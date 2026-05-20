@@ -435,10 +435,9 @@ async function sendChat() {
 
   try {
     const res = await callDS('당신은 한국 법률 AI 비서입니다. 친절하고 전문적으로 답하세요.', text, 800);
-    $(tid)?.querySelector('.msg-bubble').innerHTML = esc(res).replace(/\n/g,'<br>');
+    { const _b = $(tid); if (_b) _b.querySelector('.msg-bubble').innerHTML = esc(res).replace(/\n/g,'<br>'); }
   } catch(e) {
-    $(tid)?.querySelector('.msg-bubble').innerHTML =
-      `<span style="color:var(--red)">${esc(e.message)}</span>`;
+    { const _b2 = $(tid); if (_b2) _b2.querySelector('.msg-bubble').innerHTML = `<span style="color:var(--red)">${esc(e.message)}</span>`; }
   } finally {
     busy = false;
     list.scrollTop = list.scrollHeight;
