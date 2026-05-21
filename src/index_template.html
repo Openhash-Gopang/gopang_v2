@@ -845,6 +845,541 @@ input.settings-input{background:transparent;border:none;outline:none;
 <script>
 const KLAW_PROMPT = window.__KLAW || '';
 
+/* ══════════════════════════════════════════════════════════════
+   고팡 PDV (Private Data Vault) — 도영민 초기 데이터
+   버전: v1.0 | 2026-05-21 | AI City Inc.
+   ══════════════════════════════════════════════════════════════ */
+
+const PDV_INIT_DATA = {
+
+  /* ── 1. 신원 정보 ─────────────────────────────────────────── */
+  identity: {
+    name:           "도영민",
+    gopang_id:      "체제수리공",
+    birth:          "1964-10-05",
+    age:            61,
+    gender:         "남",
+    nationality:    "대한민국",
+    resident_no:    "641005-1******",   // 암호화 저장
+    address: {
+      road:         "제주시 한경면 판포중1길 20-1",
+      zip:          "63008",
+      detail:       "",
+      sido:         "제주특별자치도",
+      sigungu:      "제주시",
+      eupmyeon:     "한경면",
+      ri:           "판포리"
+    },
+    phone:          "010-9662-7170",
+    email:          "tensor.city@gmail.com",
+    emergency_contact: {
+      name:         "도미래",        // 아내
+      relation:     "배우자",
+      phone:        "010-8821-4433"
+    }
+  },
+
+  /* ── 2. 신체 및 건강 ──────────────────────────────────────── */
+  health: {
+    height_cm:      176,
+    weight_kg:      78,
+    blood_type:     "AB",
+    bmi:            25.2,
+    shoe_size_mm:   270,
+    dominant_hand:  "오른손",
+    vision: {
+      left:         0.8,
+      right:        1.0,
+      glasses:      false,
+      contact_lens: false
+    },
+    chronic_diseases: [
+      {
+        name:         "본태성 고혈압",
+        diagnosed:    "2019-03-12",
+        hospital:     "제주한라병원 내과",
+        doctor:       "김성민",
+        status:       "치료 중",
+        pre_treatment_bp: { systolic: 157, diastolic: 115 },
+        current_bp:       { systolic: 128, diastolic: 82, measured: "2026-04-10" }
+      }
+    ],
+    medications: [
+      {
+        name:         "암로디핀 5mg",
+        type:         "고혈압 치료제 (칼슘채널차단제)",
+        dose:         "1정/일 (아침 식후)",
+        prescribed_by:"김성민 (제주한라병원)",
+        refill_cycle: "90일",
+        last_refill:  "2026-03-01",
+        next_refill:  "2026-06-01"
+      }
+    ],
+    allergies:      ["조영제 (경미한 반응 이력)"],
+    surgeries:      [],
+    vaccinations: [
+      { name:"코로나19 (4차)", date:"2023-10-15" },
+      { name:"독감",           date:"2025-11-02" }
+    ],
+    health_checkup: {
+      last_date:    "2025-11-20",
+      institution:  "제주건강검진센터",
+      result:       "고혈압 외 이상 없음",
+      next_due:     "2026-11-20"
+    },
+    preferred_hospital:   "제주한라병원",
+    preferred_pharmacy:   "한림약국 (제주시 한림읍 한림로 37)",
+    national_health_id:   "K-0082-641005-001"   // 가상
+  },
+
+  /* ── 3. 가족 ──────────────────────────────────────────────── */
+  family: [
+    {
+      relation:     "배우자",
+      name:         "도미래",
+      birth:        "1967-07-22",
+      age:          58,
+      phone:        "010-8821-4433",
+      gopang_id:    "미래씨",
+      health:       "건강",
+      occupation:   "초등학교 교사 (퇴직)"
+    }
+  ],
+  children:       [],
+  pets: [
+    { name:"해피", species:"말티즈", age:5, vet:"한림동물병원" }
+  ],
+
+  /* ── 4. 교육 ──────────────────────────────────────────────── */
+  education: [
+    {
+      level:        "대학교 졸업",
+      school:       "제주대학교",
+      major:        "경제학과",
+      graduated:    "1989-02",
+      degree:       "경제학사"
+    },
+    {
+      level:        "고등학교 졸업",
+      school:       "제주제일고등학교",
+      graduated:    "1983-02"
+    }
+  ],
+  certifications: [
+    { name:"정보처리기사",     issued:"1995-08", issuer:"한국산업인력공단" },
+    { name:"소프트웨어기술자", issued:"2010-03", issuer:"한국소프트웨어산업협회" }
+  ],
+
+  /* ── 5. 직업 및 경력 ─────────────────────────────────────── */
+  career: {
+    current_job:    "소프트웨어 개발자 / 기업인",
+    company:        "AI City Inc.",
+    position:       "대표이사 (CEO)",
+    role:           [
+      "K-Law Creator (법률 AI 방법론 개발자)",
+      "OpenHash Creator (분산원장 프로토콜 개발자)",
+      "고팡(Gopang) 창업자"
+    ],
+    work_address:   "제주특별자치도 제주시 한경면 판포중1길 20-1",
+    work_phone:     "010-9662-7170",
+    work_email:     "tensor.city@gmail.com",
+    company_no:     "616-81-XXXXX",    // 가상
+    history: [
+      { company:"삼성SDS",     period:"1989-1998", role:"시스템 엔지니어" },
+      { company:"LG CNS",      period:"1998-2005", role:"수석 컨설턴트" },
+      { company:"자체 창업",   period:"2005-2015", role:"IT 솔루션 개발" },
+      { company:"AI City Inc.",period:"2015-현재", role:"대표이사" }
+    ]
+  },
+
+  /* ── 6. 재무 현황 ─────────────────────────────────────────── */
+  finance: {
+    /* 계좌 목록 */
+    accounts: [
+      {
+        id:           "ACC-001",
+        bank:         "KB국민은행",
+        type:         "입출금",
+        account_no:   "123-XX-XXXXXX",   // 가상
+        balance_krw:  12_850_000,
+        primary:      true
+      },
+      {
+        id:           "ACC-002",
+        bank:         "신한은행",
+        type:         "저축",
+        account_no:   "110-XXX-XXXXXX",
+        balance_krw:  45_000_000,
+        primary:      false
+      },
+      {
+        id:           "ACC-003",
+        bank:         "카카오뱅크",
+        type:         "입출금",
+        account_no:   "3333-XX-XXXXXXX",
+        balance_krw:  3_200_000,
+        primary:      false
+      }
+    ],
+    /* 자동결제 한도 */
+    auto_pay_limit:   50_000,          // 5만원 이하 자동
+    manual_pay_limit: 500_000,         // 50만원 초과 승인 필요
+    /* 자산 현황 (가상) */
+    assets: {
+      real_estate: [
+        {
+          type:       "단독주택",
+          address:    "제주시 한경면 판포중1길 20-1",
+          area_m2:    165,
+          est_value:  480_000_000,
+          owned_since:"2018-06-15",
+          mortgage:   0
+        }
+      ],
+      vehicles: [
+        {
+          type:       "승용차",
+          model:      "현대 그랜저 TG LPG",
+          year:       2007,
+          plate:      "제주 XX XXXX",
+          insurance:  "현대해상 (만기 2027-03-31)",
+          inspection: "2026-11-30"
+        }
+      ],
+      stocks: [
+        { ticker:"005930", name:"삼성전자", shares:50,  avg_price:71_200 },
+        { ticker:"035720", name:"카카오",   shares:20,  avg_price:48_500 },
+        { ticker:"NVDA",   name:"엔비디아", shares:10,  avg_price:480_00, currency:"USD" }
+      ],
+      insurance: [
+        {
+          company:    "삼성생명",
+          product:    "종신보험",
+          premium:    120_000,
+          cycle:      "월납",
+          coverage:   200_000_000,
+          expiry:     "2044-10-04"
+        },
+        {
+          company:    "현대해상",
+          product:    "실손의료보험",
+          premium:    85_000,
+          cycle:      "월납",
+          expiry:     "2034-10-04"
+        }
+      ]
+    },
+    /* 월 소득/지출 (추정) */
+    monthly: {
+      income: {
+        salary:       5_000_000,
+        business:     3_500_000,
+        dividend:     200_000,
+        rental:       0,
+        total:        8_700_000
+      },
+      expenses: {
+        food:         600_000,
+        utilities:    150_000,
+        transport:    200_000,
+        medical:      80_000,
+        insurance:    205_000,
+        communication:120_000,
+        leisure:      300_000,
+        education:    0,
+        misc:         250_000,
+        total:        1_905_000
+      }
+    },
+    /* 세금 */
+    tax: {
+      last_income_tax:    1_850_000,   // 2025년
+      last_vat:             720_000,
+      tax_office:         "제주세무서",
+      tax_id:             "641005-XXXXXXX"  // 가상
+    },
+    /* 정기 결제 자동 승인 목록 */
+    recurring: [
+      { name:"아파트 관리비",   amount:0,       auto:true,  note:"해당 없음 (단독주택)" },
+      { name:"전기요금",        amount:85_000,  auto:true,  cycle:"월" },
+      { name:"수도요금",        amount:25_000,  auto:true,  cycle:"월" },
+      { name:"가스요금",        amount:40_000,  auto:true,  cycle:"월" },
+      { name:"인터넷 (KT)",     amount:33_000,  auto:true,  cycle:"월" },
+      { name:"휴대폰 (SKT)",    amount:65_000,  auto:true,  cycle:"월" },
+      { name:"삼성생명 보험",   amount:120_000, auto:true,  cycle:"월" },
+      { name:"현대해상 실손",   amount:85_000,  auto:true,  cycle:"월" },
+      { name:"현대해상 자동차", amount:620_000, auto:true,  cycle:"연" },
+      { name:"넷플릭스",        amount:17_000,  auto:true,  cycle:"월" },
+      { name:"Claude Pro",      amount:28_000,  auto:true,  cycle:"월" },
+      { name:"GitHub",          amount:10_800,  auto:true,  cycle:"월" }
+    ]
+  },
+
+  /* ── 7. 차량 상세 ─────────────────────────────────────────── */
+  vehicle: {
+    make:           "현대",
+    model:          "그랜저 TG",
+    fuel:           "LPG",
+    year:           2007,
+    color:          "실버",
+    plate:          "제주 XX XXXX",
+    vin:            "KMHFC41EP7A0XXXXX",
+    mileage_km:     187_500,
+    last_service:   "2026-02-10",
+    next_service:   "2026-08-10",
+    garage:         "한림 현대서비스센터",
+    lpg_station:    "한림 E1 LPG 충전소 (5분 거리)"
+  },
+
+  /* ── 8. 식성 및 음식 취향 ────────────────────────────────── */
+  food: {
+    favorites:      ["갈비", "제주 흑돼지", "해산물 (전복·소라)", "냉면", "짜장면"],
+    dislikes:       ["고수", "두리안", "내장류 (간·곱창)"],
+    allergies:      ["없음"],
+    diet_restriction:"없음",
+    spice_tolerance:"중간",
+    cuisine_pref:   ["한식", "중식", "일식"],
+    drink: {
+      alcohol:      "소주 1~2잔 (가끔)",
+      beer:         "선호 안 함",
+      coffee:       "아메리카노 (하루 2잔)",
+      tea:          "녹차"
+    },
+    delivery_address:"제주시 한경면 판포중1길 20-1",
+    preferred_delivery_apps: ["배달의민족", "쿠팡이츠"],
+    nearby_restaurants: [
+      { name:"금능원",       type:"중식",   distance:"3km",  rating:4.6, phone:"064-796-XXXX" },
+      { name:"한림갈비",     type:"한식",   distance:"2km",  rating:4.8, phone:"064-796-XXXX" },
+      { name:"판포항 횟집",  type:"해산물", distance:"0.5km",rating:4.7, phone:"064-796-XXXX" },
+      { name:"제주흑돼지마당",type:"한식",  distance:"4km",  rating:4.5, phone:"064-796-XXXX" }
+    ]
+  },
+
+  /* ── 9. 패션 및 쇼핑 취향 ───────────────────────────────── */
+  fashion: {
+    clothing_size:  { top:"105 (L)", bottom:"34", jacket:"105" },
+    shoe_size_mm:   270,
+    shoe_type_pref: ["가죽 구두", "가죽 샌들 (여름)", "운동화 (일상)"],
+    style:          "캐주얼-비즈니스 혼합, 단색 선호",
+    color_pref:     ["네이비", "차콜", "베이지", "화이트"],
+    brands:         ["빈폴", "지오다노", "유니클로"],
+    shopping_pref:  "오프라인 + 온라인 혼용",
+    online_stores:  ["쿠팡", "네이버쇼핑", "무신사"],
+    annual_clothing_budget: 800_000
+  },
+
+  /* ── 10. 취미 및 여가 ─────────────────────────────────────── */
+  hobbies: [
+    {
+      name:         "바다 수영",
+      frequency:    "주 3회 (5월~10월)",
+      location:     "판포 포구, 협재 해수욕장",
+      note:         "이른 아침 6시~7시"
+    },
+    {
+      name:         "제주 올레길 걷기",
+      frequency:    "주 2회",
+      routes:       ["올레 14코스 (한림-한경)", "올레 13코스 (저지-한림)"],
+      equipment:    "트레킹화, 스틱, 배낭"
+    },
+    {
+      name:         "소프트웨어 개발",
+      frequency:    "매일",
+      tools:        ["VS Code", "Python", "JavaScript", "PowerShell"],
+      projects:     ["K-Law", "OpenHash", "Gopang"]
+    },
+    {
+      name:         "독서",
+      genres:       ["IT/기술", "경제", "역사", "철학"],
+      books_per_month: 2,
+      preferred_format: "종이책"
+    },
+    {
+      name:         "바둑",
+      level:        "아마 3단",
+      frequency:    "주 1회 (온라인)"
+    }
+  ],
+
+  /* ── 11. 디지털 서비스 ───────────────────────────────────── */
+  digital: {
+    devices: [
+      { type:"스마트폰",  model:"iPhone 15 Pro",    os:"iOS 18" },
+      { type:"노트북",    model:"MacBook Pro 16 M3", os:"macOS Sequoia" },
+      { type:"데스크탑",  model:"Windows PC",        os:"Windows 11" },
+      { type:"태블릿",    model:"iPad Air 5세대",    os:"iPadOS 18" }
+    ],
+    subscriptions: [
+      { name:"Claude Pro",  price:28_000, cycle:"월" },
+      { name:"GitHub",      price:10_800, cycle:"월" },
+      { name:"넷플릭스",    price:17_000, cycle:"월" },
+      { name:"Notion",      price:16_000, cycle:"월" },
+      { name:"DeepSeek API",price:0,      cycle:"사용량 기반" }
+    ],
+    api_keys: [
+      { service:"DeepSeek", key:"sk-e4a6f005aecf43d4aa60e77bb71de14c",
+        note:"테스트용 일회성", stored:"PDV 암호화" },
+      { service:"Anthropic Claude", key:"[설정 창에서 입력]", stored:"PDV 암호화" }
+    ],
+    cloud: ["iCloud 200GB", "Google Drive 100GB", "GitHub"]
+  },
+
+  /* ── 12. 공공 서비스 및 기관 관계 ───────────────────────── */
+  government: {
+    resident_registration: "제주시 한경면",
+    tax_office:           "제주세무서",
+    health_insurance:     "국민건강보험공단 제주지사",
+    pension:              "국민연금공단 제주지사",
+    passport: {
+      number:             "M XXXXXXXX",     // 가상
+      issued:             "2022-03-15",
+      expiry:             "2032-03-14",
+      issued_by:          "제주시청"
+    },
+    driver_license: {
+      number:             "XX-XXXXXXXX",
+      class:             "1종 보통",
+      issued:             "1988-05-20",
+      expiry:             "2028-10-04"
+    },
+    military:             "만기 전역 (1986-1988, 육군 병장)",
+    preferred_institutions: {
+      hospital:           "제주한라병원",
+      bank:               "KB국민은행 한림지점",
+      post:               "한림우체국",
+      police:             "한림파출소",
+      fire:               "한림119안전센터"
+    }
+  },
+
+  /* ── 13. 사회적 관계 및 연락처 ──────────────────────────── */
+  contacts: [
+    { name:"도미래",    relation:"배우자",   phone:"010-8821-4433", gopang_id:"미래씨" },
+    { name:"임꺽정",    relation:"변호사",   phone:"010-XXXX-XXXX", gopang_id:"임변호사", org:"제주법률사무소" },
+    { name:"김성민",    relation:"주치의",   phone:"064-740-XXXX",  org:"제주한라병원 내과" },
+    { name:"이재무",    relation:"세무사",   phone:"064-796-XXXX",  gopang_id:"이세무사" },
+    { name:"박기술",    relation:"동료개발자",phone:"010-XXXX-XXXX", gopang_id:"박개발" },
+    { name:"홍길동",    relation:"거래처",   phone:"010-XXXX-XXXX", gopang_id:"길동이야" }
+  ],
+  organizations: [
+    { name:"AI City Inc.",         role:"대표이사",    biz_no:"616-81-XXXXX" },
+    { name:"K-Law 컨소시엄",       role:"창시자",      note:"법률 AI 공동체" },
+    { name:"OpenHash 컨소시엄",    role:"창시자",      note:"분산원장 프로토콜" },
+    { name:"제주 SW 개발자 모임",  role:"회원",        frequency:"월 1회" }
+  ],
+
+  /* ── 14. 여행 및 이동 선호 ───────────────────────────────── */
+  travel: {
+    passport_valid:     true,
+    preferred_transport:["개인차량", "버스", "택시 (급할 때)"],
+    frequent_routes: [
+      { from:"판포리",   to:"제주시내",  method:"버스 (202번)",    time_min:50 },
+      { from:"판포리",   to:"한림읍내",  method:"도보 또는 차량",  time_min:10 },
+      { from:"판포리",   to:"제주공항",  method:"버스 또는 택시",  time_min:60 }
+    ],
+    taxi_pref:          "카카오택시 (앱 호출)",
+    overseas_recent: [
+      { dest:"일본 도쿄", year:2023, purpose:"관광" },
+      { dest:"미국 샌프란시스코", year:2022, purpose:"IT 컨퍼런스" }
+    ],
+    preferred_airline:  "대한항공",
+    preferred_seat:     "통로석",
+    travel_insurance:   "해외여행보험 (출발 전 단기 가입)"
+  },
+
+  /* ── 15. 디지털 서명 ─────────────────────────────────────── */
+  digital_signature: {
+    algorithm:          "ECDSA P-256",
+    public_key:         "04:A3:F2:...(공개키 placeholder)...",
+    private_key:        "[PDV 암호화 저장 — 절대 외부 전송 금지]",
+    cert_issued:        "2026-05-21",
+    cert_expiry:        "2028-05-21",
+    gopang_guid:        "fd6f:7068:6173:5000:0052:0032:0001:00F3",
+    trust_level:        0,  // L0 (초기, 향후 스테이킹으로 상향)
+    signing_policy:     "모든 공식 요청·계약·신청서 자동 서명"
+  },
+
+  /* ── 16. AI 비서 설정 ────────────────────────────────────── */
+  ai_settings: {
+    default_llm:        "deepseek",
+    default_model:      "deepseek-chat",
+    language:           "한국어",
+    greeting:           "도영민 님",
+    auto_pay_limit:     50_000,
+    manual_pay_limit:   500_000,
+    location_update:    "요청마다 자동",
+    pdv_record:         "모든 대화 자동 기록",
+    privacy_level:      "기본 (K-익명성)",
+    notifications: {
+      medication_reminder: "매일 07:30",
+      bill_due_reminder:   "납부일 3일 전",
+      appointment_reminder:"예약 30분 전",
+      car_service_reminder:"서비스 1개월 전"
+    }
+  },
+
+  /* ── 17. 현재 위치 ───────────────────────────────────────── */
+  location: {
+    current:            "제주시 한경면 판포중1길 20-1",
+    gps_approx:         "33.3617° N, 126.1728° E",
+    timezone:           "Asia/Seoul (UTC+9)",
+    last_updated:       "2026-05-21T00:00:00Z"
+  },
+
+  /* ── 18. PDV 메타데이터 ──────────────────────────────────── */
+  pdv_meta: {
+    version:            "1.0",
+    created:            "2026-05-21T00:00:00Z",
+    last_updated:       "2026-05-21T00:00:00Z",
+    total_records:      0,
+    genesis_hash:       "pending",
+    openhash_tx:        "PENDING",
+    encryption:         "AES-256-GCM (로컬)",
+    backup:             "미설정 (추후 OpenHash 연동)"
+  }
+};
+
+/* ── PDV 초기화 함수 ─────────────────────────────────────────── */
+function initPDVWithUserData() {
+  // 기존 PDV 덮어쓰기 방지
+  if (localStorage.getItem('gopang_pdv_initialized') === '2') return;
+
+  // 사용자 프로필 저장
+  localStorage.setItem('gopang_user', JSON.stringify({
+    name:       PDV_INIT_DATA.identity.name,
+    id:         PDV_INIT_DATA.identity.gopang_id,
+    birth:      PDV_INIT_DATA.identity.birth,
+    address:    PDV_INIT_DATA.identity.address.road,
+    phone:      PDV_INIT_DATA.identity.phone,
+    blood:      PDV_INIT_DATA.health.blood_type + '형',
+    height:     PDV_INIT_DATA.health.height_cm,
+    weight:     PDV_INIT_DATA.health.weight_kg,
+    family:     PDV_INIT_DATA.family[0]?.name + ' (배우자)',
+    car:        PDV_INIT_DATA.vehicle.make + ' ' + PDV_INIT_DATA.vehicle.model + ' ' + PDV_INIT_DATA.vehicle.fuel,
+    job:        PDV_INIT_DATA.career.current_job,
+    education:  PDV_INIT_DATA.education[0]?.level,
+    major:      PDV_INIT_DATA.education[0]?.major,
+    hobby:      PDV_INIT_DATA.hobbies.map(h=>h.name).join(', '),
+    email:      PDV_INIT_DATA.identity.email
+  }));
+
+  // 전체 PDV 데이터 저장
+  localStorage.setItem('gopang_pdv_full', JSON.stringify(PDV_INIT_DATA));
+
+  // API 키 저장
+  localStorage.setItem('gopang_ak', 'sk-e4a6f005aecf43d4aa60e77bb71de14c');
+  localStorage.setItem('gopang_llm', 'deepseek');
+
+  // 위치 저장
+  localStorage.setItem('gopang_last_location', PDV_INIT_DATA.identity.address.road);
+
+  // 초기화 완료 플래그
+  localStorage.setItem('gopang_pdv_initialized', '2');
+
+  console.log('PDV 초기화 완료 — 도영민 (@체제수리공)');
+}
+
+
 /* ══ 디폴트 사용자 프로필 (시뮬레이션) ══ */
 const DEFAULT_USER = {
   name:        '도영민',
@@ -1409,6 +1944,541 @@ async function callDS(system, user, maxTok=2000){
   const headers = {'Content-Type':'application/json'};
   if(ak) headers['Authorization'] = 'Bearer ' + ak;
   
+/* ══════════════════════════════════════════════════════════════
+   고팡 PDV (Private Data Vault) — 도영민 초기 데이터
+   버전: v1.0 | 2026-05-21 | AI City Inc.
+   ══════════════════════════════════════════════════════════════ */
+
+const PDV_INIT_DATA = {
+
+  /* ── 1. 신원 정보 ─────────────────────────────────────────── */
+  identity: {
+    name:           "도영민",
+    gopang_id:      "체제수리공",
+    birth:          "1964-10-05",
+    age:            61,
+    gender:         "남",
+    nationality:    "대한민국",
+    resident_no:    "641005-1******",   // 암호화 저장
+    address: {
+      road:         "제주시 한경면 판포중1길 20-1",
+      zip:          "63008",
+      detail:       "",
+      sido:         "제주특별자치도",
+      sigungu:      "제주시",
+      eupmyeon:     "한경면",
+      ri:           "판포리"
+    },
+    phone:          "010-9662-7170",
+    email:          "tensor.city@gmail.com",
+    emergency_contact: {
+      name:         "도미래",        // 아내
+      relation:     "배우자",
+      phone:        "010-8821-4433"
+    }
+  },
+
+  /* ── 2. 신체 및 건강 ──────────────────────────────────────── */
+  health: {
+    height_cm:      176,
+    weight_kg:      78,
+    blood_type:     "AB",
+    bmi:            25.2,
+    shoe_size_mm:   270,
+    dominant_hand:  "오른손",
+    vision: {
+      left:         0.8,
+      right:        1.0,
+      glasses:      false,
+      contact_lens: false
+    },
+    chronic_diseases: [
+      {
+        name:         "본태성 고혈압",
+        diagnosed:    "2019-03-12",
+        hospital:     "제주한라병원 내과",
+        doctor:       "김성민",
+        status:       "치료 중",
+        pre_treatment_bp: { systolic: 157, diastolic: 115 },
+        current_bp:       { systolic: 128, diastolic: 82, measured: "2026-04-10" }
+      }
+    ],
+    medications: [
+      {
+        name:         "암로디핀 5mg",
+        type:         "고혈압 치료제 (칼슘채널차단제)",
+        dose:         "1정/일 (아침 식후)",
+        prescribed_by:"김성민 (제주한라병원)",
+        refill_cycle: "90일",
+        last_refill:  "2026-03-01",
+        next_refill:  "2026-06-01"
+      }
+    ],
+    allergies:      ["조영제 (경미한 반응 이력)"],
+    surgeries:      [],
+    vaccinations: [
+      { name:"코로나19 (4차)", date:"2023-10-15" },
+      { name:"독감",           date:"2025-11-02" }
+    ],
+    health_checkup: {
+      last_date:    "2025-11-20",
+      institution:  "제주건강검진센터",
+      result:       "고혈압 외 이상 없음",
+      next_due:     "2026-11-20"
+    },
+    preferred_hospital:   "제주한라병원",
+    preferred_pharmacy:   "한림약국 (제주시 한림읍 한림로 37)",
+    national_health_id:   "K-0082-641005-001"   // 가상
+  },
+
+  /* ── 3. 가족 ──────────────────────────────────────────────── */
+  family: [
+    {
+      relation:     "배우자",
+      name:         "도미래",
+      birth:        "1967-07-22",
+      age:          58,
+      phone:        "010-8821-4433",
+      gopang_id:    "미래씨",
+      health:       "건강",
+      occupation:   "초등학교 교사 (퇴직)"
+    }
+  ],
+  children:       [],
+  pets: [
+    { name:"해피", species:"말티즈", age:5, vet:"한림동물병원" }
+  ],
+
+  /* ── 4. 교육 ──────────────────────────────────────────────── */
+  education: [
+    {
+      level:        "대학교 졸업",
+      school:       "제주대학교",
+      major:        "경제학과",
+      graduated:    "1989-02",
+      degree:       "경제학사"
+    },
+    {
+      level:        "고등학교 졸업",
+      school:       "제주제일고등학교",
+      graduated:    "1983-02"
+    }
+  ],
+  certifications: [
+    { name:"정보처리기사",     issued:"1995-08", issuer:"한국산업인력공단" },
+    { name:"소프트웨어기술자", issued:"2010-03", issuer:"한국소프트웨어산업협회" }
+  ],
+
+  /* ── 5. 직업 및 경력 ─────────────────────────────────────── */
+  career: {
+    current_job:    "소프트웨어 개발자 / 기업인",
+    company:        "AI City Inc.",
+    position:       "대표이사 (CEO)",
+    role:           [
+      "K-Law Creator (법률 AI 방법론 개발자)",
+      "OpenHash Creator (분산원장 프로토콜 개발자)",
+      "고팡(Gopang) 창업자"
+    ],
+    work_address:   "제주특별자치도 제주시 한경면 판포중1길 20-1",
+    work_phone:     "010-9662-7170",
+    work_email:     "tensor.city@gmail.com",
+    company_no:     "616-81-XXXXX",    // 가상
+    history: [
+      { company:"삼성SDS",     period:"1989-1998", role:"시스템 엔지니어" },
+      { company:"LG CNS",      period:"1998-2005", role:"수석 컨설턴트" },
+      { company:"자체 창업",   period:"2005-2015", role:"IT 솔루션 개발" },
+      { company:"AI City Inc.",period:"2015-현재", role:"대표이사" }
+    ]
+  },
+
+  /* ── 6. 재무 현황 ─────────────────────────────────────────── */
+  finance: {
+    /* 계좌 목록 */
+    accounts: [
+      {
+        id:           "ACC-001",
+        bank:         "KB국민은행",
+        type:         "입출금",
+        account_no:   "123-XX-XXXXXX",   // 가상
+        balance_krw:  12_850_000,
+        primary:      true
+      },
+      {
+        id:           "ACC-002",
+        bank:         "신한은행",
+        type:         "저축",
+        account_no:   "110-XXX-XXXXXX",
+        balance_krw:  45_000_000,
+        primary:      false
+      },
+      {
+        id:           "ACC-003",
+        bank:         "카카오뱅크",
+        type:         "입출금",
+        account_no:   "3333-XX-XXXXXXX",
+        balance_krw:  3_200_000,
+        primary:      false
+      }
+    ],
+    /* 자동결제 한도 */
+    auto_pay_limit:   50_000,          // 5만원 이하 자동
+    manual_pay_limit: 500_000,         // 50만원 초과 승인 필요
+    /* 자산 현황 (가상) */
+    assets: {
+      real_estate: [
+        {
+          type:       "단독주택",
+          address:    "제주시 한경면 판포중1길 20-1",
+          area_m2:    165,
+          est_value:  480_000_000,
+          owned_since:"2018-06-15",
+          mortgage:   0
+        }
+      ],
+      vehicles: [
+        {
+          type:       "승용차",
+          model:      "현대 그랜저 TG LPG",
+          year:       2007,
+          plate:      "제주 XX XXXX",
+          insurance:  "현대해상 (만기 2027-03-31)",
+          inspection: "2026-11-30"
+        }
+      ],
+      stocks: [
+        { ticker:"005930", name:"삼성전자", shares:50,  avg_price:71_200 },
+        { ticker:"035720", name:"카카오",   shares:20,  avg_price:48_500 },
+        { ticker:"NVDA",   name:"엔비디아", shares:10,  avg_price:480_00, currency:"USD" }
+      ],
+      insurance: [
+        {
+          company:    "삼성생명",
+          product:    "종신보험",
+          premium:    120_000,
+          cycle:      "월납",
+          coverage:   200_000_000,
+          expiry:     "2044-10-04"
+        },
+        {
+          company:    "현대해상",
+          product:    "실손의료보험",
+          premium:    85_000,
+          cycle:      "월납",
+          expiry:     "2034-10-04"
+        }
+      ]
+    },
+    /* 월 소득/지출 (추정) */
+    monthly: {
+      income: {
+        salary:       5_000_000,
+        business:     3_500_000,
+        dividend:     200_000,
+        rental:       0,
+        total:        8_700_000
+      },
+      expenses: {
+        food:         600_000,
+        utilities:    150_000,
+        transport:    200_000,
+        medical:      80_000,
+        insurance:    205_000,
+        communication:120_000,
+        leisure:      300_000,
+        education:    0,
+        misc:         250_000,
+        total:        1_905_000
+      }
+    },
+    /* 세금 */
+    tax: {
+      last_income_tax:    1_850_000,   // 2025년
+      last_vat:             720_000,
+      tax_office:         "제주세무서",
+      tax_id:             "641005-XXXXXXX"  // 가상
+    },
+    /* 정기 결제 자동 승인 목록 */
+    recurring: [
+      { name:"아파트 관리비",   amount:0,       auto:true,  note:"해당 없음 (단독주택)" },
+      { name:"전기요금",        amount:85_000,  auto:true,  cycle:"월" },
+      { name:"수도요금",        amount:25_000,  auto:true,  cycle:"월" },
+      { name:"가스요금",        amount:40_000,  auto:true,  cycle:"월" },
+      { name:"인터넷 (KT)",     amount:33_000,  auto:true,  cycle:"월" },
+      { name:"휴대폰 (SKT)",    amount:65_000,  auto:true,  cycle:"월" },
+      { name:"삼성생명 보험",   amount:120_000, auto:true,  cycle:"월" },
+      { name:"현대해상 실손",   amount:85_000,  auto:true,  cycle:"월" },
+      { name:"현대해상 자동차", amount:620_000, auto:true,  cycle:"연" },
+      { name:"넷플릭스",        amount:17_000,  auto:true,  cycle:"월" },
+      { name:"Claude Pro",      amount:28_000,  auto:true,  cycle:"월" },
+      { name:"GitHub",          amount:10_800,  auto:true,  cycle:"월" }
+    ]
+  },
+
+  /* ── 7. 차량 상세 ─────────────────────────────────────────── */
+  vehicle: {
+    make:           "현대",
+    model:          "그랜저 TG",
+    fuel:           "LPG",
+    year:           2007,
+    color:          "실버",
+    plate:          "제주 XX XXXX",
+    vin:            "KMHFC41EP7A0XXXXX",
+    mileage_km:     187_500,
+    last_service:   "2026-02-10",
+    next_service:   "2026-08-10",
+    garage:         "한림 현대서비스센터",
+    lpg_station:    "한림 E1 LPG 충전소 (5분 거리)"
+  },
+
+  /* ── 8. 식성 및 음식 취향 ────────────────────────────────── */
+  food: {
+    favorites:      ["갈비", "제주 흑돼지", "해산물 (전복·소라)", "냉면", "짜장면"],
+    dislikes:       ["고수", "두리안", "내장류 (간·곱창)"],
+    allergies:      ["없음"],
+    diet_restriction:"없음",
+    spice_tolerance:"중간",
+    cuisine_pref:   ["한식", "중식", "일식"],
+    drink: {
+      alcohol:      "소주 1~2잔 (가끔)",
+      beer:         "선호 안 함",
+      coffee:       "아메리카노 (하루 2잔)",
+      tea:          "녹차"
+    },
+    delivery_address:"제주시 한경면 판포중1길 20-1",
+    preferred_delivery_apps: ["배달의민족", "쿠팡이츠"],
+    nearby_restaurants: [
+      { name:"금능원",       type:"중식",   distance:"3km",  rating:4.6, phone:"064-796-XXXX" },
+      { name:"한림갈비",     type:"한식",   distance:"2km",  rating:4.8, phone:"064-796-XXXX" },
+      { name:"판포항 횟집",  type:"해산물", distance:"0.5km",rating:4.7, phone:"064-796-XXXX" },
+      { name:"제주흑돼지마당",type:"한식",  distance:"4km",  rating:4.5, phone:"064-796-XXXX" }
+    ]
+  },
+
+  /* ── 9. 패션 및 쇼핑 취향 ───────────────────────────────── */
+  fashion: {
+    clothing_size:  { top:"105 (L)", bottom:"34", jacket:"105" },
+    shoe_size_mm:   270,
+    shoe_type_pref: ["가죽 구두", "가죽 샌들 (여름)", "운동화 (일상)"],
+    style:          "캐주얼-비즈니스 혼합, 단색 선호",
+    color_pref:     ["네이비", "차콜", "베이지", "화이트"],
+    brands:         ["빈폴", "지오다노", "유니클로"],
+    shopping_pref:  "오프라인 + 온라인 혼용",
+    online_stores:  ["쿠팡", "네이버쇼핑", "무신사"],
+    annual_clothing_budget: 800_000
+  },
+
+  /* ── 10. 취미 및 여가 ─────────────────────────────────────── */
+  hobbies: [
+    {
+      name:         "바다 수영",
+      frequency:    "주 3회 (5월~10월)",
+      location:     "판포 포구, 협재 해수욕장",
+      note:         "이른 아침 6시~7시"
+    },
+    {
+      name:         "제주 올레길 걷기",
+      frequency:    "주 2회",
+      routes:       ["올레 14코스 (한림-한경)", "올레 13코스 (저지-한림)"],
+      equipment:    "트레킹화, 스틱, 배낭"
+    },
+    {
+      name:         "소프트웨어 개발",
+      frequency:    "매일",
+      tools:        ["VS Code", "Python", "JavaScript", "PowerShell"],
+      projects:     ["K-Law", "OpenHash", "Gopang"]
+    },
+    {
+      name:         "독서",
+      genres:       ["IT/기술", "경제", "역사", "철학"],
+      books_per_month: 2,
+      preferred_format: "종이책"
+    },
+    {
+      name:         "바둑",
+      level:        "아마 3단",
+      frequency:    "주 1회 (온라인)"
+    }
+  ],
+
+  /* ── 11. 디지털 서비스 ───────────────────────────────────── */
+  digital: {
+    devices: [
+      { type:"스마트폰",  model:"iPhone 15 Pro",    os:"iOS 18" },
+      { type:"노트북",    model:"MacBook Pro 16 M3", os:"macOS Sequoia" },
+      { type:"데스크탑",  model:"Windows PC",        os:"Windows 11" },
+      { type:"태블릿",    model:"iPad Air 5세대",    os:"iPadOS 18" }
+    ],
+    subscriptions: [
+      { name:"Claude Pro",  price:28_000, cycle:"월" },
+      { name:"GitHub",      price:10_800, cycle:"월" },
+      { name:"넷플릭스",    price:17_000, cycle:"월" },
+      { name:"Notion",      price:16_000, cycle:"월" },
+      { name:"DeepSeek API",price:0,      cycle:"사용량 기반" }
+    ],
+    api_keys: [
+      { service:"DeepSeek", key:"sk-e4a6f005aecf43d4aa60e77bb71de14c",
+        note:"테스트용 일회성", stored:"PDV 암호화" },
+      { service:"Anthropic Claude", key:"[설정 창에서 입력]", stored:"PDV 암호화" }
+    ],
+    cloud: ["iCloud 200GB", "Google Drive 100GB", "GitHub"]
+  },
+
+  /* ── 12. 공공 서비스 및 기관 관계 ───────────────────────── */
+  government: {
+    resident_registration: "제주시 한경면",
+    tax_office:           "제주세무서",
+    health_insurance:     "국민건강보험공단 제주지사",
+    pension:              "국민연금공단 제주지사",
+    passport: {
+      number:             "M XXXXXXXX",     // 가상
+      issued:             "2022-03-15",
+      expiry:             "2032-03-14",
+      issued_by:          "제주시청"
+    },
+    driver_license: {
+      number:             "XX-XXXXXXXX",
+      class:             "1종 보통",
+      issued:             "1988-05-20",
+      expiry:             "2028-10-04"
+    },
+    military:             "만기 전역 (1986-1988, 육군 병장)",
+    preferred_institutions: {
+      hospital:           "제주한라병원",
+      bank:               "KB국민은행 한림지점",
+      post:               "한림우체국",
+      police:             "한림파출소",
+      fire:               "한림119안전센터"
+    }
+  },
+
+  /* ── 13. 사회적 관계 및 연락처 ──────────────────────────── */
+  contacts: [
+    { name:"도미래",    relation:"배우자",   phone:"010-8821-4433", gopang_id:"미래씨" },
+    { name:"임꺽정",    relation:"변호사",   phone:"010-XXXX-XXXX", gopang_id:"임변호사", org:"제주법률사무소" },
+    { name:"김성민",    relation:"주치의",   phone:"064-740-XXXX",  org:"제주한라병원 내과" },
+    { name:"이재무",    relation:"세무사",   phone:"064-796-XXXX",  gopang_id:"이세무사" },
+    { name:"박기술",    relation:"동료개발자",phone:"010-XXXX-XXXX", gopang_id:"박개발" },
+    { name:"홍길동",    relation:"거래처",   phone:"010-XXXX-XXXX", gopang_id:"길동이야" }
+  ],
+  organizations: [
+    { name:"AI City Inc.",         role:"대표이사",    biz_no:"616-81-XXXXX" },
+    { name:"K-Law 컨소시엄",       role:"창시자",      note:"법률 AI 공동체" },
+    { name:"OpenHash 컨소시엄",    role:"창시자",      note:"분산원장 프로토콜" },
+    { name:"제주 SW 개발자 모임",  role:"회원",        frequency:"월 1회" }
+  ],
+
+  /* ── 14. 여행 및 이동 선호 ───────────────────────────────── */
+  travel: {
+    passport_valid:     true,
+    preferred_transport:["개인차량", "버스", "택시 (급할 때)"],
+    frequent_routes: [
+      { from:"판포리",   to:"제주시내",  method:"버스 (202번)",    time_min:50 },
+      { from:"판포리",   to:"한림읍내",  method:"도보 또는 차량",  time_min:10 },
+      { from:"판포리",   to:"제주공항",  method:"버스 또는 택시",  time_min:60 }
+    ],
+    taxi_pref:          "카카오택시 (앱 호출)",
+    overseas_recent: [
+      { dest:"일본 도쿄", year:2023, purpose:"관광" },
+      { dest:"미국 샌프란시스코", year:2022, purpose:"IT 컨퍼런스" }
+    ],
+    preferred_airline:  "대한항공",
+    preferred_seat:     "통로석",
+    travel_insurance:   "해외여행보험 (출발 전 단기 가입)"
+  },
+
+  /* ── 15. 디지털 서명 ─────────────────────────────────────── */
+  digital_signature: {
+    algorithm:          "ECDSA P-256",
+    public_key:         "04:A3:F2:...(공개키 placeholder)...",
+    private_key:        "[PDV 암호화 저장 — 절대 외부 전송 금지]",
+    cert_issued:        "2026-05-21",
+    cert_expiry:        "2028-05-21",
+    gopang_guid:        "fd6f:7068:6173:5000:0052:0032:0001:00F3",
+    trust_level:        0,  // L0 (초기, 향후 스테이킹으로 상향)
+    signing_policy:     "모든 공식 요청·계약·신청서 자동 서명"
+  },
+
+  /* ── 16. AI 비서 설정 ────────────────────────────────────── */
+  ai_settings: {
+    default_llm:        "deepseek",
+    default_model:      "deepseek-chat",
+    language:           "한국어",
+    greeting:           "도영민 님",
+    auto_pay_limit:     50_000,
+    manual_pay_limit:   500_000,
+    location_update:    "요청마다 자동",
+    pdv_record:         "모든 대화 자동 기록",
+    privacy_level:      "기본 (K-익명성)",
+    notifications: {
+      medication_reminder: "매일 07:30",
+      bill_due_reminder:   "납부일 3일 전",
+      appointment_reminder:"예약 30분 전",
+      car_service_reminder:"서비스 1개월 전"
+    }
+  },
+
+  /* ── 17. 현재 위치 ───────────────────────────────────────── */
+  location: {
+    current:            "제주시 한경면 판포중1길 20-1",
+    gps_approx:         "33.3617° N, 126.1728° E",
+    timezone:           "Asia/Seoul (UTC+9)",
+    last_updated:       "2026-05-21T00:00:00Z"
+  },
+
+  /* ── 18. PDV 메타데이터 ──────────────────────────────────── */
+  pdv_meta: {
+    version:            "1.0",
+    created:            "2026-05-21T00:00:00Z",
+    last_updated:       "2026-05-21T00:00:00Z",
+    total_records:      0,
+    genesis_hash:       "pending",
+    openhash_tx:        "PENDING",
+    encryption:         "AES-256-GCM (로컬)",
+    backup:             "미설정 (추후 OpenHash 연동)"
+  }
+};
+
+/* ── PDV 초기화 함수 ─────────────────────────────────────────── */
+function initPDVWithUserData() {
+  // 기존 PDV 덮어쓰기 방지
+  if (localStorage.getItem('gopang_pdv_initialized') === '2') return;
+
+  // 사용자 프로필 저장
+  localStorage.setItem('gopang_user', JSON.stringify({
+    name:       PDV_INIT_DATA.identity.name,
+    id:         PDV_INIT_DATA.identity.gopang_id,
+    birth:      PDV_INIT_DATA.identity.birth,
+    address:    PDV_INIT_DATA.identity.address.road,
+    phone:      PDV_INIT_DATA.identity.phone,
+    blood:      PDV_INIT_DATA.health.blood_type + '형',
+    height:     PDV_INIT_DATA.health.height_cm,
+    weight:     PDV_INIT_DATA.health.weight_kg,
+    family:     PDV_INIT_DATA.family[0]?.name + ' (배우자)',
+    car:        PDV_INIT_DATA.vehicle.make + ' ' + PDV_INIT_DATA.vehicle.model + ' ' + PDV_INIT_DATA.vehicle.fuel,
+    job:        PDV_INIT_DATA.career.current_job,
+    education:  PDV_INIT_DATA.education[0]?.level,
+    major:      PDV_INIT_DATA.education[0]?.major,
+    hobby:      PDV_INIT_DATA.hobbies.map(h=>h.name).join(', '),
+    email:      PDV_INIT_DATA.identity.email
+  }));
+
+  // 전체 PDV 데이터 저장
+  localStorage.setItem('gopang_pdv_full', JSON.stringify(PDV_INIT_DATA));
+
+  // API 키 저장
+  localStorage.setItem('gopang_ak', 'sk-e4a6f005aecf43d4aa60e77bb71de14c');
+  localStorage.setItem('gopang_llm', 'deepseek');
+
+  // 위치 저장
+  localStorage.setItem('gopang_last_location', PDV_INIT_DATA.identity.address.road);
+
+  // 초기화 완료 플래그
+  localStorage.setItem('gopang_pdv_initialized', '2');
+
+  console.log('PDV 초기화 완료 — 도영민 (@체제수리공)');
+}
+
+
 /* ══ 디폴트 사용자 프로필 (시뮬레이션) ══ */
 const DEFAULT_USER = {
   name:        '도영민',
@@ -2108,6 +3178,8 @@ async function sendChat(){
 }
 function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,200)+'px';}
 document.addEventListener('DOMContentLoaded',()=>{
+  // PDV 전체 데이터 초기화 (최초 1회)
+  initPDVWithUserData();
   renderCourtInfo('solo', null);
   updatePDVBadge();
   renderProfile();
@@ -2723,6 +3795,541 @@ async function callLLM(system, user, maxTok=1200){
   const cfg = LLM_CONFIG[llm];
   const ak  = getAK();
   
+/* ══════════════════════════════════════════════════════════════
+   고팡 PDV (Private Data Vault) — 도영민 초기 데이터
+   버전: v1.0 | 2026-05-21 | AI City Inc.
+   ══════════════════════════════════════════════════════════════ */
+
+const PDV_INIT_DATA = {
+
+  /* ── 1. 신원 정보 ─────────────────────────────────────────── */
+  identity: {
+    name:           "도영민",
+    gopang_id:      "체제수리공",
+    birth:          "1964-10-05",
+    age:            61,
+    gender:         "남",
+    nationality:    "대한민국",
+    resident_no:    "641005-1******",   // 암호화 저장
+    address: {
+      road:         "제주시 한경면 판포중1길 20-1",
+      zip:          "63008",
+      detail:       "",
+      sido:         "제주특별자치도",
+      sigungu:      "제주시",
+      eupmyeon:     "한경면",
+      ri:           "판포리"
+    },
+    phone:          "010-9662-7170",
+    email:          "tensor.city@gmail.com",
+    emergency_contact: {
+      name:         "도미래",        // 아내
+      relation:     "배우자",
+      phone:        "010-8821-4433"
+    }
+  },
+
+  /* ── 2. 신체 및 건강 ──────────────────────────────────────── */
+  health: {
+    height_cm:      176,
+    weight_kg:      78,
+    blood_type:     "AB",
+    bmi:            25.2,
+    shoe_size_mm:   270,
+    dominant_hand:  "오른손",
+    vision: {
+      left:         0.8,
+      right:        1.0,
+      glasses:      false,
+      contact_lens: false
+    },
+    chronic_diseases: [
+      {
+        name:         "본태성 고혈압",
+        diagnosed:    "2019-03-12",
+        hospital:     "제주한라병원 내과",
+        doctor:       "김성민",
+        status:       "치료 중",
+        pre_treatment_bp: { systolic: 157, diastolic: 115 },
+        current_bp:       { systolic: 128, diastolic: 82, measured: "2026-04-10" }
+      }
+    ],
+    medications: [
+      {
+        name:         "암로디핀 5mg",
+        type:         "고혈압 치료제 (칼슘채널차단제)",
+        dose:         "1정/일 (아침 식후)",
+        prescribed_by:"김성민 (제주한라병원)",
+        refill_cycle: "90일",
+        last_refill:  "2026-03-01",
+        next_refill:  "2026-06-01"
+      }
+    ],
+    allergies:      ["조영제 (경미한 반응 이력)"],
+    surgeries:      [],
+    vaccinations: [
+      { name:"코로나19 (4차)", date:"2023-10-15" },
+      { name:"독감",           date:"2025-11-02" }
+    ],
+    health_checkup: {
+      last_date:    "2025-11-20",
+      institution:  "제주건강검진센터",
+      result:       "고혈압 외 이상 없음",
+      next_due:     "2026-11-20"
+    },
+    preferred_hospital:   "제주한라병원",
+    preferred_pharmacy:   "한림약국 (제주시 한림읍 한림로 37)",
+    national_health_id:   "K-0082-641005-001"   // 가상
+  },
+
+  /* ── 3. 가족 ──────────────────────────────────────────────── */
+  family: [
+    {
+      relation:     "배우자",
+      name:         "도미래",
+      birth:        "1967-07-22",
+      age:          58,
+      phone:        "010-8821-4433",
+      gopang_id:    "미래씨",
+      health:       "건강",
+      occupation:   "초등학교 교사 (퇴직)"
+    }
+  ],
+  children:       [],
+  pets: [
+    { name:"해피", species:"말티즈", age:5, vet:"한림동물병원" }
+  ],
+
+  /* ── 4. 교육 ──────────────────────────────────────────────── */
+  education: [
+    {
+      level:        "대학교 졸업",
+      school:       "제주대학교",
+      major:        "경제학과",
+      graduated:    "1989-02",
+      degree:       "경제학사"
+    },
+    {
+      level:        "고등학교 졸업",
+      school:       "제주제일고등학교",
+      graduated:    "1983-02"
+    }
+  ],
+  certifications: [
+    { name:"정보처리기사",     issued:"1995-08", issuer:"한국산업인력공단" },
+    { name:"소프트웨어기술자", issued:"2010-03", issuer:"한국소프트웨어산업협회" }
+  ],
+
+  /* ── 5. 직업 및 경력 ─────────────────────────────────────── */
+  career: {
+    current_job:    "소프트웨어 개발자 / 기업인",
+    company:        "AI City Inc.",
+    position:       "대표이사 (CEO)",
+    role:           [
+      "K-Law Creator (법률 AI 방법론 개발자)",
+      "OpenHash Creator (분산원장 프로토콜 개발자)",
+      "고팡(Gopang) 창업자"
+    ],
+    work_address:   "제주특별자치도 제주시 한경면 판포중1길 20-1",
+    work_phone:     "010-9662-7170",
+    work_email:     "tensor.city@gmail.com",
+    company_no:     "616-81-XXXXX",    // 가상
+    history: [
+      { company:"삼성SDS",     period:"1989-1998", role:"시스템 엔지니어" },
+      { company:"LG CNS",      period:"1998-2005", role:"수석 컨설턴트" },
+      { company:"자체 창업",   period:"2005-2015", role:"IT 솔루션 개발" },
+      { company:"AI City Inc.",period:"2015-현재", role:"대표이사" }
+    ]
+  },
+
+  /* ── 6. 재무 현황 ─────────────────────────────────────────── */
+  finance: {
+    /* 계좌 목록 */
+    accounts: [
+      {
+        id:           "ACC-001",
+        bank:         "KB국민은행",
+        type:         "입출금",
+        account_no:   "123-XX-XXXXXX",   // 가상
+        balance_krw:  12_850_000,
+        primary:      true
+      },
+      {
+        id:           "ACC-002",
+        bank:         "신한은행",
+        type:         "저축",
+        account_no:   "110-XXX-XXXXXX",
+        balance_krw:  45_000_000,
+        primary:      false
+      },
+      {
+        id:           "ACC-003",
+        bank:         "카카오뱅크",
+        type:         "입출금",
+        account_no:   "3333-XX-XXXXXXX",
+        balance_krw:  3_200_000,
+        primary:      false
+      }
+    ],
+    /* 자동결제 한도 */
+    auto_pay_limit:   50_000,          // 5만원 이하 자동
+    manual_pay_limit: 500_000,         // 50만원 초과 승인 필요
+    /* 자산 현황 (가상) */
+    assets: {
+      real_estate: [
+        {
+          type:       "단독주택",
+          address:    "제주시 한경면 판포중1길 20-1",
+          area_m2:    165,
+          est_value:  480_000_000,
+          owned_since:"2018-06-15",
+          mortgage:   0
+        }
+      ],
+      vehicles: [
+        {
+          type:       "승용차",
+          model:      "현대 그랜저 TG LPG",
+          year:       2007,
+          plate:      "제주 XX XXXX",
+          insurance:  "현대해상 (만기 2027-03-31)",
+          inspection: "2026-11-30"
+        }
+      ],
+      stocks: [
+        { ticker:"005930", name:"삼성전자", shares:50,  avg_price:71_200 },
+        { ticker:"035720", name:"카카오",   shares:20,  avg_price:48_500 },
+        { ticker:"NVDA",   name:"엔비디아", shares:10,  avg_price:480_00, currency:"USD" }
+      ],
+      insurance: [
+        {
+          company:    "삼성생명",
+          product:    "종신보험",
+          premium:    120_000,
+          cycle:      "월납",
+          coverage:   200_000_000,
+          expiry:     "2044-10-04"
+        },
+        {
+          company:    "현대해상",
+          product:    "실손의료보험",
+          premium:    85_000,
+          cycle:      "월납",
+          expiry:     "2034-10-04"
+        }
+      ]
+    },
+    /* 월 소득/지출 (추정) */
+    monthly: {
+      income: {
+        salary:       5_000_000,
+        business:     3_500_000,
+        dividend:     200_000,
+        rental:       0,
+        total:        8_700_000
+      },
+      expenses: {
+        food:         600_000,
+        utilities:    150_000,
+        transport:    200_000,
+        medical:      80_000,
+        insurance:    205_000,
+        communication:120_000,
+        leisure:      300_000,
+        education:    0,
+        misc:         250_000,
+        total:        1_905_000
+      }
+    },
+    /* 세금 */
+    tax: {
+      last_income_tax:    1_850_000,   // 2025년
+      last_vat:             720_000,
+      tax_office:         "제주세무서",
+      tax_id:             "641005-XXXXXXX"  // 가상
+    },
+    /* 정기 결제 자동 승인 목록 */
+    recurring: [
+      { name:"아파트 관리비",   amount:0,       auto:true,  note:"해당 없음 (단독주택)" },
+      { name:"전기요금",        amount:85_000,  auto:true,  cycle:"월" },
+      { name:"수도요금",        amount:25_000,  auto:true,  cycle:"월" },
+      { name:"가스요금",        amount:40_000,  auto:true,  cycle:"월" },
+      { name:"인터넷 (KT)",     amount:33_000,  auto:true,  cycle:"월" },
+      { name:"휴대폰 (SKT)",    amount:65_000,  auto:true,  cycle:"월" },
+      { name:"삼성생명 보험",   amount:120_000, auto:true,  cycle:"월" },
+      { name:"현대해상 실손",   amount:85_000,  auto:true,  cycle:"월" },
+      { name:"현대해상 자동차", amount:620_000, auto:true,  cycle:"연" },
+      { name:"넷플릭스",        amount:17_000,  auto:true,  cycle:"월" },
+      { name:"Claude Pro",      amount:28_000,  auto:true,  cycle:"월" },
+      { name:"GitHub",          amount:10_800,  auto:true,  cycle:"월" }
+    ]
+  },
+
+  /* ── 7. 차량 상세 ─────────────────────────────────────────── */
+  vehicle: {
+    make:           "현대",
+    model:          "그랜저 TG",
+    fuel:           "LPG",
+    year:           2007,
+    color:          "실버",
+    plate:          "제주 XX XXXX",
+    vin:            "KMHFC41EP7A0XXXXX",
+    mileage_km:     187_500,
+    last_service:   "2026-02-10",
+    next_service:   "2026-08-10",
+    garage:         "한림 현대서비스센터",
+    lpg_station:    "한림 E1 LPG 충전소 (5분 거리)"
+  },
+
+  /* ── 8. 식성 및 음식 취향 ────────────────────────────────── */
+  food: {
+    favorites:      ["갈비", "제주 흑돼지", "해산물 (전복·소라)", "냉면", "짜장면"],
+    dislikes:       ["고수", "두리안", "내장류 (간·곱창)"],
+    allergies:      ["없음"],
+    diet_restriction:"없음",
+    spice_tolerance:"중간",
+    cuisine_pref:   ["한식", "중식", "일식"],
+    drink: {
+      alcohol:      "소주 1~2잔 (가끔)",
+      beer:         "선호 안 함",
+      coffee:       "아메리카노 (하루 2잔)",
+      tea:          "녹차"
+    },
+    delivery_address:"제주시 한경면 판포중1길 20-1",
+    preferred_delivery_apps: ["배달의민족", "쿠팡이츠"],
+    nearby_restaurants: [
+      { name:"금능원",       type:"중식",   distance:"3km",  rating:4.6, phone:"064-796-XXXX" },
+      { name:"한림갈비",     type:"한식",   distance:"2km",  rating:4.8, phone:"064-796-XXXX" },
+      { name:"판포항 횟집",  type:"해산물", distance:"0.5km",rating:4.7, phone:"064-796-XXXX" },
+      { name:"제주흑돼지마당",type:"한식",  distance:"4km",  rating:4.5, phone:"064-796-XXXX" }
+    ]
+  },
+
+  /* ── 9. 패션 및 쇼핑 취향 ───────────────────────────────── */
+  fashion: {
+    clothing_size:  { top:"105 (L)", bottom:"34", jacket:"105" },
+    shoe_size_mm:   270,
+    shoe_type_pref: ["가죽 구두", "가죽 샌들 (여름)", "운동화 (일상)"],
+    style:          "캐주얼-비즈니스 혼합, 단색 선호",
+    color_pref:     ["네이비", "차콜", "베이지", "화이트"],
+    brands:         ["빈폴", "지오다노", "유니클로"],
+    shopping_pref:  "오프라인 + 온라인 혼용",
+    online_stores:  ["쿠팡", "네이버쇼핑", "무신사"],
+    annual_clothing_budget: 800_000
+  },
+
+  /* ── 10. 취미 및 여가 ─────────────────────────────────────── */
+  hobbies: [
+    {
+      name:         "바다 수영",
+      frequency:    "주 3회 (5월~10월)",
+      location:     "판포 포구, 협재 해수욕장",
+      note:         "이른 아침 6시~7시"
+    },
+    {
+      name:         "제주 올레길 걷기",
+      frequency:    "주 2회",
+      routes:       ["올레 14코스 (한림-한경)", "올레 13코스 (저지-한림)"],
+      equipment:    "트레킹화, 스틱, 배낭"
+    },
+    {
+      name:         "소프트웨어 개발",
+      frequency:    "매일",
+      tools:        ["VS Code", "Python", "JavaScript", "PowerShell"],
+      projects:     ["K-Law", "OpenHash", "Gopang"]
+    },
+    {
+      name:         "독서",
+      genres:       ["IT/기술", "경제", "역사", "철학"],
+      books_per_month: 2,
+      preferred_format: "종이책"
+    },
+    {
+      name:         "바둑",
+      level:        "아마 3단",
+      frequency:    "주 1회 (온라인)"
+    }
+  ],
+
+  /* ── 11. 디지털 서비스 ───────────────────────────────────── */
+  digital: {
+    devices: [
+      { type:"스마트폰",  model:"iPhone 15 Pro",    os:"iOS 18" },
+      { type:"노트북",    model:"MacBook Pro 16 M3", os:"macOS Sequoia" },
+      { type:"데스크탑",  model:"Windows PC",        os:"Windows 11" },
+      { type:"태블릿",    model:"iPad Air 5세대",    os:"iPadOS 18" }
+    ],
+    subscriptions: [
+      { name:"Claude Pro",  price:28_000, cycle:"월" },
+      { name:"GitHub",      price:10_800, cycle:"월" },
+      { name:"넷플릭스",    price:17_000, cycle:"월" },
+      { name:"Notion",      price:16_000, cycle:"월" },
+      { name:"DeepSeek API",price:0,      cycle:"사용량 기반" }
+    ],
+    api_keys: [
+      { service:"DeepSeek", key:"sk-e4a6f005aecf43d4aa60e77bb71de14c",
+        note:"테스트용 일회성", stored:"PDV 암호화" },
+      { service:"Anthropic Claude", key:"[설정 창에서 입력]", stored:"PDV 암호화" }
+    ],
+    cloud: ["iCloud 200GB", "Google Drive 100GB", "GitHub"]
+  },
+
+  /* ── 12. 공공 서비스 및 기관 관계 ───────────────────────── */
+  government: {
+    resident_registration: "제주시 한경면",
+    tax_office:           "제주세무서",
+    health_insurance:     "국민건강보험공단 제주지사",
+    pension:              "국민연금공단 제주지사",
+    passport: {
+      number:             "M XXXXXXXX",     // 가상
+      issued:             "2022-03-15",
+      expiry:             "2032-03-14",
+      issued_by:          "제주시청"
+    },
+    driver_license: {
+      number:             "XX-XXXXXXXX",
+      class:             "1종 보통",
+      issued:             "1988-05-20",
+      expiry:             "2028-10-04"
+    },
+    military:             "만기 전역 (1986-1988, 육군 병장)",
+    preferred_institutions: {
+      hospital:           "제주한라병원",
+      bank:               "KB국민은행 한림지점",
+      post:               "한림우체국",
+      police:             "한림파출소",
+      fire:               "한림119안전센터"
+    }
+  },
+
+  /* ── 13. 사회적 관계 및 연락처 ──────────────────────────── */
+  contacts: [
+    { name:"도미래",    relation:"배우자",   phone:"010-8821-4433", gopang_id:"미래씨" },
+    { name:"임꺽정",    relation:"변호사",   phone:"010-XXXX-XXXX", gopang_id:"임변호사", org:"제주법률사무소" },
+    { name:"김성민",    relation:"주치의",   phone:"064-740-XXXX",  org:"제주한라병원 내과" },
+    { name:"이재무",    relation:"세무사",   phone:"064-796-XXXX",  gopang_id:"이세무사" },
+    { name:"박기술",    relation:"동료개발자",phone:"010-XXXX-XXXX", gopang_id:"박개발" },
+    { name:"홍길동",    relation:"거래처",   phone:"010-XXXX-XXXX", gopang_id:"길동이야" }
+  ],
+  organizations: [
+    { name:"AI City Inc.",         role:"대표이사",    biz_no:"616-81-XXXXX" },
+    { name:"K-Law 컨소시엄",       role:"창시자",      note:"법률 AI 공동체" },
+    { name:"OpenHash 컨소시엄",    role:"창시자",      note:"분산원장 프로토콜" },
+    { name:"제주 SW 개발자 모임",  role:"회원",        frequency:"월 1회" }
+  ],
+
+  /* ── 14. 여행 및 이동 선호 ───────────────────────────────── */
+  travel: {
+    passport_valid:     true,
+    preferred_transport:["개인차량", "버스", "택시 (급할 때)"],
+    frequent_routes: [
+      { from:"판포리",   to:"제주시내",  method:"버스 (202번)",    time_min:50 },
+      { from:"판포리",   to:"한림읍내",  method:"도보 또는 차량",  time_min:10 },
+      { from:"판포리",   to:"제주공항",  method:"버스 또는 택시",  time_min:60 }
+    ],
+    taxi_pref:          "카카오택시 (앱 호출)",
+    overseas_recent: [
+      { dest:"일본 도쿄", year:2023, purpose:"관광" },
+      { dest:"미국 샌프란시스코", year:2022, purpose:"IT 컨퍼런스" }
+    ],
+    preferred_airline:  "대한항공",
+    preferred_seat:     "통로석",
+    travel_insurance:   "해외여행보험 (출발 전 단기 가입)"
+  },
+
+  /* ── 15. 디지털 서명 ─────────────────────────────────────── */
+  digital_signature: {
+    algorithm:          "ECDSA P-256",
+    public_key:         "04:A3:F2:...(공개키 placeholder)...",
+    private_key:        "[PDV 암호화 저장 — 절대 외부 전송 금지]",
+    cert_issued:        "2026-05-21",
+    cert_expiry:        "2028-05-21",
+    gopang_guid:        "fd6f:7068:6173:5000:0052:0032:0001:00F3",
+    trust_level:        0,  // L0 (초기, 향후 스테이킹으로 상향)
+    signing_policy:     "모든 공식 요청·계약·신청서 자동 서명"
+  },
+
+  /* ── 16. AI 비서 설정 ────────────────────────────────────── */
+  ai_settings: {
+    default_llm:        "deepseek",
+    default_model:      "deepseek-chat",
+    language:           "한국어",
+    greeting:           "도영민 님",
+    auto_pay_limit:     50_000,
+    manual_pay_limit:   500_000,
+    location_update:    "요청마다 자동",
+    pdv_record:         "모든 대화 자동 기록",
+    privacy_level:      "기본 (K-익명성)",
+    notifications: {
+      medication_reminder: "매일 07:30",
+      bill_due_reminder:   "납부일 3일 전",
+      appointment_reminder:"예약 30분 전",
+      car_service_reminder:"서비스 1개월 전"
+    }
+  },
+
+  /* ── 17. 현재 위치 ───────────────────────────────────────── */
+  location: {
+    current:            "제주시 한경면 판포중1길 20-1",
+    gps_approx:         "33.3617° N, 126.1728° E",
+    timezone:           "Asia/Seoul (UTC+9)",
+    last_updated:       "2026-05-21T00:00:00Z"
+  },
+
+  /* ── 18. PDV 메타데이터 ──────────────────────────────────── */
+  pdv_meta: {
+    version:            "1.0",
+    created:            "2026-05-21T00:00:00Z",
+    last_updated:       "2026-05-21T00:00:00Z",
+    total_records:      0,
+    genesis_hash:       "pending",
+    openhash_tx:        "PENDING",
+    encryption:         "AES-256-GCM (로컬)",
+    backup:             "미설정 (추후 OpenHash 연동)"
+  }
+};
+
+/* ── PDV 초기화 함수 ─────────────────────────────────────────── */
+function initPDVWithUserData() {
+  // 기존 PDV 덮어쓰기 방지
+  if (localStorage.getItem('gopang_pdv_initialized') === '2') return;
+
+  // 사용자 프로필 저장
+  localStorage.setItem('gopang_user', JSON.stringify({
+    name:       PDV_INIT_DATA.identity.name,
+    id:         PDV_INIT_DATA.identity.gopang_id,
+    birth:      PDV_INIT_DATA.identity.birth,
+    address:    PDV_INIT_DATA.identity.address.road,
+    phone:      PDV_INIT_DATA.identity.phone,
+    blood:      PDV_INIT_DATA.health.blood_type + '형',
+    height:     PDV_INIT_DATA.health.height_cm,
+    weight:     PDV_INIT_DATA.health.weight_kg,
+    family:     PDV_INIT_DATA.family[0]?.name + ' (배우자)',
+    car:        PDV_INIT_DATA.vehicle.make + ' ' + PDV_INIT_DATA.vehicle.model + ' ' + PDV_INIT_DATA.vehicle.fuel,
+    job:        PDV_INIT_DATA.career.current_job,
+    education:  PDV_INIT_DATA.education[0]?.level,
+    major:      PDV_INIT_DATA.education[0]?.major,
+    hobby:      PDV_INIT_DATA.hobbies.map(h=>h.name).join(', '),
+    email:      PDV_INIT_DATA.identity.email
+  }));
+
+  // 전체 PDV 데이터 저장
+  localStorage.setItem('gopang_pdv_full', JSON.stringify(PDV_INIT_DATA));
+
+  // API 키 저장
+  localStorage.setItem('gopang_ak', 'sk-e4a6f005aecf43d4aa60e77bb71de14c');
+  localStorage.setItem('gopang_llm', 'deepseek');
+
+  // 위치 저장
+  localStorage.setItem('gopang_last_location', PDV_INIT_DATA.identity.address.road);
+
+  // 초기화 완료 플래그
+  localStorage.setItem('gopang_pdv_initialized', '2');
+
+  console.log('PDV 초기화 완료 — 도영민 (@체제수리공)');
+}
+
+
 /* ══ 디폴트 사용자 프로필 (시뮬레이션) ══ */
 const DEFAULT_USER = {
   name:        '도영민',
@@ -3449,6 +5056,8 @@ function renderProfile(){
 function buildSP00WithUser(){
   const u   = loadUserProfile();
   const age = calcAge(u.birth);
+  // PDV 전체 데이터 로드
+  const pdvFull = JSON.parse(localStorage.getItem('gopang_pdv_full') || 'null');
   const llm = localStorage.getItem('gopang_llm') || 'deepseek';
   const autoPayLimit  = localStorage.getItem('gopang_pay_auto')  || '50000';
   const manualPayLimit= localStorage.getItem('gopang_pay_manual')|| '500000';
@@ -3456,32 +5065,72 @@ function buildSP00WithUser(){
   // 현재 위치 (최선 추정)
   const lastLoc = localStorage.getItem('gopang_last_location') || u.address;
 
+    // PDV 상세 정보 구성
+  const health  = pdvFull ? pdvFull.health   : null;
+  const finance = pdvFull ? pdvFull.finance  : null;
+  const food    = pdvFull ? pdvFull.food     : null;
+  const vehicle = pdvFull ? pdvFull.vehicle  : null;
+  const hobbies = pdvFull && pdvFull.hobbies ? pdvFull.hobbies.map(function(h){return h.name;}).join(', ') : u.hobby;
+  const medList = health && health.medications ? health.medications.map(function(m){return m.name+' '+m.dose;}).join(', ') : '없음';
+  const accBal  = finance && finance.accounts ? (finance.accounts.filter(function(a){return a.primary;})[0] || {}).balance_krw || 0 : 0;
+  const nearRest= food && food.nearby_restaurants ? food.nearby_restaurants.map(function(r){return r.name+'('+r.type+')';}).join(', ') : '';
+  const idInfo  = pdvFull ? pdvFull.identity : {};
+  const carInfo = pdvFull ? pdvFull.vehicle  : {};
+  const dsig    = pdvFull ? pdvFull.digital_signature : {};
+
   return SP00_PROMPT + `
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-## 현재 사용자 컨텍스트 (실시간)
+## PDV 사용자 컨텍스트 (실시간 인출)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-이름: ${u.name} (@${u.id}) | ${age}세 | ${u.blood}형
-주거지: ${u.address}
-현재위치: ${lastLoc}
-직업: ${u.job} | 학력: ${u.education} · ${u.major}
-가족: ${u.family} | 차량: ${u.car}
-취미: ${u.hobby}
 
-## 재무 설정
-소액 자동결제 한도: ${parseInt(autoPayLimit).toLocaleString()}원 이하 → 자동
-대액 승인 한도: ${parseInt(manualPayLimit).toLocaleString()}원 초과 → 필수 승인
+[신원]
+이름: ${u.name} (@${u.id}) | 생년월일: ${u.birth} (${age}세) | 혈액형: ${u.blood}형
+주소: ${u.address} | 현재위치: ${lastLoc}
+전화: ${idInfo.phone||u.phone} | 이메일: ${idInfo.email||''}
 
-## 현재 LLM
-디폴트: DeepSeek V3 Pro (deepseek-chat)
-활성 모델: ${llm}
+[직업]
+${u.job} | ${(pdvFull&&pdvFull.career)?pdvFull.career.company:''} ${(pdvFull&&pdvFull.career)?pdvFull.career.position:''}
+역할: ${(pdvFull&&pdvFull.career&&pdvFull.career.role)?pdvFull.career.role.join(', '):''}
+
+[가족]
+배우자: ${(pdvFull&&pdvFull.family&&pdvFull.family[0])?pdvFull.family[0].name:''} (${(pdvFull&&pdvFull.family&&pdvFull.family[0])?pdvFull.family[0].phone:''})
+
+[건강]
+신장 ${(health?health.height_cm:u.height)}cm | 체중 ${(health?health.weight_kg:u.weight)}kg | 신발 ${(health?health.shoe_size_mm:270)}mm
+질환: ${(health&&health.chronic_diseases&&health.chronic_diseases[0])?health.chronic_diseases[0].name:'없음'}
+복용약: ${medList}
+주치의: ${(pdvFull&&pdvFull.government&&pdvFull.government.preferred_institutions)?pdvFull.government.preferred_institutions.hospital:''}
+
+[차량]
+${carInfo.make||''} ${carInfo.model||u.car} ${carInfo.fuel||''} (${carInfo.year||''})
+번호판: ${carInfo.plate||''} | LPG 충전소: ${carInfo.lpg_station||''}
+
+[재무]
+주거래은행: ${(finance&&finance.accounts)?finance.accounts.filter(function(a){return a.primary;})[0].bank:'KB국민은행'}
+주계좌 잔액: ${accBal.toLocaleString()}원
+소액 자동결제: ${parseInt(autoPayLimit).toLocaleString()}원 이하 자동
+대액 승인: ${parseInt(manualPayLimit).toLocaleString()}원 초과 필수 승인
+
+[식성]
+즐겨먹는 음식: ${(food&&food.favorites)?food.favorites.join(', '):''}
+싫어하는 음식: ${(food&&food.dislikes)?food.dislikes.join(', '):''}
+주변 식당: ${nearRest}
+배달 주소: ${(food&&food.delivery_address)?food.delivery_address:u.address}
+
+[취미] ${hobbies}
+
+[디지털 서명]
+GUID: ${dsig.gopang_guid||''} | Trust Level: ${dsig.trust_level||0}
+서명 알고리즘: ${dsig.algorithm||'ECDSA P-256'}
 
 ## 지시 원칙
-1. 사용자를 "${u.name}" 또는 "도 선생님"으로 호칭하세요.
-2. 위치 기반 서비스 요청 시 현재위치(${lastLoc})를 기준으로 처리하세요.
-3. 결제는 ${parseInt(autoPayLimit).toLocaleString()}원 이하 자동, 초과 시 승인을 구하세요.
-4. 모든 응답 말미에 PDV 기록 완료를 표시하세요.
-5. 전문 분야 질문은 해당 인스턴스(SP-01~SP-11)로 라우팅하세요.`;
+1. 사용자를 "도영민 님" 또는 "도 선생님"으로 호칭하세요.
+2. 모든 정보는 PDV에서 인출합니다. 사용자에게 개인정보를 묻지 마세요.
+3. 위치 기반 서비스는 현재위치(${lastLoc})를 기준으로 처리하세요.
+4. ${parseInt(autoPayLimit).toLocaleString()}원 이하 자동결제, 초과 시 승인 요청.
+5. 전문 분야는 해당 AI 비서(SP-01~SP-11)로 라우팅하세요.
+6. 모든 응답 말미에 PDV 기록 완료를 표시하세요.`;
 }
 
 
