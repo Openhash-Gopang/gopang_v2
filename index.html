@@ -216,8 +216,9 @@
       font-size: 13px;
       font-weight: 600;
       letter-spacing: 0.01em;
-      color: var(--tint);
+      color: var(--label-3);        /* 초기: 비활성 회색 */
       gap: 5px;
+      transition: color 0.3s, background 0.3s;
     }
     .btn-ai .ai-dot {
       width: 6px; height: 6px;
@@ -953,12 +954,78 @@ let _deferredInstallPrompt = null;   // beforeinstallprompt 이벤트 보관
 const _INSTALL_DISMISSED_KEY = 'gopang_install_dismissed';
 const _INSTALL_DONE_KEY      = 'gopang_installed';
 
-// ── Service Worker 등록 ────────────────────────────────────
+// ── Service Worker 등록 + 자동 갱신 ──────────────────────────
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js', { scope: '/' })
-      .then(reg => console.log('[PWA] SW 등록 완료:', reg.scope))
-      .catch(err => console.warn('[PWA] SW 등록 실패:', err));
+  window.addEventListener('load', async () => {
+    try {
+      const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+      console.log('[PWA] SW 등록 완료:', reg.scope);
+
+      // ★ 새 SW가 waiting 상태로 들어오면 → 갱신 알림 표시
+      reg.addEventListener('updatefound', () => {
+        const newSW = reg.installing;
+        if (!newSW) return;
+        newSW.addEventListener('statechange', () => {
+          if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+            // 구버전 SW가 제어 중 + 새 SW 설치 완료 → 갱신 배너 표시
+            _showUpdateBanner();
+          }
+        });
+      });
+
+      // ★ SW가 교체 완료(controllerchange) → 자동 새로고침
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        console.log('[PWA] 새 버전 감지 — 자동 새로고침');
+        window.location.reload();
+      });
+
+    } catch (err) {
+      console.warn('[PWA] SW 등록 실패:', err);
+    }
+  });
+}
+
+// ── 앱 갱신 알림 배너 ────────────────────────────────────────
+function _showUpdateBanner() {
+  // 이미 표시 중이면 중복 방지
+  if (document.getElementById('update-banner')) return;
+
+  const banner = document.createElement('div');
+  banner.id = 'update-banner';
+  banner.style.cssText = `
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+    background: #1C1C1E; border: 1px solid #3A3A3C;
+    border-radius: 14px; padding: 12px 20px;
+    display: flex; align-items: center; gap: 12px;
+    font-size: 14px; color: #F2F2F7;
+    box-shadow: 0 8px 32px rgba(0,0,0,.6);
+    z-index: 9999; white-space: nowrap;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  `;
+  banner.innerHTML = `
+    <span>🆕 새 버전이 있습니다</span>
+    <button onclick="_applyUpdate()" style="
+      background:#0A84FF; color:#fff; border:none;
+      border-radius:8px; padding:6px 14px;
+      font-size:13px; font-weight:600; cursor:pointer;">
+      지금 업데이트
+    </button>
+    <button onclick="this.parentElement.remove()" style="
+      background:transparent; color:#8E8E93; border:none;
+      font-size:18px; cursor:pointer; padding:0 4px;">✕</button>
+  `;
+  document.body.appendChild(banner);
+}
+
+// ── 업데이트 적용 (skipWaiting 메시지 전송) ──────────────────
+function _applyUpdate() {
+  navigator.serviceWorker.ready.then((reg) => {
+    if (reg.waiting) {
+      // SW에 skipWaiting 지시 → controllerchange → 자동 새로고침
+      reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+    } else {
+      window.location.reload();
+    }
   });
 }
 
@@ -1457,21 +1524,12 @@ async function callAI(userText, imageFile = null) {
   }
 
   // ── 메시지 구성 ─────────────────────────────────────────
-  // Prompt Caching: system 메시지에 cache_control 마커 추가
-  // DeepSeek은 첫 호출 후 해당 prefix를 서버 캐시에 보관 → 이후 TTFT 대폭 단축
+  // DeepSeek은 system content를 문자열로 요구함
+  // (Anthropic 방식 cache_control 배열 불지원 → 400 오류 원인)
   const systemContent = CFG.system + locNote;
   const messages = [
-    {
-      role: 'system',
-      content: [
-        {
-          type: 'text',
-          text: systemContent,
-          cache_control: { type: 'ephemeral' },  // Prompt Caching 마커
-        },
-      ],
-    },
-    ...history.slice(-12),   // 최근 12턴 (토큰 절약 — 이미지 포함 시 더 중요)
+    { role: 'system', content: systemContent },
+    ...history.slice(-12),
     { role: 'user', content: userContent },
   ];
 
@@ -1533,17 +1591,20 @@ async function callAI(userText, imageFile = null) {
       }
     }
 
-    if (!fullReply) fullReply = '응답 없음';
+    if (!fullReply) fullReply = '(응답 없음)';
     history.push({ role: 'assistant', content: fullReply });
-    bubble.classList.remove('streaming');  // 커서 깜빡임 제거
-
-    // 캐시 사용 여부 콘솔 확인 (디버그용)
-    // DeepSeek은 cached_tokens 필드로 캐시 적중 여부를 반환
-    // stream 모드에서는 마지막 chunk의 usage 필드에서 확인 가능
+    bubble.classList.remove('streaming');
 
   } catch (err) {
     hideTyping();
-    appendBubble('ai', `⚠️ API 오류: ${err.message}`);
+    // 스트리밍 버블이 이미 생성된 경우 그 버블에 오류 표시
+    const existingBubble = document.querySelector('.bubble-ai.streaming');
+    if (existingBubble) {
+      existingBubble.classList.remove('streaming');
+      existingBubble.textContent = `⚠️ API 오류: ${err.message}`;
+    } else {
+      appendBubble('ai', `⚠️ API 오류: ${err.message}`);
+    }
     console.error('[AI]', err);
   }
 }
