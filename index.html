@@ -1,377 +1,1009 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>고팡 v2 — AI 법률·의료 비서</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>고팡</title>
   <style>
-    /* ── 전역 리셋 + 변수 ─────────────────────────────── */
+    /* ── Apple HIG 토큰 ─────────────────────────────────── */
+    :root {
+      --bg:           #000000;
+      --bg-elevated:  rgba(28,28,30,0.92);
+      --bg-glass:     rgba(44,44,46,0.72);
+      --bg-input:     rgba(58,58,60,0.9);
+      --sep:          rgba(255,255,255,0.08);
+      --sep-strong:   rgba(255,255,255,0.14);
+      --label:        rgba(255,255,255,0.96);
+      --label-2:      rgba(255,255,255,0.55);
+      --label-3:      rgba(255,255,255,0.28);
+      --tint:         #0A84FF;
+      --tint-dim:     rgba(10,132,255,0.18);
+      --green:        #30D158;
+      --red:          #FF453A;
+      --yellow:       #FFD60A;
+      --orange:       #FF9F0A;
+      --r-sm:         10px;
+      --r-md:         14px;
+      --r-lg:         20px;
+      --r-xl:         26px;
+      --blur:         saturate(180%) blur(24px);
+      --blur-sm:      saturate(160%) blur(12px);
+      --font:         -apple-system, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+      --font-display: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+      --ease-spring:  cubic-bezier(0.34, 1.56, 0.64, 1);
+      --ease-out:     cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    :root {
-      --bg-primary:   #0f1117;
-      --bg-secondary: #1a1d27;
-      --bg-panel:     #20243a;
-      --border:       #2e3250;
-      --text-primary: #e8eaf6;
-      --text-muted:   #8892b0;
-      --accent:       #5c6bc0;
-      --accent-glow:  #7986cb;
-      --s0: #27ae60; --s1: #f39c12; --s2: #e67e22; --s3: #e74c3c;
-      --radius: 10px;
-      --transition: 0.2s ease;
-    }
-
-    body {
-      font-family: 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--label);
+      font-family: var(--font);
+      -webkit-font-smoothing: antialiased;
       overflow: hidden;
     }
 
-    /* ── 헤더 ──────────────────────────────────────────── */
-    .app-header {
+    /* ── 앱 레이아웃 ────────────────────────────────────── */
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      position: relative;
+    }
+
+    /* ── 상단 여백 (헤더 없음 — 요구사항) ─────────────── */
+    .top-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 52px;
+      z-index: 100;
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 12px 20px;
-      background: var(--bg-secondary);
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-    .app-logo { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.5px; }
-    .app-logo span { color: var(--accent-glow); }
-    .boot-status {
-      margin-left: auto;
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .boot-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: var(--s0);
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
-    /* ── Shell 컨테이너 ─────────────────────────────────── */
-    #gopang-shell { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
-
-    .shell-container { display: flex; flex-direction: column; height: 100%; }
-
-    /* ── 탭 바 ─────────────────────────────────────────── */
-    .tab-bar {
-      display: flex;
-      gap: 4px;
-      padding: 8px 16px 0;
-      background: var(--bg-secondary);
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-      overflow-x: auto;
-    }
-    .tab-btn {
-      padding: 8px 16px;
-      border: 1px solid var(--border);
-      border-bottom: none;
-      border-radius: var(--radius) var(--radius) 0 0;
-      background: var(--bg-primary);
-      color: var(--text-muted);
-      cursor: pointer;
-      font-size: 0.85rem;
-      transition: var(--transition);
-      white-space: nowrap;
-    }
-    .tab-btn:hover { background: var(--bg-panel); color: var(--text-primary); }
-    .tab-btn.active {
-      background: var(--bg-panel);
-      color: var(--text-primary);
-      border-color: var(--accent);
-    }
-    .tab-add { opacity: 0.4; cursor: not-allowed !important; }
-
-    /* ── 메인 ───────────────────────────────────────────── */
-    .shell-main {
-      flex: 1;
-      display: grid;
-      grid-template-columns: 1fr 300px;
-      gap: 0;
-      overflow: hidden;
-    }
-
-    /* ── 메신저 패널 ────────────────────────────────────── */
-    .messenger-panel {
-      display: flex;
-      flex-direction: column;
-      border-right: 1px solid var(--border);
-      overflow: hidden;
-    }
-
-    .message-list {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .message {
-      max-width: 75%;
-      padding: 10px 14px;
-      border-radius: var(--radius);
-      font-size: 0.9rem;
-      line-height: 1.5;
-    }
-    .message-user {
-      align-self: flex-end;
-      background: var(--accent);
-      color: #fff;
-    }
-    .message-ai {
-      align-self: flex-start;
-      background: var(--bg-panel);
-      border: 1px solid var(--border);
-    }
-
-    /* ── 위험 배지 ──────────────────────────────────────── */
-    .risk-badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      padding: 8px 16px;
-      background: var(--bg-secondary);
-      border-top: 1px solid var(--border);
-    }
-    .risk-badge {
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 0.78rem;
-      font-weight: 600;
-      background: var(--s0);
-      color: #fff;
-    }
-
-    /* ── 입력 영역 ──────────────────────────────────────── */
-    .input-area {
-      padding: 12px 16px;
-      background: var(--bg-secondary);
-      border-top: 1px solid var(--border);
-    }
-    textarea {
-      width: 100%;
-      background: var(--bg-panel);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      color: var(--text-primary);
-      padding: 10px;
-      font-size: 0.9rem;
-      resize: none;
-      outline: none;
-      transition: border-color var(--transition);
-    }
-    textarea:focus { border-color: var(--accent); }
-    .input-actions {
-      display: flex;
       justify-content: flex-end;
-      gap: 8px;
-      margin-top: 8px;
+      padding: 0 18px;
+      gap: 10px;
+      /* 완전 투명 — 내용 없음 */
     }
-    button {
-      padding: 7px 14px;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: var(--bg-panel);
-      color: var(--text-primary);
+
+    /* ── 우상단 버튼 그룹 ──────────────────────────────── */
+    .top-btn {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      border: none;
+      background: var(--bg-glass);
+      backdrop-filter: var(--blur-sm);
+      -webkit-backdrop-filter: var(--blur-sm);
+      color: var(--label);
       cursor: pointer;
-      font-size: 0.83rem;
-      transition: var(--transition);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px;
+      transition: background 0.15s, transform 0.12s var(--ease-spring);
+      -webkit-tap-highlight-color: transparent;
     }
-    button:hover { background: var(--bg-secondary); }
-    .btn-primary {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #fff;
+    .top-btn:hover  { background: rgba(255,255,255,0.12); }
+    .top-btn:active { transform: scale(0.93); }
+
+    .btn-ai {
+      width: auto;
+      padding: 0 14px;
+      border-radius: 20px;
+      font-size: 13px;
       font-weight: 600;
+      letter-spacing: 0.01em;
+      color: var(--tint);
+      gap: 5px;
     }
-    .btn-primary:hover { background: var(--accent-glow); }
+    .btn-ai .ai-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--tint);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+    .btn-ai.active { background: var(--tint-dim); color: var(--tint); }
+    @keyframes pulse-dot {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.5; transform: scale(0.7); }
+    }
 
-    /* ── 결과 패널 ──────────────────────────────────────── */
-    .result-panel {
+    /* ── 메시지 영역 ────────────────────────────────────── */
+    #message-list {
+      flex: 1;
       overflow-y: auto;
-      padding: 16px;
-      background: var(--bg-secondary);
+      padding: 60px 0 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      scroll-behavior: smooth;
     }
-    .result-panel h3 {
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--text-muted);
-      margin-bottom: 10px;
-    }
-    .legal-flags { font-size: 0.85rem; }
-    .flag-item {
-      padding: 6px 10px;
-      margin-bottom: 6px;
-      background: var(--bg-panel);
-      border-left: 3px solid var(--s2);
-      border-radius: 0 var(--radius) var(--radius) 0;
-      list-style: none;
-    }
-    .no-flags { color: var(--text-muted); font-size: 0.83rem; }
+    #message-list::-webkit-scrollbar { width: 0; }
 
-    /* ── 상태 바 ────────────────────────────────────────── */
-    .status-bar {
+    .msg-row {
+      display: flex;
+      padding: 3px 16px;
+      animation: msg-in 0.28s var(--ease-out) both;
+    }
+    @keyframes msg-in {
+      from { opacity:0; transform: translateY(10px) scale(0.97); }
+      to   { opacity:1; transform: translateY(0) scale(1); }
+    }
+
+    .msg-row.user  { justify-content: flex-end; }
+    .msg-row.ai    { justify-content: flex-start; }
+
+    .bubble {
+      max-width: 72%;
+      padding: 10px 14px;
+      border-radius: var(--r-lg);
+      font-size: 15px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .bubble-user {
+      background: var(--tint);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+    .bubble-ai {
+      background: var(--bg-glass);
+      backdrop-filter: var(--blur-sm);
+      -webkit-backdrop-filter: var(--blur-sm);
+      color: var(--label);
+      border-bottom-left-radius: 4px;
+    }
+
+    /* 위험 배지 (버블 아래 inline) */
+    .risk-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 4px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .risk-chip.s0 { background: rgba(48,209,88,0.18);  color: var(--green);  }
+    .risk-chip.s1 { background: rgba(255,214,10,0.18); color: var(--yellow); }
+    .risk-chip.s2 { background: rgba(255,159,10,0.18); color: var(--orange); }
+    .risk-chip.s3 { background: rgba(255,69,58,0.18);  color: var(--red);    }
+
+    /* AI 타이핑 인디케이터 */
+    .typing-indicator {
+      display: flex; align-items: center; gap: 4px;
+      padding: 12px 16px;
+    }
+    .typing-indicator span {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--label-2);
+      animation: bounce 1.2s ease-in-out infinite;
+    }
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%,80%,100% { transform: translateY(0); }
+      40%          { transform: translateY(-5px); }
+    }
+
+    /* ── 하단 입력 영역 (Apple Messages / Claude.ai 스타일) */
+    .input-dock {
+      flex-shrink: 0;
+      padding: 8px 12px 20px;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      border-top: 1px solid var(--sep);
+    }
+
+    /* 상태 바 (한 줄, 소형) */
+    .status-strip {
       display: flex;
       align-items: center;
-      gap: 16px;
-      padding: 8px 16px;
-      background: var(--bg-secondary);
-      border-top: 1px solid var(--border);
-      font-size: 0.78rem;
-      color: var(--text-muted);
+      gap: 10px;
+      padding: 0 4px 8px;
+      font-size: 11px;
+      color: var(--label-3);
+      letter-spacing: 0.01em;
+    }
+    .status-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--green);
       flex-shrink: 0;
-      overflow-x: auto;
-      flex-wrap: wrap;
     }
-    .status-bar code {
-      font-family: 'Courier New', monospace;
-      color: var(--accent-glow);
-    }
-    .btn-evidence {
-      margin-left: auto;
-      background: linear-gradient(135deg, #5c6bc0, #7986cb);
-      color: #fff;
-      border: none;
-      padding: 6px 14px;
-      font-size: 0.8rem;
-      font-weight: 600;
+    .status-strip code {
+      font-family: 'SF Mono', 'Menlo', monospace;
+      font-size: 10px;
+      color: var(--label-3);
     }
 
-    /* ── 부팅 스플래시 ──────────────────────────────────── */
-    #boot-splash {
+    /* 입력 컨테이너 */
+    .input-wrap {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      background: var(--bg-input);
+      border-radius: var(--r-xl);
+      padding: 6px 6px 6px 10px;
+      border: 1px solid var(--sep-strong);
+      transition: border-color 0.15s;
+    }
+    .input-wrap:focus-within {
+      border-color: rgba(10,132,255,0.5);
+    }
+
+    /* 좌측 액션 버튼 */
+    .input-actions-left {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      flex-shrink: 0;
+      padding-bottom: 2px;
+    }
+    .ia-btn {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      color: var(--label-2);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      transition: color 0.12s, background 0.12s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .ia-btn:hover  { color: var(--label); background: rgba(255,255,255,0.06); }
+    .ia-btn:active { transform: scale(0.9); }
+
+    /* 버전 선택 드롭다운 */
+    .version-select {
+      background: transparent;
+      border: none;
+      color: var(--label-2);
+      font-size: 12px;
+      font-family: var(--font);
+      cursor: pointer;
+      padding: 4px 2px;
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .version-select:hover { color: var(--label); }
+    .version-select option { background: #1c1c1e; }
+
+    /* textarea */
+    #msg-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--label);
+      font-family: var(--font);
+      font-size: 16px;
+      line-height: 1.4;
+      resize: none;
+      max-height: 140px;
+      min-height: 22px;
+      overflow-y: auto;
+      padding: 4px 0;
+      align-self: flex-end;
+    }
+    #msg-input::placeholder { color: var(--label-3); }
+    #msg-input::-webkit-scrollbar { width: 0; }
+
+    /* 전송 버튼 */
+    .send-btn {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: var(--tint);
+      color: #fff;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-size: 15px;
+      transition: background 0.15s, transform 0.1s var(--ease-spring), opacity 0.15s;
+      align-self: flex-end;
+    }
+    .send-btn:disabled { background: var(--bg-glass); opacity: 0.4; }
+    .send-btn:not(:disabled):hover  { background: #0071e3; }
+    .send-btn:not(:disabled):active { transform: scale(0.88); }
+
+    /* ── 설정 패널 ──────────────────────────────────────── */
+    .settings-overlay {
       position: fixed; inset: 0;
-      background: var(--bg-primary);
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      gap: 20px;
-      z-index: 1000;
-      transition: opacity 0.4s ease;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 200;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.22s;
     }
-    #boot-splash.hidden { opacity: 0; pointer-events: none; }
-    .splash-logo { font-size: 2.5rem; font-weight: 800; }
-    .splash-logo span { color: var(--accent-glow); }
-    .splash-msg { color: var(--text-muted); font-size: 0.9rem; }
-    .progress-bar {
-      width: 240px; height: 3px;
-      background: var(--border);
-      border-radius: 3px;
-      overflow: hidden;
+    .settings-overlay.open {
+      opacity: 1;
+      pointer-events: all;
     }
-    .progress-fill {
-      height: 100%; width: 0%;
-      background: linear-gradient(90deg, var(--accent), var(--accent-glow));
-      border-radius: 3px;
-      transition: width 0.3s ease;
+    .settings-sheet {
+      width: 100%;
+      max-width: 520px;
+      background: var(--bg-elevated);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      border-radius: var(--r-xl) var(--r-xl) 0 0;
+      padding: 20px 20px 40px;
+      transform: translateY(100%);
+      transition: transform 0.3s var(--ease-out);
+      border-top: 1px solid var(--sep-strong);
+    }
+    .settings-overlay.open .settings-sheet {
+      transform: translateY(0);
+    }
+
+    .sheet-handle {
+      width: 36px; height: 4px;
+      background: var(--sep-strong);
+      border-radius: 2px;
+      margin: 0 auto 20px;
+    }
+    .sheet-title {
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--label);
+      margin-bottom: 20px;
+      letter-spacing: -0.01em;
+    }
+
+    .setting-group {
+      margin-bottom: 20px;
+    }
+    .setting-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--label-2);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .setting-field {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--sep-strong);
+      border-radius: var(--r-md);
+      color: var(--label);
+      font-family: var(--font);
+      font-size: 15px;
+      padding: 11px 14px;
+      outline: none;
+      transition: border-color 0.15s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .setting-field:focus { border-color: var(--tint); }
+    .setting-field option { background: #1c1c1e; }
+
+    .setting-field-mono {
+      font-family: 'SF Mono', 'Menlo', monospace;
+      font-size: 13px;
+      letter-spacing: 0.01em;
+    }
+    .setting-field::placeholder { color: var(--label-3); }
+
+    .sheet-save {
+      width: 100%;
+      padding: 13px;
+      background: var(--tint);
+      border: none;
+      border-radius: var(--r-md);
+      color: #fff;
+      font-family: var(--font);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 4px;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .sheet-save:hover  { background: #0071e3; }
+    .sheet-save:active { transform: scale(0.98); }
+
+    /* ── AI 비서 시스템 패널 ────────────────────────────── */
+    .ai-overlay {
+      position: fixed; inset: 0;
+      z-index: 150;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .ai-overlay.open { opacity: 1; pointer-events: all; }
+    .ai-backdrop {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+    .ai-card {
+      position: relative;
+      width: 90%;
+      max-width: 380px;
+      background: var(--bg-elevated);
+      border-radius: var(--r-xl);
+      padding: 24px 20px 20px;
+      border: 1px solid var(--sep-strong);
+      transform: scale(0.94) translateY(8px);
+      transition: transform 0.24s var(--ease-spring);
+    }
+    .ai-overlay.open .ai-card { transform: scale(1) translateY(0); }
+
+    .ai-card-icon {
+      width: 48px; height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #0A84FF, #5E5CE6);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      margin-bottom: 14px;
+    }
+    .ai-card-title {
+      font-family: var(--font-display);
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 4px;
+    }
+    .ai-card-sub {
+      font-size: 13px;
+      color: var(--label-2);
+      margin-bottom: 18px;
+      line-height: 1.4;
+    }
+    .ai-card-btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: var(--r-md);
+      border: none;
+      font-family: var(--font);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 8px;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .ai-card-btn:active { transform: scale(0.97); }
+    .ai-card-btn-primary { background: var(--tint); color: #fff; }
+    .ai-card-btn-primary:hover { background: #0071e3; }
+    .ai-card-btn-secondary {
+      background: var(--bg-input);
+      color: var(--label-2);
+    }
+
+    /* ── 파일 첨부 미리보기 ─────────────────────────────── */
+    .attach-preview {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--bg-glass);
+      border-radius: var(--r-md);
+      margin-bottom: 8px;
+      font-size: 13px;
+      color: var(--label-2);
+    }
+    .attach-preview .remove-attach {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: var(--label-3);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 0;
+      width: auto; height: auto;
+      border-radius: 0;
     }
 
     /* ── 반응형 ─────────────────────────────────────────── */
-    @media (max-width: 700px) {
-      .shell-main { grid-template-columns: 1fr; }
-      .result-panel { display: none; }
+    @media (min-width: 680px) {
+      .input-dock { padding: 8px 20% 28px; }
+      #message-list { padding: 60px 16% 16px; }
     }
   </style>
 </head>
 <body>
+<div id="app">
 
-<!-- 부팅 스플래시 -->
-<div id="boot-splash">
-  <div class="splash-logo">고<span>팡</span> v2</div>
-  <div class="splash-msg" id="splash-msg">플랫폼 초기화 중...</div>
-  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
-</div>
-
-<!-- 앱 헤더 -->
-<header class="app-header">
-  <div class="app-logo">고<span>팡</span> v2</div>
-  <div class="boot-status">
-    <div class="boot-dot" id="boot-dot"></div>
-    <span id="boot-label">준비 중</span>
+  <!-- ── 상단 바 (빈 영역 + 우상단 버튼만) ───────────── -->
+  <div class="top-bar">
+    <!-- AI 비서 버튼 -->
+    <button class="top-btn btn-ai" id="btn-ai" onclick="toggleAI()" title="AI 비서">
+      <span class="ai-dot" id="ai-dot"></span>
+      AI
+    </button>
+    <!-- 설정 버튼 -->
+    <button class="top-btn" id="btn-settings" onclick="openSettings()" title="설정">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06
+                 a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09
+                 A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83
+                 l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09
+                 A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83
+                 l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09
+                 a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83
+                 l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09
+                 a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </button>
   </div>
-</header>
 
-<!-- Shell UI 마운트 포인트 -->
-<div id="gopang-shell">
-  <!-- shell-ui.js가 여기에 렌더링합니다 -->
+  <!-- ── 메시지 목록 ─────────────────────────────────── -->
+  <div id="message-list"></div>
+
+  <!-- ── 하단 입력 독 ───────────────────────────────── -->
+  <div class="input-dock">
+
+    <!-- 상태 스트립 -->
+    <div class="status-strip">
+      <div class="status-dot" id="status-dot"></div>
+      <span id="status-text">PDV 암호화</span>
+      <span>·</span>
+      <span>OpenHash <code id="hash-ref">대기중</code></span>
+      <span id="layer-lbl">L1</span>
+    </div>
+
+    <!-- 첨부 미리보기 -->
+    <div id="attach-preview" style="display:none" class="attach-preview">
+      <span>📎</span>
+      <span id="attach-name"></span>
+      <button class="remove-attach" onclick="removeAttach()">✕</button>
+    </div>
+
+    <!-- 입력 래퍼 -->
+    <div class="input-wrap">
+
+      <!-- 좌측 버튼 그룹 -->
+      <div class="input-actions-left">
+        <!-- + 첨부 -->
+        <button class="ia-btn" onclick="triggerAttach()" title="파일 첨부">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="16"/>
+            <line x1="8" y1="12" x2="16" y2="12"/>
+          </svg>
+        </button>
+
+        <!-- 버전 선택 -->
+        <select class="version-select" id="version-select" title="고팡 버전">
+          <option value="v2">고팡 v2</option>
+          <option value="v1">고팡 v1</option>
+        </select>
+
+        <!-- 마이크 -->
+        <button class="ia-btn" id="btn-mic" onclick="toggleMic()" title="음성 입력">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/>
+            <line x1="8" y1="23" x2="16" y2="23"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- 텍스트 입력 -->
+      <textarea id="msg-input"
+                placeholder="메시지를 입력하세요…"
+                rows="1"
+                oninput="autoResize(this); updateSendBtn()"
+                onkeydown="handleKey(event)"></textarea>
+
+      <!-- 전송 버튼 -->
+      <button class="send-btn" id="send-btn" onclick="sendMessage()" disabled>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+        </svg>
+      </button>
+    </div>
+
+    <input type="file" id="file-input" style="display:none"
+           accept=".pdf,.jpg,.png,.txt,.docx"
+           onchange="handleFileSelect(event)"/>
+  </div>
 </div>
 
-<script type="module">
-  // ── 스플래시 진행 관리 ──────────────────────────────────
-  const splash    = document.getElementById('boot-splash');
-  const splashMsg = document.getElementById('splash-msg');
-  const progress  = document.getElementById('progress-fill');
-  const bootDot   = document.getElementById('boot-dot');
-  const bootLabel = document.getElementById('boot-label');
+<!-- ── AI 비서 카드 ────────────────────────────────────── -->
+<div class="ai-overlay" id="ai-overlay">
+  <div class="ai-backdrop" onclick="closeAI()"></div>
+  <div class="ai-card">
+    <div class="ai-card-icon">🤖</div>
+    <div class="ai-card-title">AI 비서</div>
+    <div class="ai-card-sub" id="ai-card-sub">
+      DeepSeek v3을 AI 대화 상대로 연결합니다.<br>
+      고팡 법률·의료 분석과 함께 동작합니다.
+    </div>
+    <button class="ai-card-btn ai-card-btn-primary" onclick="activateAI()">
+      AI 비서 시작
+    </button>
+    <button class="ai-card-btn ai-card-btn-secondary" onclick="closeAI()">
+      취소
+    </button>
+  </div>
+</div>
 
-  const STEPS = [
-    [10, '코어 초기화 중...'],
-    [30, 'PDV + OpenHash 로드 중...'],
-    [50, '도메인 플러그인 등록 중...'],
-    [70, 'AI 비서 파이프라인 연결 중...'],
-    [85, '네트워크 + GDC 초기화 중...'],
-    [95, 'Shell UI 렌더링 중...'],
-    [100, '준비 완료'],
+<!-- ── 설정 시트 ──────────────────────────────────────── -->
+<div class="settings-overlay" id="settings-overlay" onclick="handleOverlayClick(event)">
+  <div class="settings-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">설정</div>
+
+    <div class="setting-group">
+      <div class="setting-label">LLM 모델</div>
+      <select class="setting-field" id="setting-model">
+        <option value="deepseek-chat">DeepSeek v3 (기본)</option>
+        <option value="deepseek-reasoner">DeepSeek R1</option>
+        <option value="gpt-4o">GPT-4o</option>
+        <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
+        <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+      </select>
+    </div>
+
+    <div class="setting-group">
+      <div class="setting-label">API 엔드포인트</div>
+      <select class="setting-field" id="setting-endpoint">
+        <option value="https://api.deepseek.com/v1">DeepSeek API</option>
+        <option value="https://api.openai.com/v1">OpenAI API</option>
+        <option value="https://api.anthropic.com/v1">Anthropic API</option>
+        <option value="custom">직접 입력</option>
+      </select>
+    </div>
+
+    <div class="setting-group" id="custom-endpoint-group" style="display:none">
+      <div class="setting-label">커스텀 엔드포인트 URL</div>
+      <input class="setting-field setting-field-mono" id="custom-endpoint-url"
+             type="text" placeholder="https://..."/>
+    </div>
+
+    <div class="setting-group">
+      <div class="setting-label">API Key</div>
+      <input class="setting-field setting-field-mono" id="setting-apikey"
+             type="password"
+             placeholder="sk-…"
+             autocomplete="off" spellcheck="false"/>
+    </div>
+
+    <div class="setting-group">
+      <div class="setting-label">시스템 프롬프트</div>
+      <textarea class="setting-field" id="setting-system"
+                rows="4"
+                style="resize:vertical; font-size:13px; line-height:1.5"
+                placeholder="AI 비서의 역할과 동작 방식을 정의하세요…"></textarea>
+    </div>
+
+    <button class="sheet-save" onclick="saveSettings()">저장</button>
+  </div>
+</div>
+
+<script>
+// ── 상태 ────────────────────────────────────────────────
+const CFG = {
+  apiKey:   'sk-e4a6f005aecf43d4aa60e77bb71de14c',
+  endpoint: 'https://api.deepseek.com/v1',
+  model:    'deepseek-chat',
+  system:   `당신은 고팡(Gopang) AI 법률·의료 비서입니다.
+한국 법률(형법, 민법, 주택임대차보호법, 근로기준법, 전기통신금융사기법 등)과
+의료법·약사법에 정통한 전문 AI 어시스턴트로서,
+사용자의 법률·의료 관련 질문에 정확하고 신뢰할 수 있는 정보를 제공합니다.
+위험한 상황(보이스피싱, 불법의료 등) 감지 시 즉시 경고합니다.
+항상 한국어로 답변하며, 전문적이지만 이해하기 쉽게 설명합니다.`,
+};
+
+let aiActive   = false;
+let micActive  = false;
+let attachFile = null;
+let recognition = null;
+const history  = [];   // { role, content }
+
+// ── 부트스트랩 연동 ─────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const { bootstrap } = await import('./src/app.js');
+    await bootstrap();
+    document.getElementById('status-dot').style.background = 'var(--green)';
+  } catch(e) {
+    document.getElementById('status-text').textContent = '오프라인 모드';
+    document.getElementById('status-dot').style.background = 'var(--yellow)';
+    console.warn('[UI] 고팡 백엔드 없이 AI 전용 모드:', e.message);
+  }
+  // 저장된 설정 로드
+  loadSettings();
+});
+
+// ── 입력 필드 ───────────────────────────────────────────
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 140) + 'px';
+}
+function updateSendBtn() {
+  const v = document.getElementById('msg-input').value.trim();
+  document.getElementById('send-btn').disabled = !v;
+}
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+// ── 메시지 전송 ─────────────────────────────────────────
+async function sendMessage() {
+  const inp  = document.getElementById('msg-input');
+  const text = inp.value.trim();
+  if (!text) return;
+
+  appendBubble('user', text);
+  history.push({ role: 'user', content: text });
+  inp.value = '';
+  inp.style.height = 'auto';
+  updateSendBtn();
+  removeAttach();
+
+  if (aiActive) {
+    await callAI(text);
+  } else {
+    // 고팡 파이프라인 (AI 비서 미활성 시 기본 분석)
+    showTyping();
+    try {
+      const { runPipeline } = await import('./src/ai-secretary/pipeline.js');
+      const result = await runPipeline(
+        { content: text, senderId: 'user', attachment: attachFile },
+        {}
+      );
+      hideTyping();
+      const r = result.riskResult;
+      const chip = riskChip(r?.level ?? 'S0', r?.legalFlags ?? []);
+      appendBubble('ai', `분석 완료 ${chip}`, true);
+      if (result.anchorHash) {
+        document.getElementById('hash-ref').textContent =
+          result.anchorHash.slice(0,8)+'…';
+      }
+    } catch {
+      hideTyping();
+      appendBubble('ai', '고팡 파이프라인 없음 — AI 버튼을 눌러 AI 비서를 활성화하세요.');
+    }
+  }
+}
+
+// ── DeepSeek API 호출 ───────────────────────────────────
+async function callAI(userText) {
+  showTyping();
+  const messages = [
+    { role: 'system', content: CFG.system },
+    ...history.slice(-20),   // 최근 20턴
   ];
 
-  let step = 0;
-  const advance = () => {
-    if (step >= STEPS.length) return;
-    const [pct, msg] = STEPS[step++];
-    progress.style.width = pct + '%';
-    splashMsg.textContent = msg;
-  };
+  // 엔드포인트 결정
+  const baseUrl = document.getElementById('setting-endpoint')?.value === 'custom'
+    ? document.getElementById('custom-endpoint-url')?.value || CFG.endpoint
+    : CFG.endpoint;
 
-  // 부트 이벤트로 진행도 업데이트 (모듈 로드 후)
-  window._bootAdvance = advance;
-
-  // ── 앱 로드 ─────────────────────────────────────────────
   try {
-    advance(); // 10%
+    const res = await fetch(`${baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${CFG.apiKey}`,
+      },
+      body: JSON.stringify({
+        model:       CFG.model,
+        messages,
+        max_tokens:  2048,
+        temperature: 0.7,
+        stream:      false,
+      }),
+    });
 
-    // app.js import (브라우저 ESM)
-    const { bootstrap } = await import('./src/app.js');
+    if (!res.ok) throw new Error(`API ${res.status}`);
+    const data = await res.json();
+    const reply = data.choices?.[0]?.message?.content ?? '응답 없음';
 
-    // 각 단계마다 진행도 올리기
-    const origLog = console.log.bind(console);
-    console.log = (...args) => {
-      origLog(...args);
-      if (args[0]?.startsWith?.('[BOOT]')) advance();
-    };
-
-    await bootstrap();
-
-    console.log = origLog;
-
-    // 완료 처리
-    bootDot.style.background = '#27ae60';
-    bootDot.style.animation = 'none';
-    bootLabel.textContent = '정상 작동 중';
-
-    setTimeout(() => splash.classList.add('hidden'), 400);
+    hideTyping();
+    history.push({ role: 'assistant', content: reply });
+    appendBubble('ai', reply);
 
   } catch (err) {
-    splashMsg.textContent = `❌ 오류: ${err.message}`;
-    progress.style.background = '#e74c3c';
-    bootDot.style.background = '#e74c3c';
-    bootDot.style.animation = 'none';
-    bootLabel.textContent = '오류 발생';
-    console.error('[Shell] 부트스트랩 실패:', err);
+    hideTyping();
+    appendBubble('ai', `⚠️ API 오류: ${err.message}`);
+    console.error('[AI]', err);
   }
-</script>
+}
 
+// ── 버블 렌더링 ─────────────────────────────────────────
+function appendBubble(role, text, isHTML = false) {
+  const list = document.getElementById('message-list');
+  const row  = document.createElement('div');
+  row.className = `msg-row ${role}`;
+
+  const bubble = document.createElement('div');
+  bubble.className = `bubble bubble-${role}`;
+  if (isHTML) bubble.innerHTML = text;
+  else        bubble.textContent = text;
+
+  row.appendChild(bubble);
+  list.appendChild(row);
+  list.scrollTop = list.scrollHeight;
+}
+
+function riskChip(level, flags) {
+  const map = { S0:'✅ 안전', S1:'⚠️ 주의', S2:'🚨 경고', S3:'🛑 차단' };
+  const cls = level.toLowerCase();
+  const label = map[level] ?? '—';
+  const flagStr = flags.length ? ` · ${flags.slice(0,3).join(' ')}` : '';
+  return `<span class="risk-chip ${cls}">${label}${flagStr}</span>`;
+}
+
+let typingEl = null;
+function showTyping() {
+  const list = document.getElementById('message-list');
+  typingEl = document.createElement('div');
+  typingEl.className = 'msg-row ai';
+  typingEl.id = 'typing-row';
+  typingEl.innerHTML = `<div class="typing-indicator">
+    <span></span><span></span><span></span>
+  </div>`;
+  list.appendChild(typingEl);
+  list.scrollTop = list.scrollHeight;
+}
+function hideTyping() {
+  document.getElementById('typing-row')?.remove();
+  typingEl = null;
+}
+
+// ── AI 비서 토글 ────────────────────────────────────────
+function toggleAI() {
+  document.getElementById('ai-overlay').classList.toggle('open');
+}
+function closeAI() {
+  document.getElementById('ai-overlay').classList.remove('open');
+}
+function activateAI() {
+  aiActive = true;
+  closeAI();
+  const btn = document.getElementById('btn-ai');
+  btn.classList.add('active');
+  document.getElementById('ai-dot').style.background = 'var(--green)';
+  document.getElementById('ai-card-sub').textContent =
+    `${CFG.model} 연결됨`;
+  appendBubble('ai',
+    `AI 비서가 활성화되었습니다. ${CFG.model} 모델이 대화 상대로 설정되었습니다.\n법률·의료 질문을 입력하세요.`);
+}
+
+// ── 설정 패널 ───────────────────────────────────────────
+function openSettings() {
+  // 현재 값 반영
+  document.getElementById('setting-apikey').value  = CFG.apiKey;
+  document.getElementById('setting-system').value  = CFG.system;
+  const modelSel = document.getElementById('setting-model');
+  if (modelSel) modelSel.value = CFG.model;
+  const epSel = document.getElementById('setting-endpoint');
+  if (epSel) epSel.value = CFG.endpoint;
+  document.getElementById('settings-overlay').classList.add('open');
+}
+function handleOverlayClick(e) {
+  if (e.target.id === 'settings-overlay') closeSettings();
+}
+function closeSettings() {
+  document.getElementById('settings-overlay').classList.remove('open');
+}
+function saveSettings() {
+  const model = document.getElementById('setting-model').value;
+  const epVal = document.getElementById('setting-endpoint').value;
+  const key   = document.getElementById('setting-apikey').value.trim();
+  const sys   = document.getElementById('setting-system').value.trim();
+
+  if (model) CFG.model    = model;
+  if (key)   CFG.apiKey   = key;
+  if (sys)   CFG.system   = sys;
+
+  if (epVal === 'custom') {
+    const customUrl = document.getElementById('custom-endpoint-url').value.trim();
+    if (customUrl) CFG.endpoint = customUrl;
+  } else {
+    CFG.endpoint = epVal;
+  }
+
+  // 로컬 저장 (API key 제외)
+  try {
+    localStorage.setItem('gopang_cfg', JSON.stringify({
+      model: CFG.model, endpoint: CFG.endpoint, system: CFG.system
+    }));
+  } catch {}
+
+  closeSettings();
+  appendBubble('ai', `⚙️ 설정 저장: ${CFG.model}`);
+}
+function loadSettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('gopang_cfg') || '{}');
+    if (saved.model)    CFG.model    = saved.model;
+    if (saved.endpoint) CFG.endpoint = saved.endpoint;
+    if (saved.system)   CFG.system   = saved.system;
+  } catch {}
+}
+
+// 커스텀 엔드포인트 필드 토글
+document.getElementById('setting-endpoint').addEventListener('change', function() {
+  document.getElementById('custom-endpoint-group').style.display =
+    this.value === 'custom' ? 'block' : 'none';
+});
+
+// ── 파일 첨부 ───────────────────────────────────────────
+function triggerAttach() {
+  document.getElementById('file-input').click();
+}
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  attachFile = file;
+  document.getElementById('attach-name').textContent = file.name;
+  document.getElementById('attach-preview').style.display = 'flex';
+  e.target.value = '';
+}
+function removeAttach() {
+  attachFile = null;
+  document.getElementById('attach-preview').style.display = 'none';
+  document.getElementById('attach-name').textContent = '';
+}
+
+// ── 마이크 (Web Speech API) ─────────────────────────────
+function toggleMic() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    appendBubble('ai', '이 브라우저는 음성 입력을 지원하지 않습니다.');
+    return;
+  }
+
+  if (micActive) {
+    recognition?.stop();
+    micActive = false;
+    document.getElementById('btn-mic').style.color = '';
+    return;
+  }
+
+  recognition = new SpeechRecognition();
+  recognition.lang = 'ko-KR';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+
+  recognition.onresult = (e) => {
+    const t = e.results[0][0].transcript;
+    document.getElementById('msg-input').value = t;
+    autoResize(document.getElementById('msg-input'));
+    updateSendBtn();
+    micActive = false;
+    document.getElementById('btn-mic').style.color = '';
+  };
+  recognition.onerror = () => {
+    micActive = false;
+    document.getElementById('btn-mic').style.color = '';
+  };
+  recognition.onend = () => { micActive = false; };
+
+  recognition.start();
+  micActive = true;
+  document.getElementById('btn-mic').style.color = 'var(--red)';
+}
+</script>
 </body>
 </html>
