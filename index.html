@@ -7,7 +7,7 @@
   <style>
     /* ── Apple HIG 토큰 ─────────────────────────────────── */
     :root {
-      --bg:           #000000;
+      --bg:           #09090F;
       --bg-elevated:  rgba(28,28,30,0.92);
       --bg-glass:     rgba(44,44,46,0.72);
       --bg-input:     rgba(58,58,60,0.9);
@@ -44,6 +44,21 @@
       -webkit-font-smoothing: antialiased;
       overflow: hidden;
     }
+
+    /* Apple HIG macOS 다크 — 미세 방사형 하이라이트 */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% -10%,
+          rgba(10,132,255,0.07) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 100% 100%,
+          rgba(94,92,230,0.05) 0%, transparent 60%);
+    }
+    #app { position: relative; z-index: 1; }
 
     /* ── 앱 레이아웃 ────────────────────────────────────── */
     #app {
@@ -558,6 +573,13 @@
       <span>·</span>
       <span>OpenHash <code id="hash-ref">대기중</code></span>
       <span id="layer-lbl">L1</span>
+      <span style="margin-left:auto">
+        <select class="version-select" id="version-select" title="고팡 버전"
+                style="color:var(--label-2);font-size:11px">
+          <option value="v2">고팡 v2</option>
+          <option value="v1">고팡 v1</option>
+        </select>
+      </span>
     </div>
 
     <!-- 첨부 미리보기 -->
@@ -582,12 +604,6 @@
             <line x1="8" y1="12" x2="16" y2="12"/>
           </svg>
         </button>
-
-        <!-- 버전 선택 -->
-        <select class="version-select" id="version-select" title="고팡 버전">
-          <option value="v2">고팡 v2</option>
-          <option value="v1">고팡 v1</option>
-        </select>
 
         <!-- 마이크 -->
         <button class="ia-btn" id="btn-mic" onclick="toggleMic()" title="음성 입력">
@@ -885,8 +901,7 @@ function activateAI() {
   document.getElementById('ai-dot').style.background = 'var(--green)';
   document.getElementById('ai-card-sub').textContent =
     `${CFG.model} 연결됨`;
-  appendBubble('ai',
-    `AI 비서가 활성화되었습니다. ${CFG.model} 모델이 대화 상대로 설정되었습니다.\n법률·의료 질문을 입력하세요.`);
+  appendBubble('ai', '귀하의 AI 비서입니다. 지시하십시오.');
 }
 
 // ── 설정 패널 ───────────────────────────────────────────
