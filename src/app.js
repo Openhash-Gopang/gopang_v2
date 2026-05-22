@@ -54,30 +54,19 @@ export async function bootstrap() {
     await registry.register(new KHealthPlugin())
 
     // ── 4. AI 비서 파이프라인 ─────────────────────────────
-    // runPipeline은 함수이므로 init() 불필요
-    // EventBus를 통해 pipeline.js 내부에서 이벤트 구독 설정됨
+    // runPipeline은 함수이므로 init() 불필요.
+    // ⚠️  파이프라인 실행은 index.html의 _runPipelineBackground()가 담당.
+    //     여기서 MSG_RECEIVED를 구독하면 이중 실행 → Phase0 오류 발생.
+    //     따라서 자동 연결을 제거한다.
     log('4/6 AI 비서 파이프라인 준비...')
 
     // ── 5. Network + GDC + Privacy ────────────────────────
-    // 개별 함수 export 모듈 — 별도 init 불필요
     log('5/6 Network + GDC + Privacy 준비...')
 
     // ── 6. Shell UI 렌더링 ───────────────────────────────
     log('6/6 Shell UI 렌더링...')
     const plugins = registry.list()
     await ShellUI.render(plugins)
-
-    // 메시지 수신 시 파이프라인 연결
-    EventBus.on(EVENTS.MSG_RECEIVED, async (data) => {
-      try {
-        await runPipeline(
-          { content: data.text, senderId: 'user', attachment: data.file ?? null },
-          { activePlugin: data.activePlugin }
-        )
-      } catch (err) {
-        console.error('[BOOT] 파이프라인 오류:', err)
-      }
-    }, 'app')
 
     _state = BootState.READY
     EventBus.emit(EVENTS.PLATFORM_READY ?? 'platform:ready',
