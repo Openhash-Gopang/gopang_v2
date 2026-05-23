@@ -1560,7 +1560,8 @@ async function sendMessage() {
     if (capturedFile) appendBubble('user', `📎 ${capturedFile.name}`, false);
   }
 
-  history.push({ role: 'user', content: text || `[첨부: ${capturedFile?.name}]` });
+  // ★ history.push(user)는 callAI 내부에서 처리
+  //   (callAI 진입 전에 push하면 isFirstTurn 감지 오작동)
   inp.value = '';
   inp.style.height = 'auto';
   updateSendBtn();
@@ -1782,42 +1783,33 @@ async function callAI(userText, imageFile = null) {
     userContent = userText;
   }
 
-  // ── DeepSeek Prefix Caching 전략 ────────────────────────
-  // 원칙: system prompt는 세션 최초 1회만 전송.
-  //       이후 호출은 history 전체를 그대로 전송 (system 반복 없음).
-  //       locNote(위치)도 최초 1회 system 메시지로 삽입 후 재사용.
-  //       전문가 SP 로드 시에는 불가피하게 캐시 무효화됨 (명시).
+  // ── history에 system(최초) 및 user 추가 ─────────────────
+  // history 구조: [system(index 0, 고정), user, assistant, user, assistant, ...]
 
-  // 세션 최초 호출 여부 판단
-  const isFirstTurn = history.length === 0 ||
-    (history.length === 1 && history[0].role === 'system');
-
-  if (isFirstTurn) {
-    // ── 최초 1회: system + locNote를 history[0]으로 고정 ──
+  // 1) system: 세션 최초 1회만 history[0]으로 삽입
+  if (history.length === 0) {
+    // 세션 최초 — system + locNote 고정
     const locNote = _buildLocNote();
-    const systemContent = CFG.system + locNote;
-
-    // 전문가 SP 로드 시 system 교체 (캐시 무효화 불가피)
-    if (expertLoaded) {
-      history.length = 0;  // 리셋
-      history.push({ role: 'system', content: CFG.system + locNote });
-      console.log('[Cache] 전문가 SP 로드 — system 교체, 캐시 리셋');
-    } else if (history.length === 0) {
-      history.push({ role: 'system', content: systemContent });
-      console.log('[Cache] 세션 최초 — system 1회 삽입');
-    }
+    history.push({ role: 'system', content: CFG.system + locNote });
+    console.log('[Cache] 세션 최초 — system 1회 삽입');
   } else if (expertLoaded) {
-    // 전문가 SP 로드: system 교체 + 이전 대화 유지
+    // 전문가 SP 로드: history[0] system 교체 (캐시 무효화 불가피)
     const locNote = _buildLocNote();
     history[0] = { role: 'system', content: CFG.system + locNote };
     console.log('[Cache] 전문가 SP 로드 — system 교체');
   }
-  // 이후 호출: history[0]이 system으로 고정되어 있으므로 추가 작업 없음
+  // 이후 일반 호출: history[0] system 고정 유지, 추가 작업 없음
 
-  // ── history에 현재 user 메시지 추가 ─────────────────────
-  // sendMessage()에서도 push하므로 중복 방지: callAI는 messages 구성만 담당
-  // history 구조: [system(고정), user, assistant, user, assistant, ...]
-  const messages = [...history, { role: 'user', content: userContent }];
+  // 2) user: messages 전송 직전에 history에 추가
+  const userRecord = { role: 'user', content: typeof userContent === 'string' ? userContent : `[첨부: 이미지]` };
+  history.push(userRecord);
+
+  // 3) messages: history 전체 (system + 대화 누적 + 현재 user)
+  //    단, 이미지가 있을 경우 마지막 user content는 multipart로 교체
+  const messages = [
+    ...history.slice(0, -1),                        // system + 이전 대화
+    { role: 'user', content: userContent },         // 현재 user (이미지 포함 가능)
+  ];
 
   // ── 엔드포인트 + API Key 결정 ────────────────────────────
   const epSel   = document.getElementById('setting-endpoint');
