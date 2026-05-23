@@ -996,11 +996,22 @@
     </div>
 
     <div class="setting-group">
-      <div class="setting-label">API Key</div>
+      <div class="setting-label">API Key (DeepSeek 직접 사용 시)</div>
       <input class="setting-field setting-field-mono" id="setting-apikey"
              type="password"
              placeholder="sk-…"
              autocomplete="off" spellcheck="false"/>
+    </div>
+
+    <div class="setting-group">
+      <div class="setting-label">Gemini API Key (이미지 분석용)</div>
+      <input class="setting-field setting-field-mono" id="setting-gemini-key"
+             type="password"
+             placeholder="AIza…"
+             autocomplete="off" spellcheck="false"/>
+      <div style="font-size:11px;color:var(--label-2);margin-top:4px;">
+        K-Cleaner 이미지 분석에 사용 · <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--tint);">무료 발급 →</a>
+      </div>
     </div>
 
     <div class="setting-group">
@@ -1269,9 +1280,10 @@ const USER_GUID = (() => {
 
 // ── 설정 ────────────────────────────────────────────────
 const CFG = {
-  apiKey:   '',   // ★ API 키는 Cloudflare Worker에서 관리 (보안)
-  endpoint: 'https://gopang-proxy.tensor-city.workers.dev',
-  model:    'deepseek-v4-pro',
+  apiKey:    '',   // ★ API 키는 Cloudflare Worker에서 관리 (보안)
+  geminiKey: '',   // Gemini Vision API Key (이미지 분석용)
+  endpoint:  'https://gopang-proxy.tensor-city.workers.dev',
+  model:     'deepseek-v4-pro',
   system:   `# AI Secretary Prompt SP-00 v9.0
 # 문서코드: SP-00 | 작성: AI City Inc. · 도영민
 # 사용자 GUID: ${USER_GUID}
@@ -1753,6 +1765,76 @@ function _fileToBase64(file) {
 }
 
 // ── EXIF GPS·시간 추출 (순수 JS, 외부 라이브러리 불필요) ────
+// ── Gemini Vision 호출 — K-Cleaner 이미지 분석 전담 ─────────
+// SP-14-IMG v1.0 system prompt 기반으로 구조화된 JSON 반환
+async function _callGeminiVision(imageFile, geminiKey) {
+  const GEMINI_VISION_SYSTEM = `당신은 환경 현장 사진을 분석하는 객관적 데이터 추출 전문가다.
+사진에서 보이는 사실만 수치로 추출한다. 판단·해석·견적·보고서 작성은 절대 하지 않는다.
+결과는 반드시 아래 JSON 형식으로만 출력한다. JSON 외 어떠한 텍스트도 출력하지 않는다.
+8대 성분: ST=스티로폼 PL=경질플라스틱 VI=비닐 GL=유리병 ME=금속캔 NT=폐어구 WD=목재 EX=기타
+(ratio_pct 합계 반드시 100. 보이지 않는 성분은 0/false)
+규모: XS(<50kg모래) S(50~200kg암반) M(200~400kg) L(400~1000kg) XL(1000kg↑)
+지형: SAND|ROCK|CLIFF|WATER|FOREST|UNKNOWN
+위험도: S0(일반) S1(대량) S2(오염위험) S3(유해물질)
+출력: JSON만. 설명·인사·부연 절대 금지.`;
+
+  const dataUrl  = await _fileToBase64(imageFile);
+  const mimeType = imageFile.type || 'image/jpeg';
+  const base64   = dataUrl.split(',')[1];
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`;
+  const body = {
+    system_instruction: { parts: [{ text: GEMINI_VISION_SYSTEM }] },
+    contents: [{
+      role: 'user',
+      parts: [
+        { inline_data: { mime_type: mimeType, data: base64 } },
+        { text: '이 이미지를 분석하여 아래 JSON 형식으로만 출력하라:\n{"analysis_version":"SP-14-IMG-v1.0","image_quality":"GOOD|FAIR|POOR","confidence":0.85,"components":{"ST":{"ratio_pct":0,"weight_kg_est":null,"visible":false},"PL":{"ratio_pct":0,"weight_kg_est":null,"visible":false},"VI":{"ratio_pct":0,"weight_kg_est":null,"visible":false},"GL":{"ratio_pct":0,"weight_kg_est":null,"visible":false},"ME":{"ratio_pct":0,"weight_kg_est":null,"visible":false},"NT":{"ratio_pct":0,"weight_kg_est":null,"visible":false},"WD":{"ratio_pct":0,"weight_kg_est":null,"visible":false},"EX":{"ratio_pct":0,"weight_kg_est":null,"visible":false}},"total_weight_kg_est":null,"scale":"S","terrain":"ROCK","risk_level":"S1","hazard_detected":false,"hazard_notes":null,"area_est_m2":null,"coastline_length_est_m":null,"notable_items":[],"exif":{"lat":null,"lng":null,"datetime":null,"altitude_m":null},"scene_description":""}' }
+      ]
+    }],
+    generationConfig: { temperature: 0.1, maxOutputTokens: 1024 }
+  };
+
+  const res = await fetch(url, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify(body),
+    signal:  AbortSignal.timeout(15000),
+  });
+
+  if (!res.ok) {
+    const err = await res.text().catch(() => '');
+    throw new Error(`Gemini API ${res.status}: ${err.slice(0,200)}`);
+  }
+
+  const data  = await res.json();
+  const text  = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  const clean = text.replace(/```json|```/g, '').trim();
+  return JSON.parse(clean);
+}
+
+// Gemini 분석 결과 → DeepSeek 전달용 요약 텍스트 변환
+function _geminiResultToText(result, userText) {
+  const c     = result.components || {};
+  const parts = Object.entries(c)
+    .filter(([, v]) => v.visible && v.ratio_pct > 0)
+    .map(([k, v]) => `${k}(${v.ratio_pct}%·${v.weight_kg_est||'?'}kg)`)
+    .join(', ');
+
+  return `[Gemini Vision 현장 분석 결과 — SP-14-IMG-v1.0]
+신뢰도: ${Math.round((result.confidence||0)*100)}% | 이미지품질: ${result.image_quality||'?'}
+규모: ${result.scale} | 지형: ${result.terrain} | 위험도: ${result.risk_level}
+추정중량: ${result.total_weight_kg_est||'?'}kg | 면적: ${result.area_est_m2||'?'}㎡ | 해안선: ${result.coastline_length_est_m||'?'}m
+성분구성: ${parts||'분석불가'}
+주목항목: ${result.notable_items?.join(', ')||'없음'}
+현장설명: ${result.scene_description||''}
+위험물감지: ${result.hazard_detected ? '⚠️ '+result.risk_level : '없음'}
+GPS(EXIF): ${result.exif?.lat ? result.exif.lat+', '+result.exif.lng : '없음'}
+---
+사용자원문: ${userText||'(없음)'}
+위 Gemini 분석 결과를 바탕으로 K-Cleaner v1.2 방법론에 따라 수거견적서와 환경신고서를 작성하라.`;
+}
+
 async function _extractExif(file) {
   return new Promise((resolve) => {
     const reader = new FileReader();
@@ -2035,9 +2117,9 @@ async function callAI(userText, imageFile = null) {
 
   // ── 전문가 SP 로드 판단 ───────────────────────────────
   // 조건 A: 텍스트에 EXPERT_KEYWORDS 포함
-  // 조건 B: 이미지 첨부 + 쓰레기/환경 관련 텍스트 → CLN 자동 활성
-  //         (사진 찍어서 "쓰레기" 한 마디만 해도 K-Cleaner 변신)
-  const CLN_IMG_KEYWORDS = /쓰레기|오염|폐기물|해양|신고|여기|이거|이것|이게|찍었|현장/;
+  // 조건 B: 이미지 첨부 + 명시적 쓰레기/환경 키워드 → CLN 자동 활성
+  // ★ 모호한 지시어(여기/이거/현장 등)는 제외 — 쓰레기임을 명시해야 함
+  const CLN_IMG_KEYWORDS = /쓰레기|폐기물|해양오염|투기|불법투기|폐어구|기름유출|오염물|환경오염|수거|정화|해양쓰레기|해안쓰레기/;
   const shouldLoadExpert = userText && (
     EXPERT_KEYWORDS.test(userText) ||
     (imageFile && CLN_IMG_KEYWORDS.test(userText))
@@ -2082,46 +2164,61 @@ async function callAI(userText, imageFile = null) {
     }
   }
 
-  // ── CLN 활성 시 EXIF + 날씨 + 해양기상 자동 수집 ──────────
+  // ── CLN 활성 시 Gemini Vision → DeepSeek 파이프라인 ─────────
   if (expertLoaded && detectedCode === 'CLN' && imageFile) {
     // 이미지 분석을 위해 Vision 지원 모델로 자동 전환
     if (!_modelSupportsVision(CFG.model)) {
       console.log(`[K-Cleaner] Vision 미지원 모델(${CFG.model}) → deepseek-chat으로 자동 전환`);
-      CFG._modelOverride = CFG.model;  // 원래 모델 백업
+      CFG._modelOverride = CFG.model;
       CFG.model = 'deepseek-chat';
     }
+
     try {
-      appendBubble('ai', '🌤️ 현장 기상 정보 수집 중...');
+      // ── Gemini Vision 호출 (이미지 분석 전담) ──────────────
+      if (CFG.geminiKey) {
+        appendBubble('ai', '📸 Gemini Vision으로 현장 이미지 분석 중...');
+        console.log('[K-Cleaner] Gemini Vision 호출 시작');
 
-      // 1) EXIF에서 GPS·시간 추출
-      const exif = await _extractExif(imageFile);
-      let fieldLat = exif.lat;
-      let fieldLng = exif.lng;
+        let geminiResult = null;
+        try {
+          geminiResult = await _callGeminiVision(imageFile, CFG.geminiKey);
+          console.log('[K-Cleaner] Gemini Vision 분석 완료:', geminiResult.scale, geminiResult.risk_level);
+        } catch (e) {
+          console.warn('[K-Cleaner] Gemini Vision 실패, 텍스트 전용 진행:', e.message);
+        }
 
-      // EXIF GPS 없으면 현재 장치 위치 사용
-      if (!fieldLat && _userLocation?.lat) {
-        fieldLat = _userLocation.lat;
-        fieldLng = _userLocation.lng;
-        console.log('[K-Cleaner] EXIF GPS 없음 → 장치 GPS 사용');
-      } else if (fieldLat) {
-        console.log(`[K-Cleaner] EXIF GPS 추출: ${fieldLat.toFixed(4)}, ${fieldLng.toFixed(4)}`);
+        // 마지막 AI 버블(분석 중...) 제거
+        document.querySelector('#message-list .bubble-ai:last-child')?.remove();
+
+        if (geminiResult) {
+          // Gemini 결과를 userContent 텍스트로 변환 → DeepSeek에 전달
+          const analysisText = _geminiResultToText(geminiResult, userText);
+          // 이미지는 DeepSeek에 전달 안 함 (텍스트 전용으로 처리)
+          userContent = analysisText;
+          imageFile   = null;   // 이미지 파일 소거 (DeepSeek에 직접 전송 불필요)
+          console.log('[K-Cleaner] Gemini 결과 → DeepSeek 전달 준비 완료');
+        }
+      } else {
+        // Gemini 키 없음 → 텍스트만으로 진행 + 안내
+        console.warn('[K-Cleaner] Gemini API 키 없음 → 이미지 없이 텍스트 진행');
+        appendBubble('ai', '⚠️ Gemini API 키가 없어 이미지 분석을 건너뜁니다.\n설정 → Gemini API Key를 입력하면 이미지 자동 분석이 활성됩니다.');
+        document.querySelector('#message-list .bubble-ai:last-child')?.remove();
       }
 
-      // 2) 수중 작업 여부 판단 (텍스트 키워드 기반)
-      const isMarineJob = /수중|잠수|해녀|폐그물|침적|ROV|태왁/.test(userText || '');
+      // ── EXIF + 날씨 수집 (이미지 원본 필요 — 소거 전 처리) ──
+      const exif = await _extractExif(imageFile || new File([], 'dummy'));
+      let fieldLat = exif.lat || _userLocation?.lat;
+      let fieldLng = exif.lng || _userLocation?.lng;
 
-      // 3) 날씨 + 해양기상 수집
       if (fieldLat) {
+        const isMarineJob = /수중|잠수|해녀|폐그물|침적|ROV|태왁/.test(userText || '');
         const fieldReport = await _buildFieldReport(fieldLat, fieldLng, exif, isMarineJob);
-        // system prompt 뒤에 현장 보고서 append
         CFG.system = CFG.system + fieldReport;
         console.log('[K-Cleaner] 현장 기상 보고서 system에 주입 완료');
       }
 
-      // 마지막 버블(수집 중...) 제거
-      document.querySelector('#message-list .bubble-ai:last-child')?.remove();
     } catch (e) {
-      console.warn('[K-Cleaner] 기상 수집 실패:', e.message);
+      console.warn('[K-Cleaner] 파이프라인 오류:', e.message);
       document.querySelector('#message-list .bubble-ai:last-child')?.remove();
     }
   }
@@ -2152,24 +2249,42 @@ async function callAI(userText, imageFile = null) {
       userContent = userText;
     } else {
       // 비전 지원 모델 — base64 변환 후 multipart content
-      // DeepSeek Vision API: image_url 타입 + data URI 형식
+      // DeepSeek API: image_url 형식 미지원 → base64를 텍스트로 포함
+      // OpenAI 호환 모델(gpt-4o 등): image_url 형식 사용
       try {
         const dataUrl  = await _fileToBase64(imageFile);
-        const mimeType = imageFile.type;          // "image/jpeg" 등
-        const base64   = dataUrl.split(',')[1];   // base64 부분만
+        const mimeType = imageFile.type;
+        const base64   = dataUrl.split(',')[1];
+
+        const isOpenAI = CFG.endpoint.includes('openai.com') ||
+                         CFG.endpoint.includes('azure') ||
+                         CFG.model.startsWith('gpt-');
+        const isDeepSeek = CFG.endpoint.includes('deepseek') ||
+                           CFG.endpoint.includes('workers.dev');
 
         userContent = [];
         if (userText) {
           userContent.push({ type: 'text', text: userText });
         }
-        // DeepSeek Vision: base64 data URI를 image_url.url에 직접 포함
-        userContent.push({
-          type: 'image_url',
-          image_url: {
-            url: `data:${mimeType};base64,${base64}`,
-          },
-        });
-        if (!userText) {
+
+        if (isOpenAI) {
+          // OpenAI 형식: image_url
+          userContent.push({
+            type: 'image_url',
+            image_url: { url: `data:${mimeType};base64,${base64}` },
+          });
+        } else {
+          // DeepSeek 형식: base64를 텍스트로 포함
+          // DeepSeek API는 image_url 미지원 → base64 데이터를 직접 전달
+          userContent = [];
+          if (userText) userContent.push({ type: 'text', text: userText });
+          userContent.push({
+            type: 'text',
+            text: `[이미지 첨부됨 — base64 데이터: data:${mimeType};base64,${base64.slice(0,100)}... (${Math.round(base64.length*0.75/1024)}KB)]\n이 이미지를 분석해 주세요.`,
+          });
+        }
+
+        if (!userText && userContent[userContent.length-1]?.text?.includes('분석') === false) {
           userContent.push({ type: 'text', text: '이 이미지를 분석해 주세요.' });
         }
       } catch (e) {
@@ -2412,9 +2527,9 @@ function activateAI(silent = false) {
 
 // ── 설정 패널 ───────────────────────────────────────────
 function openSettings() {
-  // 현재 값 반영
-  document.getElementById('setting-apikey').value  = CFG.apiKey;
-  document.getElementById('setting-system').value  = CFG.system;
+  document.getElementById('setting-apikey').value   = CFG.apiKey;
+  document.getElementById('setting-gemini-key').value = CFG.geminiKey;
+  document.getElementById('setting-system').value   = CFG.system;
   const modelSel = document.getElementById('setting-model');
   if (modelSel) modelSel.value = CFG.model;
   const epSel = document.getElementById('setting-endpoint');
@@ -2444,15 +2559,16 @@ async function clearSWCache() {
   }
 }
 function saveSettings() {
-  const model = document.getElementById('setting-model').value;
-  const epVal = document.getElementById('setting-endpoint').value;
-  const key   = document.getElementById('setting-apikey').value.trim();
-  const sys   = document.getElementById('setting-system').value.trim();
+  const model     = document.getElementById('setting-model').value;
+  const epVal     = document.getElementById('setting-endpoint').value;
+  const key       = document.getElementById('setting-apikey').value.trim();
+  const geminiKey = document.getElementById('setting-gemini-key').value.trim();
+  const sys       = document.getElementById('setting-system').value.trim();
 
-  // 구버전 모델명 교정 후 저장
-  if (model) CFG.model = MODEL_MIGRATION[model] ?? model;
-  if (key)   CFG.apiKey   = key;
-  if (sys)   CFG.system   = sys;
+  if (model)     CFG.model     = MODEL_MIGRATION[model] ?? model;
+  if (key)       CFG.apiKey    = key;
+  if (geminiKey) CFG.geminiKey = geminiKey;
+  if (sys)       CFG.system    = sys;
 
   if (epVal === 'custom') {
     const customUrl = document.getElementById('custom-endpoint-url').value.trim();
