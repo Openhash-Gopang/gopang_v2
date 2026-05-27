@@ -7,6 +7,7 @@
 
   <!-- ── PWA 핵심 ──────────────────────────────────────── -->
   <link rel="manifest" href="/manifest.json"/>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 
   <!-- iOS Safari — 홈 화면 추가 -->
   <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -21,7 +22,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black"/>
 
   <!-- Android Chrome -->
-  <meta name="theme-color" content="#17212B"/>
+  <meta name="theme-color" content="#1A1F29"/>
   <meta name="mobile-web-app-capable" content="yes"/>
 
   <!-- 일반 메타 -->
@@ -39,68 +40,74 @@
     }
   </style>
   <style>
-    /* ── Apple HIG 토큰 ─────────────────────────────────── */
+    /* ── 고팡 디자인 시스템 v5.0 — Supabase 계열 전문가 UI ── */
     :root {
       /* ══════════════════════════════════════════════════
-         고팡 색상 시스템 v4.0
-         헤더/메뉴바: 텔레그램 짙은 청색 (#17212B)
-         채팅 영역:   밝고 전문적인 회백색
-         한국 정부 공식 사이트 디자인 지침 준수
-         WCAG 2.1 AA 전항목 통과
+         고팡 색상 시스템 v5.0
+         Supabase 대시보드 스타일 기반
+         간결·전문·사무적 / WCAG 2.1 AA 전항목 통과
          ══════════════════════════════════════════════════ */
 
-      /* 앱 전체 배경 — 채팅 영역 (밝게) */
-      --bg:           #F0F4F8;
-      --bg-elevated:  #FFFFFF;
-      --bg-glass:     rgba(255,255,255,0.92);
+      /* 기본 배경 */
+      --bg:           #F8F9FA;   /* 아주 연한 회색 — Supabase 메인 bg */
+      --bg-elevated:  #FFFFFF;   /* 카드·패널 */
+      --bg-glass:     rgba(255,255,255,0.96);
       --bg-input:     #FFFFFF;
-      --bg-subtle:    #E8EDF3;
+      --bg-subtle:    #F1F3F5;   /* 호버, 구분 */
+      --bg-code:      #F4F4F5;
 
       /* 구분선 */
-      --sep:          rgba(0,0,0,0.07);
-      --sep-strong:   #D1D9E6;
+      --sep:          #E4E4E7;   /* 얇고 선명한 보더 */
+      --sep-strong:   #D1D5DB;
 
-      /* 텍스트 (밝은 배경 기준) */
-      --label:        #1A202C;   /* 15.0:1 AAA ✅ */
-      --label-2:      #4A5568;   /* 6.8:1  AA  ✅ */
-      --label-3:      #718096;   /* 4.6:1  AA  ✅ */
+      /* 텍스트 */
+      --label:        #111827;   /* 거의 검정 */
+      --label-2:      #374151;
+      --label-3:      #6B7280;
+      --label-4:      #9CA3AF;
 
-      /* 헤더/메뉴바 전용 텍스트 (어두운 배경 기준) */
-      --label-on-dark:   rgba(255,255,255,0.95);
-      --label-2-on-dark: rgba(255,255,255,0.60);
+      /* 헤더/사이드바 전용 텍스트 */
+      --label-on-dark:   rgba(255,255,255,0.92);
+      --label-2-on-dark: rgba(255,255,255,0.55);
 
-      /* 브랜드 — 정부 표준 블루 (텍스트·버튼 모두 AA) */
-      --tint:         #0057A8;   /* 배경위 6.5:1 AA ✅ / 흰글씨 7.2:1 AAA ✅ */
-      --tint-hover:   #003C82;
-      --tint-dim:     #E8F0FA;
-      --tint-dim-bd:  #B8D0F0;
+      /* 브랜드 — Supabase 초록 계열 */
+      --tint:         #3ECF8E;   /* Supabase 시그니처 그린 */
+      --tint-dark:    #29A374;   /* 호버 */
+      --tint-dim:     #ECFDF5;   /* 연초록 배경 */
+      --tint-dim-bd:  #A7F3D0;
 
-      /* 텔레그램 짙은 청색 — 헤더/메뉴바 전용 */
-      --header-bg:    #17212B;   /* 텔레그램 공식 사이드바 색상 */
-      --header-mid:   #1C2B3A;   /* 탑바, 약간 밝게 */
-      --header-hover: rgba(255,255,255,0.06);
+      /* 사이드바/헤더 — Supabase 짙은 네이비 */
+      --header-bg:    #1A1F29;   /* Supabase 사이드바 */
+      --header-mid:   #1A1F29;   /* 탑바 동일 */
+      --header-top:   #FFFFFF;   /* 탑바를 흰색으로 — Supabase 스타일 */
+      --header-hover: rgba(255,255,255,0.07);
 
-      /* 내 메시지 버블 */
-      --bubble-out-bg:   #D9EAF8;  /* 연파랑 */
-      --bubble-out-text: #0D2137;  /* 짙은 남색 */
+      /* 내 메시지 버블 — 연한 초록 tint */
+      --bubble-out-bg:   #ECFDF5;
+      --bubble-out-text: #065F46;
 
-      /* AI 메시지 버블 */
+      /* AI 메시지 버블 — 순백 카드 */
       --bubble-in-bg:    #FFFFFF;
-      --bubble-in-text:  #1A202C;
+      --bubble-in-text:  #111827;
 
       /* 시맨틱 */
-      --green:        #1B6B3A;   /* 5.7:1 AA ✅ */
-      --red:          #C01C28;   /* 5.8:1 AA ✅ */
-      --yellow:       #8C5A00;   /* 7.1:1 AAA ✅ */
-      --orange:       #A5200A;   /* 7.0:1 AAA ✅ */
-      --r-sm:         10px;
-      --r-md:         14px;
-      --r-lg:         20px;
-      --r-xl:         26px;
-      --blur:         saturate(180%) blur(24px);
-      --blur-sm:      saturate(160%) blur(12px);
-      --font:         -apple-system, 'SF Pro Text', 'Helvetica Neue', sans-serif;
-      --font-display: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+      --green:        #059669;
+      --red:          #DC2626;
+      --yellow:       #D97706;
+      --orange:       #EA580C;
+      --blue:         #2563EB;
+
+      /* 반경 — Supabase는 작은 반경 선호 */
+      --r-sm:         4px;
+      --r-md:         6px;
+      --r-lg:         8px;
+      --r-xl:         12px;
+
+      --blur:         saturate(180%) blur(20px);
+      --blur-sm:      saturate(160%) blur(10px);
+      --font:         'Noto Sans KR', -apple-system, 'Helvetica Neue', sans-serif;
+      --font-mono:    'IBM Plex Mono', 'SF Mono', monospace;
+      --font-display: 'Noto Sans KR', -apple-system, sans-serif;
       --ease-spring:  cubic-bezier(0.34, 1.56, 0.64, 1);
       --ease-out:     cubic-bezier(0.16, 1, 0.3, 1);
     }
@@ -122,7 +129,7 @@
       position: fixed;
       top: 0; left: 0; right: 0;
       height: 3px;
-      background: linear-gradient(90deg, #003C82, #0057A8, #003C82);
+      background: linear-gradient(90deg, #29A374, #3ECF8E, #29A374);
       z-index: 999;
       pointer-events: none;
     }
@@ -140,7 +147,7 @@
     .top-bar {
       position: fixed;
       top: 0; left: 0; right: 0;
-      height: calc(44px + var(--safe-top));
+      height: calc(48px + var(--safe-top));
       padding-top: var(--safe-top);
       z-index: 100;
       display: flex;
@@ -149,8 +156,9 @@
       padding-right: 14px;
       padding-left: 14px;
       gap: 8px;
-      background: var(--header-mid);
-      border-bottom: 1px solid rgba(255,255,255,0.06);
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--sep);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
 
     /* ── PWA 설치 배너 ─────────────────────────────────── */
@@ -229,43 +237,46 @@
     /* ── 우상단 버튼 그룹 ──────────────────────────────── */
     .top-btn {
       width: 34px; height: 34px;
-      border-radius: 50%;
+      border-radius: var(--r-md);
       border: none;
       background: transparent;
-      color: var(--label-on-dark);
+      color: var(--label-3);
       cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       font-size: 15px;
-      transition: background 0.15s, transform 0.12s var(--ease-spring);
+      transition: background 0.15s, color 0.15s, transform 0.12s var(--ease-spring);
       -webkit-tap-highlight-color: transparent;
-      border-radius: 8px;
     }
-    .top-btn:hover  { background: var(--header-hover); }
+    .top-btn:hover  { background: var(--bg-subtle); color: var(--label); }
     .top-btn:active { transform: scale(0.93); }
 
     .btn-ai {
       width: auto;
-      padding: 0 14px;
-      border-radius: 20px;
-      font-size: 13px;
+      padding: 0 12px;
+      border-radius: var(--r-md);
+      font-size: 12px;
       font-weight: 600;
-      letter-spacing: 0.01em;
-      color: var(--label-2-on-dark);
+      letter-spacing: 0.03em;
+      color: var(--label-3);
       gap: 5px;
-      transition: color 0.3s, background 0.3s;
+      border: 1px solid var(--sep);
+      transition: color 0.2s, background 0.2s, border-color 0.2s;
     }
     .btn-ai .ai-dot {
       width: 6px; height: 6px;
       border-radius: 50%;
-      background: rgba(255,255,255,0.35);
+      background: var(--label-4);
       transition: background 0.3s, transform 0.3s;
     }
-    /* 활성 상태 — .btn-ai.active 일 때 dot도 초록 + 애니메이션 */
     .btn-ai.active .ai-dot {
-      background: var(--green);
+      background: var(--tint);
       animation: pulse-dot 2s ease-in-out infinite;
     }
-    .btn-ai.active { background: rgba(255,255,255,0.15); color: #ffffff; }
+    .btn-ai.active {
+      background: var(--tint-dim);
+      border-color: var(--tint-dim-bd);
+      color: var(--green);
+    }
     @keyframes pulse-dot {
       0%,100% { opacity: 1; transform: scale(1); }
       50%      { opacity: 0.5; transform: scale(0.7); }
@@ -280,7 +291,7 @@
       background: var(--bg);
       flex: 1;
       overflow-y: auto;
-      padding: 60px 0 16px;
+      padding: 64px 0 16px;
       display: flex;
       flex-direction: column;
       gap: 2px;
@@ -319,7 +330,7 @@
       background: var(--bubble-in-bg);
       color: var(--bubble-in-text);
       border-bottom-left-radius: 4px;
-      border: 1px solid var(--sep-strong);
+      border: 1px solid var(--sep);
       box-shadow: 0 1px 3px rgba(0,0,0,0.06);
     }
 
@@ -371,10 +382,9 @@
     /* ── 하단 입력 영역 (Apple Messages / Claude.ai 스타일) */
     .input-dock {
       flex-shrink: 0;
-      padding: 6px 12px calc(16px + var(--safe-bottom));
-      background: var(--header-bg);
-      backdrop-filter: none;
-      border-top: 1px solid rgba(255,255,255,0.08);
+      padding: 8px 12px calc(12px + var(--safe-bottom));
+      background: var(--bg-elevated);
+      border-top: 1px solid var(--sep);
     }
 
     /* 상태 바 — 숨김 처리 */
@@ -386,16 +396,16 @@
       display: flex;
       align-items: flex-end;
       gap: 8px;
-      background: #FFFFFF;
-      border-radius: var(--r-xl);
+      background: var(--bg-elevated);
+      border-radius: var(--r-lg);
       padding: 6px 6px 6px 10px;
-      border: 1.5px solid #D1D9E6;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      border: 1px solid var(--sep);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
       transition: border-color 0.15s, box-shadow 0.15s;
     }
     .input-wrap:focus-within {
       border-color: var(--tint);
-      box-shadow: 0 0 0 3px rgba(0,87,168,0.12);
+      box-shadow: 0 0 0 2px rgba(62,207,142,0.20);
     }
 
     /* 좌측 액션 버튼 */
@@ -771,7 +781,7 @@
   <div class="top-bar">
     <!-- 좌측 로고 / 진행 상황 버튼 -->
     <div id="top-logo" onclick="_onLogoTap()"
-         style="color:rgba(255,255,255,0.90);font-size:15px;font-weight:700;
+         style="color:var(--label);font-size:15px;font-weight:700;
                 letter-spacing:-0.3px;flex:1;cursor:pointer;
                 display:flex;align-items:center;gap:6px;user-select:none;">
       <span id="top-logo-text">고팡</span>
@@ -3084,6 +3094,9 @@ async function callAI(userText, imageFile = null) {
     history.push({ role: 'assistant', content: fullReply });
     if (bubble) bubble.classList.remove('streaming');
 
+    // K-Law 백그라운드 감시 트리거 — 대화 내용 자동 검토 (비동기)
+    setTimeout(() => _klawReview('conversation', null), 3000);
+
     // ── CLN 신고: 간략 메시지 표시 + 진행 상황 시작 ────────────
     if (isCLNReport) {
       // 1. AI 응답에서 "이해한 지시" 추출 (첫 1~2문장)
@@ -3974,6 +3987,167 @@ async function _updateFiilReport(reportId, parsed) {
 
 let _lastFiilReportId = null;  // 가장 최근 FIIL 신고 ID (AI 응답 파싱 업데이트용)
 
+
+// ══════════════════════════════════════════════════════════════════════
+// K-Law 백그라운드 감시 파이프라인 v1.0
+//
+// 역할: 사용자가 요청하지 않아도 모든 대화·서비스 결과를
+//       자동으로 검토하여 법적/분쟁 리스크를 감지합니다.
+//
+// 트리거:
+//   1. callAI() 완료 후 → 대화 내용 자동 검토
+//   2. _recordPDV() 호출 후 → 서비스 결과 자동 검토
+//
+// 결과:
+//   - RISK_HIGH/RISK_CRITICAL → 채팅창에 경고 버블 즉시 표시
+//   - RISK_LOW/RISK_MEDIUM   → PDV에만 조용히 기록
+//   - RISK_NONE              → 무시
+// ══════════════════════════════════════════════════════════════════════
+
+// ── K-Law 감시 상태 ────────────────────────────────────────────────
+let _klawBusy          = false;   // 중복 실행 방지
+let _klawLastCheck     = 0;       // 마지막 검토 시각 (ms)
+const KLAW_COOLDOWN_MS = 30000;   // 30초 쿨다운 (과도한 API 호출 방지)
+
+// K-Law Monitor 프롬프트 캐시 (감시용 경량 프롬프트 — v15.1 판결예측과 별개)
+let _klawMonitorPrompt = null;
+async function _getKlawPrompt() {
+  if (_klawMonitorPrompt) return _klawMonitorPrompt;
+  try {
+    const res = await fetch('/klaw/prompts/monitor_prompt.txt');
+    if (res.ok) {
+      _klawMonitorPrompt = await res.text();
+      console.info('[K-Law Monitor] 프롬프트 로드 완료');
+      return _klawMonitorPrompt;
+    }
+  } catch(e) { console.warn('[K-Law Monitor] 프롬프트 로드 실패:', e.message); }
+  return null;
+}
+
+// ── 리스크 레벨 정의 ────────────────────────────────────────────────
+const KLAW_RISK = {
+  NONE:     { label: null,              show: false },
+  LOW:      { label: '🟢 낮음',         show: false },  // PDV만 기록
+  MEDIUM:   { label: '🟡 검토 권고',    show: false },  // PDV만 기록
+  HIGH:     { label: '🟠 주의 필요',    show: true  },  // 채팅창 경고
+  CRITICAL: { label: '🔴 법적 리스크',  show: true  },  // 채팅창 즉시 경고
+};
+
+// ── 메인: K-Law 백그라운드 검토 ────────────────────────────────────
+// source: 'conversation' | 'service'
+// payload: 검토할 텍스트 또는 서비스 데이터
+async function _klawReview(source, payload) {
+  // 쿨다운 및 중복 실행 방지
+  const now = Date.now();
+  if (_klawBusy) return;
+  if (now - _klawLastCheck < KLAW_COOLDOWN_MS) return;
+
+  // K-Law 프롬프트 로드
+  const klawPrompt = await _getKlawPrompt();
+  if (!klawPrompt) return;
+
+  _klawBusy      = true;
+  _klawLastCheck = now;
+
+  try {
+    // ── 검토 대상 텍스트 구성 ────────────────────────────────
+    let reviewText = '';
+
+    if (source === 'conversation') {
+      // 최근 대화 5턴 추출 (system 제외)
+      const recent = (window._gopangHistory || [])
+        .filter(m => m.role !== 'system')
+        .slice(-10)
+        .map(m => `[${m.role === 'user' ? '사용자' : 'AI'}] ${m.content}`)
+        .join('\n');
+      if (!recent || recent.length < 50) { _klawBusy = false; return; }
+      reviewText = `## 검토 대상: 고팡 대화 내용\n\n${recent}`;
+
+    } else if (source === 'service') {
+      // 서비스 완료 결과 (pdvData)
+      reviewText = `## 검토 대상: ${payload.service || '서비스'} 처리 결과\n\n` +
+        `서비스: ${payload.serviceId}\n` +
+        `요약: ${payload.summary}\n` +
+        `데이터: ${JSON.stringify(payload.data || {}, null, 2)}`;
+    }
+
+    if (!reviewText) { _klawBusy = false; return; }
+
+    // ── K-Law API 호출 (백그라운드) ──────────────────────────
+    // monitor_prompt.txt가 출력 형식을 완전히 정의하므로 추가 지시 불필요
+    const klawSystemPrompt = klawPrompt;
+
+    const res = await fetch(CFG.endpoint + '/deepseek', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model:       CFG.model,
+        max_tokens:  512,
+        temperature: 0.1,   // 일관된 법적 판단을 위해 낮게 설정
+        messages: [
+          { role: 'system',  content: klawSystemPrompt },
+          { role: 'user',    content: reviewText },
+        ],
+      }),
+    });
+
+    if (!res.ok) { _klawBusy = false; return; }
+    const data = await res.json();
+    const raw  = data.choices?.[0]?.message?.content || '{}';
+    const clean = raw.replace(/```json|```/g, '').trim();
+
+    let result;
+    try { result = JSON.parse(clean); }
+    catch { _klawBusy = false; return; }
+
+    const level = result.risk_level || 'NONE';
+    const risk  = KLAW_RISK[level] || KLAW_RISK.NONE;
+
+    console.info(`[K-Law Monitor] 감시 완료 — ${level}: ${result.summary || '이상 없음'}`);
+
+    // ── PDV에 감시 결과 기록 (모든 레벨) ────────────────────
+    if (level !== 'NONE') {
+      _recordPDV({
+        type:       'klaw_monitor',
+        serviceId:  'klaw',
+        service:    'K-Law',
+        summary:    `[${level}] ${result.summary || ''}`,
+        data:       result,
+        source:     source,
+        ts:         new Date().toISOString(),
+      });
+    }
+
+    // ── HIGH/CRITICAL: 채팅창에 경고 버블 표시 ──────────────
+    if (risk.show && result.summary) {
+      const icon  = level === 'CRITICAL' ? '🔴' : '🟠';
+      const html  =
+        `<div style="border-left:3px solid ${level==='CRITICAL'?'#C01C28':'#e37400'};` +
+        `padding:10px 12px;border-radius:4px;background:${level==='CRITICAL'?'#FEE2E2':'#FFF7ED'}">` +
+        `<div style="font-size:11px;font-weight:700;color:${level==='CRITICAL'?'#C01C28':'#e37400'};` +
+        `letter-spacing:.5px;margin-bottom:6px">` +
+        `${icon} K-Law 자동 감지 — ${risk.label}</div>` +
+        `<div style="font-size:14px;color:#1A202C;margin-bottom:${result.detail?'8px':'0'}">${result.summary}</div>` +
+        (result.detail  ? `<div style="font-size:12px;color:#4A5568;margin-bottom:6px">${result.detail}</div>` : '') +
+        (result.action  ? `<div style="font-size:12px;font-weight:600;color:#0057A8">💡 ${result.action}</div>` : '') +
+        `</div>`;
+      appendBubble('ai', html, true);
+    }
+
+  } catch(e) {
+    console.warn('[K-Law] 감시 오류 (무시):', e.message);
+  } finally {
+    _klawBusy = false;
+  }
+}
+
+// ── 대화 히스토리 전역 노출 (K-Law 감시용) ──────────────────────────
+// callAI() 내부의 history를 K-Law가 읽을 수 있도록
+Object.defineProperty(window, '_gopangHistory', {
+  get: () => typeof history !== 'undefined' ? history : [],
+  configurable: true,
+});
+
 // ══════════════════════════════════════════════════════════════════════
 // Gopang Widget Protocol (GWP) 호스트 엔진 v1.0
 // 고팡이 개별 서비스 webapp을 iframe으로 호출하고 제어권을 관리합니다.
@@ -4150,6 +4324,11 @@ async function _recordPDV(record) {
       }),
     });
   } catch(e) { console.warn('[PDV] 기록 실패:', e.message); }
+
+  // K-Law 백그라운드 감시 트리거 — 서비스 완료 결과 자동 검토
+  if (record.type === 'service_task' && record.serviceId !== 'klaw') {
+    setTimeout(() => _klawReview('service', record), 2000);
+  }
 }
 
 const _SUPABASE_URL = 'https://ebbecjfrwaswbdybbgiu.supabase.co';
