@@ -74,6 +74,7 @@ export async function recordPDV(record) {
         how:         howStr,
         service_id:  record.serviceId || null,
         why:         whyStr,
+        report_id:   record.data?.reportId || null,  // fiil.kr 신고서 연결
       }),
     });
     console.info('[PDV] 기록 완료:', record.type, '/', record.summary?.slice(0, 30));
