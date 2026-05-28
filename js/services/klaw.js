@@ -84,3 +84,48 @@ export async function klawReview(source, payload) {
   } catch(e) { console.warn('[K-Law]', e.message); }
   finally    { _busy = false; }
 }
+
+// ── K-Law webapp 실행 ────────────────────────────────────────────
+// 고팡에서 법률 관련 메시지 감지 시 호출
+// user: { guid, fp }  /  userText: 사용자 입력 원문
+let _getUser = () => null;
+
+export function initKlawLaunch({ getUser }) {
+  _getUser = getUser;
+}
+
+const KLAW_URL = location.hostname === 'localhost'
+  ? 'http://localhost:8080/webapp.html'
+  : 'https://klaw.openhash.kr/webapp.html';
+
+let _klawTab  = null;   // 이미 열린 탭 재사용
+let _lastOpen = 0;
+const OPEN_COOLDOWN = 10_000; // 10초 내 중복 방지
+
+export function klawLaunch(userText = '') {
+  // 쿨다운: 10초 내 중복 호출 방지
+  if (Date.now() - _lastOpen < OPEN_COOLDOWN) return;
+  _lastOpen = Date.now();
+
+  const user = _getUser();
+  const url  = new URL(KLAW_URL);
+
+  // 고팡 사용자 정보 전달
+  if (user?.guid) url.searchParams.set('guid', user.guid);
+  if (user?.fp)   url.searchParams.set('fp',   user.fp);
+
+  // 사건 초기 텍스트 전달 (있을 경우)
+  if (userText)   url.searchParams.set('case', encodeURIComponent(userText));
+
+  // 출처 표시
+  url.searchParams.set('from', 'gopang');
+
+  // 이미 열린 탭이 있으면 재사용, 아니면 새 탭
+  if (_klawTab && !_klawTab.closed) {
+    _klawTab.focus();
+  } else {
+    _klawTab = window.open(url.toString(), 'gopang_klaw');
+  }
+
+  console.info('[K-Law] 탭 실행:', url.toString());
+}
