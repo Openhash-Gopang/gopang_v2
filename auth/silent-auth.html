@@ -252,7 +252,7 @@
 // 역할 2: 리다이렉트 → 인증 UI → 토큰 발급 → return URL 복귀
 // ══════════════════════════════════════════════════════════
 
-import { gopangAuth, issueToken } from './gopang-sso.js';
+import { gopangAuth, issueToken } from './gopang-sso.js?v=1.1';
 
 const params    = new URLSearchParams(location.search);
 const SERVICE   = params.get('svc')    || '*';
@@ -290,9 +290,14 @@ async function _runSilentMode() {
       return;
     }
 
-    // ✅ 토큰 발급
-    const token = await issueToken(SERVICE, 'L0');
-    _postToParent(token, null);
+    // ✅ 토큰 발급 (issueToken(user, svcId) 형식)
+    const tokenObj = await issueToken(user, SERVICE);
+    const flatToken = {
+      ipv6:  tokenObj.payload.ipv6,
+      level: tokenObj.payload.level,
+      exp:   tokenObj.payload.exp,
+    };
+    _postToParent(flatToken, null);
 
   } catch(e) {
     _postToParent(null, e.message);
@@ -383,8 +388,11 @@ window.doLogin = async function() {
       _showMsg('✅ 등록 완료!', 'success');
     }
 
-    // 토큰 발급
-    const token = await issueToken(SERVICE, 'L0');
+    // 토큰 발급 (issueToken(user, svcId) 형식)
+    const freshUser = _getLocalUser();
+    const tokenResult = await issueToken(freshUser, SERVICE);
+    const token = btoa(JSON.stringify(tokenResult))
+      .replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
 
     await new Promise(r => setTimeout(r, 600));
 
