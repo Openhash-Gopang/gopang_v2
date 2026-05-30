@@ -577,13 +577,13 @@ footer {
     <h1><strong>고팡</strong></h1>
     <p class="hero-sub">AI 평행세계 플랫폼 · v3.4</p>
 
-    <p class="hero-tagline">현실 세계의 비용을 <strong>99%</strong>, 시간을 <strong>99.9%</strong> 줄입니다.</p>
+    <p class="hero-tagline">AI 평행 세계는 현실 세계의 비용을 <strong>99%</strong>, 시간을 <strong>99.99999%</strong> 줄입니다.</p>
 
     <div class="hero-actions">
-      <a href="https://gopang.net" target="_blank" class="btn-lg btn-green">
+      <button onclick="openWebApp()" class="btn-lg btn-green">
         <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M6 3a1 1 0 000 2h2.586L3.293 10.293a1 1 0 101.414 1.414L10 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1H6z"/></svg>
         고팡 웹앱 열기
-      </a>
+      </button>
       <a href="https://klaw.openhash.kr" target="_blank" class="btn-lg btn-outline">
         K-Law 체험하기 →
       </a>
@@ -1012,12 +1012,17 @@ function openWebApp() {
   document.body.style.overflow = 'hidden';
   const iframe = document.getElementById('webapp-iframe');
   if (iframe && !iframe.dataset.loaded) {
-    // 절대경로 사용 — desktop.html과 동일 루트의 webapp.html
-    const base = location.href.replace(/\/[^/]*$/, '/');
-    iframe.src = base + 'webapp.html';
+    // 로딩 인디케이터 표시
+    const screen = iframe.closest('.phone-screen');
+    if (screen) screen.setAttribute('data-loading', '1');
+    // gopang.net 루트의 webapp.html 절대 경로
+    const origin = location.origin;   // https://gopang.net
+    iframe.src = origin + '/webapp.html';
     iframe.dataset.loaded = '1';
   }
 }
+
+
 function closeWebApp() {
   const modal = document.getElementById('webapp-modal');
   if (!modal) return;
@@ -1025,11 +1030,34 @@ function closeWebApp() {
   document.body.style.overflow = '';
 }
 document.addEventListener('DOMContentLoaded', function() {
+  // ── 모달 외부 클릭 닫기 ──────────────────────────────
   const modal = document.getElementById('webapp-modal');
   if (modal) {
     modal.addEventListener('click', function(e) {
       const wrapper = document.getElementById('phone-wrapper');
       if (wrapper && !wrapper.contains(e.target)) closeWebApp();
+    });
+  }
+
+  // ── iframe load/error 핸들러 (인라인 속성 대신 JS 등록) ──
+  const iframe = document.getElementById('webapp-iframe');
+  if (iframe) {
+    iframe.addEventListener('load', function() {
+      // src가 빈 초기 상태일 때는 무시
+      if (!iframe.src || iframe.src === location.origin + '/') return;
+      const loading = document.getElementById('_iframe-loading');
+      if (loading) {
+        loading.style.opacity = '0';
+        setTimeout(() => { loading.style.display = 'none'; }, 300);
+      }
+      console.log('[WebApp] 로딩 완료:', iframe.src);
+    });
+    iframe.addEventListener('error', function() {
+      const loading = document.getElementById('_iframe-loading');
+      if (loading) loading.style.display = 'none';
+      const err = document.getElementById('_iframe-err');
+      if (err) err.style.display = 'flex';
+      console.warn('[WebApp] 로딩 실패:', iframe.src);
     });
   }
 });
@@ -1067,8 +1095,33 @@ document.addEventListener('keydown', function(e) {
 
     <!-- 화면 -->
     <div class="phone-screen">
+      <!-- 로딩 중 표시 -->
+      <div id="_iframe-loading" style="
+        position:absolute;inset:0;z-index:2;
+        display:flex;flex-direction:column;align-items:center;justify-content:center;
+        background:#f8f9fa;gap:12px;border-radius:40px;
+        opacity:1;transition:opacity 0.3s;">
+        <div style="width:28px;height:28px;border:2.5px solid #e5e7eb;
+             border-top-color:#3ecf8e;border-radius:50%;
+             animation:spin 0.8s linear infinite;"></div>
+        <span style="font-size:12px;color:#9ca3af;">웹앱 로딩 중…</span>
+      </div>
+      <!-- 에러 폴백 -->
+      <div id="_iframe-err" style="
+        display:none;position:absolute;inset:0;z-index:3;
+        flex-direction:column;align-items:center;justify-content:center;
+        background:#f8f9fa;gap:16px;border-radius:40px;padding:24px;text-align:center;">
+        <span style="font-size:32px;">📱</span>
+        <p style="font-size:13px;color:#374151;font-weight:500;">웹앱을 불러올 수 없습니다</p>
+        <a href="https://gopang.net/webapp.html" target="_blank"
+           style="background:#3ecf8e;color:white;padding:10px 20px;border-radius:8px;
+                  font-size:13px;font-weight:600;text-decoration:none;">
+          새 탭에서 열기 →
+        </a>
+      </div>
       <iframe id="webapp-iframe" title="고팡 웹앱"
-              allow="camera; microphone; geolocation"></iframe>
+              allow="camera; microphone; geolocation; clipboard-write"
+              allowfullscreen></iframe>
     </div>
 
     <!-- 하단 홈 인디케이터 -->
@@ -1249,6 +1302,9 @@ document.addEventListener('keydown', function(e) {
 @keyframes mpulse {
   0%,100% { opacity: 1; }
   50%      { opacity: 0.3; }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* ── 화면 작을 때 폰 축소 ── */
