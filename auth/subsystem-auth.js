@@ -44,6 +44,10 @@ export async function initAuth() {
   if (!_user) return null;
   _renderAuthBadge();
   _autoHideLoading();
+  // 페이지 인라인 스크립트에 인증 결과 전달
+  if (typeof window._onGopangAuth === 'function') {
+    window._onGopangAuth(_user);
+  }
   return _user;
 }
 
