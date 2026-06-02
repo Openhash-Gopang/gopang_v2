@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>고팡 인증 프로세스 안내</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700;900&family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── 리셋 & 기본 ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: #faf9f6;
+  color: #1a1a1a;
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── 색상 변수 ── */
+:root {
+  --green:    #3ecf8e;
+  --green-dk: #1a9e6a;
+  --green-lt: #d1fae5;
+  --blue:     #1d4ed8;
+  --amber:    #f59e0b;
+  --red:      #ef4444;
+  --ink:      #1a1a1a;
+  --ink2:     #374151;
+  --ink3:     #6b7280;
+  --paper:    #faf9f6;
+  --paper2:   #f3f1ec;
+  --border:   #e5e0d8;
+  --code-bg:  #1e2330;
+  --code-txt: #a8d8a8;
+}
+
+/* ── 표지 ── */
+.cover {
+  background: linear-gradient(160deg, #0f1923 0%, #1a2f1a 50%, #0a1628 100%);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 40px;
+  position: relative;
+  overflow: hidden;
+}
+.cover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 30% 40%, rgba(62,207,142,.08) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 50% at 70% 60%, rgba(29,78,216,.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+.cover-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(62,207,142,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(62,207,142,.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+}
+.cover-inner {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  max-width: 720px;
+}
+.cover-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(62,207,142,.12);
+  border: 1px solid rgba(62,207,142,.3);
+  border-radius: 99px;
+  padding: 6px 18px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--green);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 32px;
+  font-family: 'DM Mono', monospace;
+}
+.cover-badge::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+.cover-title {
+  font-family: 'Noto Serif KR', serif;
+  font-size: clamp(32px, 5vw, 52px);
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.2;
+  margin-bottom: 20px;
+  letter-spacing: -1px;
+}
+.cover-title .hl {
+  color: var(--green);
+}
+.cover-sub {
+  font-size: 17px;
+  color: rgba(255,255,255,.55);
+  line-height: 1.7;
+  margin-bottom: 48px;
+  font-weight: 300;
+}
+.cover-meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  font-size: 12px;
+  color: rgba(255,255,255,.3);
+  font-family: 'DM Mono', monospace;
+}
+.cover-meta span { display: flex; align-items: center; gap: 6px; }
+
+/* ── 본문 컨테이너 ── */
+.doc {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 80px 40px 120px;
+}
+
+/* ── 섹션 구분 ── */
+.part-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--green-dk);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.part-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.section-title {
+  font-family: 'Noto Serif KR', serif;
+  font-size: clamp(24px, 3.5vw, 34px);
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 32px;
+  letter-spacing: -0.5px;
+  line-height: 1.3;
+}
+
+/* ── 일반 텍스트 ── */
+p {
+  font-size: 16px;
+  color: var(--ink2);
+  line-height: 1.9;
+  margin-bottom: 20px;
+}
+p strong { color: var(--ink); font-weight: 700; }
+
+/* ── 비유 카드 ── */
+.analogy {
+  background: var(--paper2);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--amber);
+  border-radius: 0 12px 12px 0;
+  padding: 24px 28px;
+  margin: 28px 0;
+  position: relative;
+}
+.analogy::before {
+  content: '비유';
+  position: absolute;
+  top: -10px; left: 20px;
+  background: var(--amber);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 99px;
+  letter-spacing: 1px;
+  font-family: 'DM Mono', monospace;
+}
+.analogy p { margin-bottom: 0; font-style: italic; color: var(--ink2); }
+.analogy p:not(:last-child) { margin-bottom: 12px; }
+
+/* ── 흐름 다이어그램 ── */
+.flow {
+  background: var(--code-bg);
+  border-radius: 14px;
+  padding: 32px;
+  margin: 32px 0;
+  overflow-x: auto;
+}
+.flow-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: rgba(255,255,255,.3);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+.flow pre {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  line-height: 1.8;
+  color: #c9d1d9;
+  white-space: pre;
+}
+.flow .f-green  { color: #3ecf8e; }
+.flow .f-blue   { color: #79b8ff; }
+.flow .f-yellow { color: #f0e68c; }
+.flow .f-gray   { color: #6e7681; }
+.flow .f-red    { color: #ff7b72; }
+.flow .f-white  { color: #fff; }
+
+/* ── 경로 카드 ── */
+.paths {
+  display: grid;
+  gap: 16px;
+  margin: 32px 0;
+}
+.path-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 16px;
+  align-items: start;
+  transition: border-color .15s, box-shadow .15s;
+}
+.path-card:hover {
+  border-color: var(--green);
+  box-shadow: 0 4px 16px rgba(62,207,142,.08);
+}
+.path-num {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 15px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+.path-num.p1 { background: rgba(62,207,142,.12); color: var(--green-dk); }
+.path-num.p2 { background: rgba(29,78,216,.10); color: #3b82f6; }
+.path-num.p3 { background: rgba(245,158,11,.10); color: var(--amber); }
+.path-num.p4 { background: rgba(239,68,68,.10); color: var(--red); }
+.path-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+.path-desc {
+  font-size: 13px;
+  color: var(--ink3);
+  line-height: 1.6;
+  margin: 0;
+}
+.path-badge {
+  display: inline-block;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-top: 6px;
+  font-weight: 500;
+}
+.badge-fast { background: var(--green-lt); color: var(--green-dk); }
+.badge-cached { background: #dbeafe; color: #1d4ed8; }
+.badge-cross { background: #fef3c7; color: #92400e; }
+.badge-fallback { background: #fee2e2; color: #991b1b; }
+
+/* ── 코드 블록 ── */
+.code-block {
+  background: var(--code-bg);
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 24px 0;
+}
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: rgba(255,255,255,.04);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.code-filename {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: rgba(255,255,255,.45);
+}
+.code-lang {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--green);
+  background: rgba(62,207,142,.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.code-body {
+  padding: 20px 24px;
+  overflow-x: auto;
+}
+.code-body pre {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  line-height: 1.75;
+  color: #c9d1d9;
+  white-space: pre;
+}
+/* 구문 강조 */
+.kw  { color: #ff79c6; }   /* 키워드 */
+.fn  { color: #79b8ff; }   /* 함수명 */
+.str { color: #f1fa8c; }   /* 문자열 */
+.cm  { color: #6272a4; }   /* 주석 */
+.nm  { color: #bd93f9; }   /* 변수명 */
+.op  { color: #ff5555; }   /* 연산자/특수 */
+
+/* ── 파일 목록 ── */
+.file-tree {
+  background: var(--code-bg);
+  border-radius: 12px;
+  padding: 24px 28px;
+  margin: 24px 0;
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  line-height: 2;
+}
+.ft-dir  { color: #79b8ff; }
+.ft-file { color: #c9d1d9; }
+.ft-note { color: #6272a4; font-size: 11px; }
+.ft-hl   { color: var(--green); font-weight: 500; }
+
+/* ── 레벨 표 ── */
+.level-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 24px 0;
+  font-size: 14px;
+}
+.level-table th {
+  background: var(--paper2);
+  padding: 10px 16px;
+  text-align: left;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: .5px;
+  color: var(--ink3);
+  border-bottom: 2px solid var(--border);
+}
+.level-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--ink2);
+  vertical-align: top;
+}
+.level-table tr:last-child td { border-bottom: none; }
+.lv-badge {
+  display: inline-block;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 6px;
+}
+.lv-0 { background: #f3f4f6; color: #374151; }
+.lv-1 { background: #e0f2fe; color: #0369a1; }
+.lv-2 { background: var(--green-lt); color: var(--green-dk); }
+.lv-3 { background: #fef3c7; color: #92400e; }
+
+/* ── 콜아웃 ── */
+.callout {
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 28px 0;
+  display: flex;
+  gap: 14px;
+}
+.callout-green { background: var(--green-lt); border: 1px solid #a7f3d0; }
+.callout-blue  { background: #dbeafe; border: 1px solid #bfdbfe; }
+.callout-amber { background: #fef3c7; border: 1px solid #fde68a; }
+.callout-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+.callout-body { font-size: 14px; color: var(--ink2); line-height: 1.7; }
+.callout-body strong { color: var(--ink); }
+
+/* ── 구분선 ── */
+.divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 64px 0;
+}
+
+/* ── 반응형 ── */
+@media (max-width: 600px) {
+  .doc { padding: 48px 20px 80px; }
+  .cover { padding: 60px 24px; }
+  .flow { padding: 20px; }
+  .code-body { padding: 16px; }
+  .path-card { grid-template-columns: 1fr; }
+  .path-num { width: 36px; height: 36px; font-size: 13px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ 표지 ══ -->
+<div class="cover">
+  <div class="cover-grid"></div>
+  <div class="cover-inner">
+    <div class="cover-badge">Gopang Auth · White Paper</div>
+    <h1 class="cover-title">
+      고팡과 하위 시스템 간<br>
+      <span class="hl">인증 프로세스 공유</span><br>
+      메커니즘 안내
+    </h1>
+    <p class="cover-sub">
+      고팡 생태계의 모든 서비스는 단 하나의 계정으로<br>
+      어떻게 안전하게 연결되는가
+    </p>
+    <div class="cover-meta">
+      <span>📄 AI City Inc.</span>
+      <span>·</span>
+      <span>gopang-sso.js v1.0</span>
+      <span>·</span>
+      <span>2026</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 본문 ══ -->
+<div class="doc">
+
+  <!-- ─ PART 1: 쉬운 설명 ─ -->
+  <div class="part-label">Part 1 &nbsp;·&nbsp; 대중을 위한 쉬운 설명</div>
+  <h2 class="section-title">고팡 계정 하나로<br>모든 서비스를 이용한다</h2>
+
+  <p>
+    자신의 스마트폰을 지문이나 패턴 등으로 연 뒤, 폰에 설치된 수십 개의 앱을 제한없이 이용할 수 있습니다. 웹은 어떤가요? 국세청, 은행, 기업, 특허청 등 제각각의 로그인 절차와 별의별 인증서를 요구합니다. 고팡은 마치 스마트폰처럼 기존의 웹을 하나의 인증 방법으로 열고, 그 앱인 수백만 개 웹사이트를 AI로 재구성합니다. 말하자면, 현실 세계의 웹을 그대로 투사한 <strong>"AI 평행 세계의 웹"</strong>입니다.
+  </p>
+
+  <p>
+    고팡은 단순한 앱이 아닙니다. <strong>K-Police(치안), K-School(교육), K-Law(법률), K-Health(의료)</strong> 등 수십 개의 하위 서비스로 이루어진 거대한 생태계입니다. 이 서비스들은 각기 다른 주소(도메인)에 있지만, 사용자는 계정을 하나만 만들면 모든 서비스를 자유롭게 이용할 수 있습니다.
+  </p>
+  <p>
+    어떻게 가능할까요? 이것을 <strong>"인증 프로세스 공유"</strong>라고 합니다.
+  </p>
+
+  <div class="analogy">
+    <p>
+      🏢 <strong>아파트 단지 마스터키에 비유하면:</strong><br>
+      고팡은 하나의 대형 아파트 단지입니다. 경비실(고팡)에서 한 번 신분 확인을 마치면, 단지 안의 헬스장(K-Health), 도서관(K-School), 경찰초소(K-Police) 어디든 같은 마스터키로 출입할 수 있습니다. 각 시설마다 따로 신분증을 제시할 필요가 없습니다.
+    </p>
+  </div>
+
+  <p>
+    이 방식을 <strong>SSO(Single Sign-On, 단일 로그인)</strong>라고 부릅니다. 전 세계 수많은 서비스가 이 방식을 사용합니다. 구글 계정 하나로 유튜브·지메일·구글맵을 모두 이용하는 것과 같은 원리입니다.
+  </p>
+
+  <hr class="divider" style="margin: 40px 0;">
+
+  <h2 class="section-title" style="font-size: clamp(20px,3vw,28px);">사용자 입장에서 본 전체 흐름</h2>
+
+  <p><strong>Step 1 — 고팡에서 딱 한 번 등록합니다</strong></p>
+  <p>
+    처음 고팡(gopang.net)에 접속하면 두 가지를 설정합니다. 하나는 <strong>기기 인식</strong>입니다. 고팡은 사용자의 스마트폰이나 컴퓨터를 조용히 분석해 고유한 "기기 지문"을 만듭니다. 다른 하나는 <strong>4단어 시드</strong>입니다. 기기를 잃어버렸을 때 복원하기 위한 비밀 열쇠입니다. 선택적으로 얼굴 등록도 할 수 있습니다.
+  </p>
+
+  <div class="analogy">
+    <p>
+      🔑 <strong>지문과 비밀 암호에 비유하면:</strong><br>
+      기기 지문은 여러분의 손가락 지문과 같습니다. 같은 기기라면 언제나 동일한 지문이 나옵니다. 4단어 시드는 은행 금고의 비밀번호와 같습니다. 기기가 바뀌어도 이 암호를 알면 다시 본인임을 증명할 수 있습니다.
+    </p>
+  </div>
+
+  <p><strong>Step 2 — K-Police(또는 다른 하위 서비스)에 접속합니다</strong></p>
+  <p>
+    사용자가 police.gopang.net에 접속하면, K-Police는 "이 사람이 누구인지" 고팡에게 조용히 물어봅니다. 사용자는 이 과정을 전혀 알아채지 못합니다. 1~3초 안에 자동으로 완료되기 때문입니다.
+  </p>
+
+  <div class="analogy">
+    <p>
+      📞 <strong>호텔 내선 전화에 비유하면:</strong><br>
+      호텔 레스토랑(K-Police)에 들어서면, 레스토랑 직원이 프런트(고팡)에 내선을 걸어 "507호 투숙객 맞나요?"라고 확인합니다. 손님(사용자)은 아무것도 할 필요가 없습니다. 프런트가 "맞습니다"라고 답하면 바로 자리를 안내받습니다.
+    </p>
+  </div>
+
+  <p><strong>Step 3 — 처음 접속이라면 간단한 확인 절차가 있습니다</strong></p>
+  <p>
+    만약 같은 기기에서 처음 접속하거나, 기기를 바꿨다면 고팡 인증 화면이 나타납니다. 4단어 시드를 입력하면 바로 신원이 확인되고, 서비스를 이용할 수 있습니다.
+  </p>
+
+  <hr class="divider" style="margin: 40px 0;">
+
+  <h2 class="section-title" style="font-size: clamp(20px,3vw,28px);">인증 레벨: 보안의 4단계</h2>
+
+  <p>
+    모든 서비스가 동일한 수준의 보안을 요구하지는 않습니다. 게시판 글을 읽는 것과, 범죄를 신고하거나 법적 서류를 제출하는 것은 다릅니다. 고팡은 이를 4단계로 구분합니다.
+  </p>
+
+  <table class="level-table">
+    <thead>
+      <tr>
+        <th>레벨</th>
+        <th>인증 방법</th>
+        <th>허용 기능 예시</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="lv-badge lv-0">L0</span></td>
+        <td>기기 자동 인식</td>
+        <td>일반 조회, AI 상담</td>
+      </tr>
+      <tr>
+        <td><span class="lv-badge lv-1">L1</span></td>
+        <td>L0 + 얼굴 인증</td>
+        <td>신고 접수, 출동 승인, 소송 패키지 생성</td>
+      </tr>
+      <tr>
+        <td><span class="lv-badge lv-2">L2</span></td>
+        <td>L1 + 지문(WebAuthn)</td>
+        <td>진료 기록 열람, 금융 거래</td>
+      </tr>
+      <tr>
+        <td><span class="lv-badge lv-3">L3</span></td>
+        <td>L2 + 4단어 시드</td>
+        <td>계정 복원, 최고 보안 기능</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ─ PART 2: 기술적 설명 ─ -->
+  <hr class="divider">
+  <div class="part-label">Part 2 &nbsp;·&nbsp; 기술적 프로세스</div>
+  <h2 class="section-title">파일과 함수로 보는<br>정확한 작동 원리</h2>
+
+  <p>
+    고팡 인증 시스템은 <strong>3개의 핵심 파일</strong>로 구성됩니다. 이 파일들은 모두 <code style="background:var(--paper2);padding:2px 6px;border-radius:4px;font-family:'DM Mono',monospace;font-size:13px">gopang.net</code>에만 존재합니다. 각 하위 시스템은 자체 인증 파일을 두지 않으며, HTML에 <strong>단 한 줄</strong>만 삽입합니다.
+  </p>
+
+  <div class="file-tree">
+    <div><span class="ft-dir">gopang.net/auth/</span>  <span class="ft-note">← 인증 관련 파일은 모두 여기에만 존재</span></div>
+    <div>&nbsp;&nbsp;├── <span class="ft-hl">gopang-sso.js</span>        <span class="ft-note">← 중앙 인증 라이브러리 (핵심)</span></div>
+    <div>&nbsp;&nbsp;├── <span class="ft-hl">subsystem-auth.js</span>    <span class="ft-note">← 하위 시스템 공용 인증 모듈</span></div>
+    <div>&nbsp;&nbsp;└── <span class="ft-hl">silent-auth.html</span>     <span class="ft-note">← 크로스도메인 토큰 발급기</span></div>
+    <div>&nbsp;</div>
+    <div><span class="ft-dir">각 하위 시스템/</span>  <span class="ft-note">← auth.js 파일 없음</span></div>
+    <div>&nbsp;&nbsp;└── <span class="ft-file">*.html</span>               <span class="ft-note">← script 태그 한 줄만 삽입</span></div>
+  </div>
+
+  <hr class="divider" style="margin: 40px 0;">
+
+  <h2 class="section-title" style="font-size: clamp(18px,2.5vw,24px);">1단계 — 하위 시스템은 HTML 한 줄만 삽입한다</h2>
+
+  <p>
+    수백 개의 하위 시스템 각각에 인증 파일을 두면, 인증 로직이 변경될 때마다 수백 개를 모두 수정해야 합니다. 고팡은 이 문제를 근본적으로 해결합니다. 하위 시스템은 HTML에 <code style="background:var(--paper2);padding:2px 6px;border-radius:4px;font-family:'DM Mono',monospace;font-size:13px">script</code> 태그 <strong>한 줄</strong>만 추가하면 됩니다. 인증 로직 전체가 <code style="background:var(--paper2);padding:2px 6px;border-radius:4px;font-family:'DM Mono',monospace;font-size:13px">gopang.net</code>에서 원격으로 실행됩니다.
+  </p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-filename">police.html / school.html / klaw.html / … (모든 하위 시스템 동일)</span>
+      <span class="code-lang">HTML</span>
+    </div>
+    <div class="code-body"><pre><span class="cm">&lt;!-- 고팡 인증 — 이 한 줄이 전부입니다 --&gt;</span>
+<span class="kw">&lt;script</span> <span class="nm">type</span>=<span class="str">"module"</span>
+  <span class="nm">src</span>=<span class="str">"https://gopang.net/auth/subsystem-auth.js"</span><span class="kw">&gt;
+&lt;/script&gt;</span></pre></div>
+  </div>
+
+  <p>
+    더 세밀한 제어가 필요할 때는 함수를 직접 import해서 사용할 수도 있습니다.
+  </p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-filename">고급 사용 예시 (선택적)</span>
+      <span class="code-lang">JavaScript</span>
+    </div>
+    <div class="code-body"><pre><span class="kw">import</span> { <span class="fn">initAuth</span>, <span class="fn">requireLevel</span> }
+  <span class="kw">from</span> <span class="str">'https://gopang.net/auth/subsystem-auth.js'</span>;
+
+<span class="cm">// L0 기본 인증</span>
+<span class="kw">const</span> <span class="nm">user</span> = <span class="kw">await</span> <span class="fn">initAuth</span>();
+
+<span class="cm">// 중요 기능(신고 접수, 소송 생성 등) 전 L1 요청</span>
+<span class="kw">const</span> <span class="nm">ok</span> = <span class="kw">await</span> <span class="fn">requireLevel</span>(<span class="str">'L1'</span>);
+<span class="kw">if</span> (<span class="nm">ok</span>) { <span class="cm">/* 기능 실행 */</span> }</pre></div>
+  </div>
+
+  <div class="callout callout-green">
+    <div class="callout-icon">💡</div>
+    <div class="callout-body">
+      <strong>핵심:</strong> 인증 로직을 수정할 일이 생기면 <code>gopang.net/auth/subsystem-auth.js</code> 하나만 수정합니다. 수백 개의 하위 시스템 전체에 즉시 반영됩니다. 각 하위 시스템은 아무것도 변경할 필요가 없습니다.
+    </div>
+  </div>
+
+  <hr class="divider" style="margin: 40px 0;">
+
+  <h2 class="section-title" style="font-size: clamp(18px,2.5vw,24px);">2단계 — gopang-sso.js가 4가지 경로를 순서대로 시도한다</h2>
+
+  <p>
+    <code style="background:var(--paper2);padding:2px 6px;border-radius:4px;font-family:'DM Mono',monospace;font-size:13px">gopangAuth.require('L0')</code>가 호출되면, <strong>gopang-sso.js</strong>는 아래 4가지 경로를 빠른 것부터 순서대로 시도합니다. 하나라도 성공하면 즉시 인증을 완료합니다.
+  </p>
+
+  <div class="paths">
+    <div class="path-card">
+      <div class="path-num p1">①</div>
+      <div>
+        <div class="path-title">GWP <span style="font-size:12px;font-weight:400;color:var(--ink3)">(Gopang Widget Portal)</span> 토큰 확인</div>
+        <p class="path-desc">
+          고팡 앱 안에서 하위 서비스를 열 때, URL에 <code style="font-family:'DM Mono',monospace;font-size:12px">?gwp=1&amp;gwp_token=...</code> 파라미터가 붙어 옵니다. <code style="font-family:'DM Mono',monospace;font-size:12px">_tryGwpToken()</code> 함수가 이를 파싱하고 HMAC-SHA256으로 서명을 검증합니다.
+        </p>
+        <span class="path-badge badge-fast">가장 빠름 · GWP(Gopang Widget Portal) 내부 접속 시</span>
+      </div>
+    </div>
+    <div class="path-card">
+      <div class="path-num p2">②</div>
+      <div>
+        <div class="path-title">세션 캐시 확인</div>
+        <p class="path-desc">
+          이미 인증한 적이 있다면, <code style="font-family:'DM Mono',monospace;font-size:12px">sessionStorage['gopang_sso_token']</code>에 1시간짜리 토큰이 저장되어 있습니다. <code style="font-family:'DM Mono',monospace;font-size:12px">_trySession()</code> 함수가 이를 읽어 만료 여부를 확인합니다.
+        </p>
+        <span class="path-badge badge-cached">캐시 활용 · 같은 탭 재방문 시</span>
+      </div>
+    </div>
+    <div class="path-card">
+      <div class="path-num p2">③</div>
+      <div>
+        <div class="path-title">로컬 기기 확인</div>
+        <p class="path-desc">
+          <code style="font-family:'DM Mono',monospace;font-size:12px">_tryLocalStore()</code> 함수가 같은 브라우저의 <code style="font-family:'DM Mono',monospace;font-size:12px">localStorage['gopang_user_v3']</code>를 읽고, 현재 기기의 핑거프린트(<code style="font-family:'DM Mono',monospace;font-size:12px">_buildDeviceFingerprint()</code>)와 대조합니다. 일치하면 토큰을 발급합니다.
+        </p>
+        <span class="path-badge badge-cached">직접 접속 · 같은 기기일 때</span>
+      </div>
+    </div>
+    <div class="path-card">
+      <div class="path-num p3">④</div>
+      <div>
+        <div class="path-title">Silent iframe (크로스도메인 해결)</div>
+        <p class="path-desc">
+          <code style="font-family:'DM Mono',monospace;font-size:12px">_trySilentIframe()</code> 함수가 <code style="font-family:'DM Mono',monospace;font-size:12px">gopang.net/auth/silent-auth.html</code>을 1×1px 보이지 않는 iframe으로 삽입합니다. 이 iframe은 <strong>gopang.net 도메인에서 실행</strong>되므로 gopang.net의 localStorage를 직접 읽을 수 있습니다. 토큰 발급 후 <code style="font-family:'DM Mono',monospace;font-size:12px">postMessage</code>로 결과를 전달합니다.
+        </p>
+        <span class="path-badge badge-cross">크로스도메인 해결 · 핵심 기술</span>
+      </div>
+    </div>
+    <div class="path-card">
+      <div class="path-num p4">⑤</div>
+      <div>
+        <div class="path-title">리다이렉트 (최후 수단)</div>
+        <p class="path-desc">
+          위 모든 경로가 실패하면 <code style="font-family:'DM Mono',monospace;font-size:12px">_redirectToGopang()</code>이 호출됩니다. 사용자를 <code style="font-family:'DM Mono',monospace;font-size:12px">gopang.net/auth/silent-auth.html?return=현재URL</code>로 보내 등록 또는 복원 UI를 보여줍니다. 완료 후 원래 서비스로 자동 복귀합니다.
+        </p>
+        <span class="path-badge badge-fallback">미등록 사용자 · 기기 변경 시</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow">
+    <div class="flow-title">gopang-sso.js · gopangAuth.require() 전체 흐름</div>
+    <pre>
+<span class="f-green">gopangAuth.require('L0')</span> 호출
+│
+├─ <span class="f-blue">_tryGwpToken()</span>         <span class="f-gray">← URL ?gwp_token= 파싱 + HMAC 검증</span>
+│    성공 → <span class="f-yellow">✅ 반환</span>
+│
+├─ <span class="f-blue">_trySession()</span>          <span class="f-gray">← sessionStorage['gopang_sso_token'] 확인</span>
+│    성공 → <span class="f-yellow">✅ 반환</span>
+│
+├─ <span class="f-blue">_tryLocalStore()</span>       <span class="f-gray">← localStorage['gopang_user_v3'] + 기기 핑거프린트</span>
+│    성공 → <span class="f-yellow">✅ 반환</span>
+│
+├─ <span class="f-blue">_trySilentIframe()</span>     <span class="f-gray">← 1px iframe: gopang.net/auth/silent-auth.html</span>
+│    │                      <span class="f-gray">   gopang.net localStorage 직접 접근 (크로스도메인 해결)</span>
+│    │   <span class="f-white">postMessage({ type:'GOPANG_SSO_TOKEN', token })</span>
+│    성공 → <span class="f-yellow">✅ 반환</span>
+│    실패 → (3초 타임아웃)
+│
+└─ <span class="f-red">_redirectToGopang()</span>    <span class="f-gray">← 최후 수단: 전체 화면 리다이렉트</span>
+       gopang.net/auth/silent-auth.html?return=현재URL
+       등록/복원 완료 → ?gopang_token=XXX 붙여서 복귀
+       복귀 후 _tryGwpToken()이 처리 → <span class="f-yellow">✅ 반환</span>
+</pre>
+  </div>
+
+  <hr class="divider" style="margin: 40px 0;">
+
+  <h2 class="section-title" style="font-size: clamp(18px,2.5vw,24px);">3단계 — silent-auth.html이 크로스도메인을 해결한다</h2>
+
+  <p>
+    브라우저 보안 정책상 <strong>서로 다른 도메인의 localStorage는 읽을 수 없습니다.</strong> police.gopang.net은 gopang.net의 저장 데이터를 직접 읽지 못합니다. 이 문제를 <code style="background:var(--paper2);padding:2px 6px;border-radius:4px;font-family:'DM Mono',monospace;font-size:13px">silent-auth.html</code>이 해결합니다.
+  </p>
+
+  <div class="analogy">
+    <p>
+      🪟 <strong>유리창 너머 쪽지 전달에 비유하면:</strong><br>
+      A 방(police.gopang.net)에서는 B 방(gopang.net)의 서랍을 직접 열 수 없습니다. 하지만 B 방 안에 대리인(silent-auth.html)을 잠깐 들여보내면, 대리인이 서랍을 열어 내용을 확인하고 쪽지(postMessage)로 결과를 창문 너머로 건네줄 수 있습니다.
+    </p>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-filename">gopang.net/auth/silent-auth.html (핵심 부분)</span>
+      <span class="code-lang">JavaScript</span>
+    </div>
+    <div class="code-body"><pre><span class="cm">// silent-auth.html은 gopang.net 도메인에서 실행됨</span>
+<span class="cm">// → gopang.net의 localStorage를 직접 읽을 수 있음</span>
+
+<span class="kw">async function</span> <span class="fn">_runSilentMode</span>() {
+  <span class="kw">const</span> <span class="nm">user</span> = <span class="fn">_getLocalUser</span>();  <span class="cm">// localStorage['gopang_user_v3'] 읽기</span>
+
+  <span class="cm">// 기기 핑거프린트 일치 확인</span>
+  <span class="kw">const</span> <span class="nm">fpHex</span> = <span class="kw">await</span> <span class="fn">_buildDeviceFingerprint</span>();
+  <span class="kw">if</span> (<span class="nm">user</span>.<span class="nm">fpHex</span> !== <span class="nm">fpHex</span>) {
+    <span class="fn">_postToParent</span>(<span class="kw">null</span>, <span class="str">'DEVICE_CHANGED'</span>);
+    <span class="kw">return</span>;
+  }
+
+  <span class="cm">// 토큰 발급 후 postMessage로 전달</span>
+  <span class="kw">const</span> <span class="nm">tokenObj</span> = <span class="kw">await</span> <span class="fn">issueToken</span>(<span class="nm">user</span>, <span class="nm">SERVICE</span>);
+  <span class="fn">_postToParent</span>(<span class="nm">tokenObj</span>, <span class="kw">null</span>);
+}
+
+<span class="kw">function</span> <span class="fn">_postToParent</span>(<span class="nm">token</span>, <span class="nm">error</span>) {
+  <span class="cm">// police.gopang.net으로 결과 전송</span>
+  <span class="nm">window</span>.<span class="nm">parent</span>.<span class="fn">postMessage</span>({
+    <span class="nm">type</span>:  <span class="str">'GOPANG_SSO_TOKEN'</span>,
+    <span class="nm">token</span>: <span class="nm">token</span>,
+    <span class="nm">error</span>: <span class="nm">error</span>,
+  }, <span class="nm">targetOrigin</span>);
+}</pre></div>
+  </div>
+
+  <hr class="divider" style="margin: 40px 0;">
+
+  <h2 class="section-title" style="font-size: clamp(18px,2.5vw,24px);">4단계 — 기기 정체성: 어떻게 "나"를 증명하는가</h2>
+
+  <p>
+    고팡에는 아이디와 비밀번호가 없습니다. 대신 <strong>기기 핑거프린트</strong>와 <strong>4단어 시드</strong>로 신원을 증명합니다.
+  </p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-filename">gopang-sso.js · _buildDeviceFingerprint()</span>
+      <span class="code-lang">JavaScript</span>
+    </div>
+    <div class="code-body"><pre><span class="kw">async function</span> <span class="fn">_buildDeviceFingerprint</span>() {
+  <span class="cm">// 기기 고유 정보 8가지를 조합</span>
+  <span class="kw">const</span> <span class="nm">raw</span> = [
+    <span class="nm">navigator</span>.<span class="nm">userAgent</span>,          <span class="cm">// 브라우저 종류</span>
+    <span class="nm">navigator</span>.<span class="nm">language</span>,           <span class="cm">// 언어 설정</span>
+    <span class="nm">screen</span>.<span class="nm">width</span> + <span class="str">'x'</span> + <span class="nm">screen</span>.<span class="nm">height</span>, <span class="cm">// 화면 크기</span>
+    <span class="nm">screen</span>.<span class="nm">colorDepth</span>,            <span class="cm">// 색상 깊이</span>
+    <span class="nm">Intl</span>.<span class="nm">DateTimeFormat</span>().<span class="fn">resolvedOptions</span>().<span class="nm">timeZone</span>, <span class="cm">// 시간대</span>
+    <span class="nm">navigator</span>.<span class="nm">hardwareConcurrency</span>, <span class="cm">// CPU 코어 수</span>
+    <span class="nm">navigator</span>.<span class="nm">deviceMemory</span>,       <span class="cm">// RAM 용량</span>
+    <span class="nm">screen</span>.<span class="nm">pixelDepth</span>,            <span class="cm">// 픽셀 깊이</span>
+  ].<span class="fn">join</span>(<span class="str">'|'</span>);
+
+  <span class="cm">// SHA-256 해시 → 64자리 16진수 문자열</span>
+  <span class="kw">const</span> <span class="nm">buf</span> = <span class="kw">await</span> <span class="nm">crypto</span>.<span class="nm">subtle</span>.<span class="fn">digest</span>(<span class="str">'SHA-256'</span>, <span class="kw">new</span> <span class="fn">TextEncoder</span>().<span class="fn">encode</span>(<span class="nm">raw</span>));
+  <span class="kw">return</span> <span class="nm">Array</span>.<span class="fn">from</span>(<span class="kw">new</span> <span class="fn">Uint8Array</span>(<span class="nm">buf</span>))
+    .<span class="fn">map</span>(<span class="nm">b</span> => <span class="nm">b</span>.<span class="fn">toString</span>(<span class="str">16</span>).<span class="fn">padStart</span>(<span class="str">2</span>, <span class="str">'0'</span>)).<span class="fn">join</span>(<span class="str">''</span>);
+}
+</pre></div>
+  </div>
+
+  <p>
+    이 핑거프린트를 앞 16바이트만 사용해 <strong>IPv6 형식의 고유 주소</strong>로 변환합니다. 이것이 고팡에서 사용자를 식별하는 <strong>GUID(고유 식별자)</strong>가 됩니다. 예: <code style="font-family:'DM Mono',monospace;font-size:13px;background:var(--paper2);padding:2px 8px;border-radius:4px">2601:db80:a3f2:...</code>
+  </p>
+
+  <hr class="divider" style="margin: 40px 0;">
+
+  <h2 class="section-title" style="font-size: clamp(18px,2.5vw,24px);">전체 시스템 구조 한눈에 보기</h2>
+
+  <div class="flow">
+    <div class="flow-title">고팡 생태계 인증 전체 구조</div>
+    <pre>
+┌─────────────────────────────────────────────────────────────┐
+│                    gopang.net/auth/  (중앙)                  │
+│                                                             │
+│  ┌──────────────────┐  ┌────────────────┐  ┌────────────┐  │
+│  │  gopang-sso.js   │  │subsystem-auth  │  │silent-auth │  │
+│  │                  │  │     .js        │  │   .html    │  │
+│  │ 4가지 경로 처리   │←─│                │  │            │  │
+│  │ GWP토큰          │  │initAuth()      │  │Silent모드  │  │
+│  │ 세션캐시          │  │requireLevel()  │  │→postMessage│  │
+│  │ 로컬기기          │  │showAuthPanel() │  │            │  │
+│  │ Silent iframe    │──→│               │  │리다이렉트   │  │
+│  │ 리다이렉트        │  │               │  │→등록/복원UI│  │
+│  └──────────────────┘  └────────────────┘  └────────────┘  │
+└───────────────────────────────┬─────────────────────────────┘
+                                │
+          script 태그 한 줄 삽입 │
+          ┌─────────────────────┘
+          ↓
+┌─────────────────────────────────────────────────────────────┐
+│            각 하위 시스템 HTML  (auth.js 파일 없음)           │
+│                                                             │
+│  K-Police · K-School · K-Law · K-Health · K-Tax · 기타      │
+│                                                             │
+│  &lt;script type="module"                                      │
+│    src="https://gopang.net/auth/subsystem-auth.js"&gt;         │
+│  &lt;/script&gt;                                                  │
+│                                                             │
+│  ← 이 한 줄이 전부. 인증 로직은 gopang.net에서 실행됨.        │
+└─────────────────────────────────────────────────────────────┘
+</pre>
+  </div>
+
+  <div class="callout callout-blue">
+    <div class="callout-icon">🏗️</div>
+    <div class="callout-body">
+      <strong>설계 원칙 (백서 §12):</strong> 하위 서비스는 독자 인증 구현이 금지됩니다. 반드시 <code>gopangAuth.require(level)</code> 단일 호출로 모든 인증을 처리해야 합니다. 이로써 인증 로직의 변경이 필요할 때 gopang-sso.js 하나만 수정하면 수백 개 하위 시스템 전체에 즉시 반영됩니다.
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ─ PART 3: OpenHash + PDV 보안 ─ -->
+  <div class="part-label">Part 3 &nbsp;·&nbsp; 더욱 강력한 보안</div>
+  <h2 class="section-title">OpenHash 기반 PDV<br>— 인증을 넘어선 증거</h2>
+
+  <p>
+    지금까지 설명한 SSO 인증은 <strong>"이 사람이 누구인가"</strong>를 증명합니다. 그런데 고팡은 여기서 한 걸음 더 나아갑니다. 인증 행위 자체를 포함한 모든 데이터 접근 이력을 <strong>수학적으로 변조 불가능한 형태</strong>로 기록합니다. 이것이 <strong>PDV(Private Data Vault, 개인 데이터 금고)</strong>와 <strong>OpenHash</strong>의 역할입니다.
+  </p>
+
+  <div class="analogy">
+    <p>
+      🏦 <strong>공증된 금고에 비유하면:</strong><br>
+      일반 인증은 금고 열쇠를 확인하는 것입니다. 고팡의 PDV+OpenHash는 "누가, 언제, 어떤 열쇠로, 어느 서랍을 열었는지"를 공증 기관이 실시간으로 기록하는 것과 같습니다. 이 기록은 금고 주인도, 고팡도, 심지어 법원도 사후에 변경할 수 없습니다. 기록 자체가 법적 증거가 됩니다.
+    </p>
+  </div>
+
+  <hr class="divider" style="margin: 40px 0;">
+
+  <h2 class="section-title" style="font-size: clamp(18px,2.5vw,24px);">PDV란 무엇인가</h2>
+
+  <p>
+    PDV(Private Data Vault)는 사용자의 모든 데이터를 <strong>사용자 본인의 기기에 암호화하여 저장</strong>하는 개인 데이터 금고입니다. 인증 이력, 서비스 이용 기록, 신고 내역, 진료 기록 등이 모두 PDV에 저장됩니다. 고팡 서버도, 하위 시스템도, 정부 기관도 사용자의 동의 없이 내용을 볼 수 없습니다.
+  </p>
+
+  <p>
+    PDV의 각 레코드는 <strong>6하원칙(Who·When·Where·What·How·Why)</strong> 구조로 기록됩니다.
+  </p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span class="code-filename">PDV 레코드 구조 예시 — K-Police 신고 접수</span>
+      <span class="code-lang">JSON</span>
+    </div>
+    <div class="code-body"><pre>{
+  <span class="str">"svc"</span>:   <span class="str">"police"</span>,
+  <span class="str">"type"</span>:  <span class="str">"incident_report"</span>,
+  <span class="str">"who"</span>:   <span class="str">"2601:db80:a3f2:…"</span>,        <span class="cm">// 신고자 IPv6 GUID</span>
+  <span class="str">"when"</span>:  <span class="str">"2026-06-01T22:15:00Z"</span>,
+  <span class="str">"where"</span>: <span class="str">"police.gopang.net"</span>,
+  <span class="str">"what"</span>:  { <span class="str">"crime_type"</span>: <span class="str">"강도"</span>, <span class="str">"risk_level"</span>: <span class="str">"CRITICAL"</span> },
+  <span class="str">"how"</span>:   { <span class="str">"auth_level"</span>: <span class="str">"L1"</span>, <span class="str">"method"</span>: <span class="str">"gopang-sso"</span> },
+  <span class="str">"why"</span>:   { <span class="str">"goal"</span>: <span class="str">"범죄 신고 및 출동 요청"</span> },
+  <span class="str">"openhash"</span>: <span class="str">"a3f2b8c1…"</span>          <span class="cm">// OpenHash 앵커 해시값</span>
+}</pre></div>
+  </div>
+
+  <hr class="divider" style="margin: 40px 0;">
+
+  <h2 class="section-title" style="font-size: clamp(18px,2.5vw,24px);">OpenHash란 무엇인가</h2>
+
+  <p>
+    OpenHash는 고팡의 핵심 기술로, <strong>PHLD(Probabilistic Hierarchical Ledger Distribution, 확률적 계층 분산 원장)</strong> 방식으로 동작하는 분산 해시 네트워크입니다. 데이터가 생성되는 순간 그 내용의 해시값이 전 세계에 분산된 노드에 즉시 등록됩니다. 한 번 등록된 해시는 수학적으로 변경이 불가능합니다.
+  </p>
+
+  <div class="analogy">
+    <p>
+      📰 <strong>신문 기사에 비유하면:</strong><br>
+      오늘 아침 신문에 실린 기사는 수백만 부가 배포된 뒤에는 아무도 내용을 바꿀 수 없습니다. OpenHash는 이와 같습니다. 단, 신문은 수백만 부를 인쇄해야 하지만, OpenHash는 해시값(지문) 하나만으로 전 세계 노드에 즉시 "공증"합니다.
+    </p>
+  </div>
+
+  <hr class="divider" style="margin: 40px 0;">
+
+  <h2 class="section-title" style="font-size: clamp(18px,2.5vw,24px);">PDV + OpenHash가 인증에 더하는 것</h2>
+
+  <p>
+    기존 SSO 인증은 <strong>"지금 이 순간"</strong>의 신원만 확인합니다. PDV + OpenHash는 여기에 <strong>"과거의 모든 순간"</strong>에 대한 불변 증거를 더합니다.
+  </p>
+
+  <div class="paths">
+    <div class="path-card">
+      <div class="path-num p1" style="font-size:20px;background:rgba(62,207,142,.12)">🔐</div>
+      <div>
+        <div class="path-title">인증 이력 불변 기록</div>
+        <p class="path-desc">
+          사용자가 서비스에 로그인할 때마다 <code style="font-family:'DM Mono',monospace;font-size:12px">auth_level</code>, <code style="font-family:'DM Mono',monospace;font-size:12px">ipv6</code>, 타임스탬프가 PDV에 기록되고 OpenHash로 앵커링됩니다. "내가 언제 로그인했는가"가 법적 증거가 됩니다.
+        </p>
+        <span class="path-badge badge-fast">위조 불가 · 수학적 보증</span>
+      </div>
+    </div>
+    <div class="path-card">
+      <div class="path-num p2" style="font-size:20px;background:rgba(29,78,216,.10)">🛡️</div>
+      <div>
+        <div class="path-title">발신자 서명 (부인 방지)</div>
+        <p class="path-desc">
+          사용자의 <code style="font-family:'DM Mono',monospace;font-size:12px">seedHex</code>로 HMAC-SHA256 서명된 모든 행위(신고, 계약, 진술)는 나중에 "나는 그런 적 없다"고 부인할 수 없습니다. 서명은 사용자의 4단어 시드에서만 생성되며, 고팡 서버도 복제할 수 없습니다.
+        </p>
+        <span class="path-badge badge-cached">부인 방지 · Non-repudiation</span>
+      </div>
+    </div>
+    <div class="path-card">
+      <div class="path-num p3" style="font-size:20px;background:rgba(245,158,11,.10)">⛓️</div>
+      <div>
+        <div class="path-title">해시 체인 연속성</div>
+        <p class="path-desc">
+          각 PDV 레코드는 이전 레코드의 해시를 포함합니다. 중간 기록을 삭제하거나 변조하면 체인이 깨져 즉시 탐지됩니다. 블록체인과 동일한 원리이지만, 개인 기기에서 동작하므로 프라이버시가 보호됩니다.
+        </p>
+        <span class="path-badge badge-cross">변조 즉시 탐지 · 체인 무결성</span>
+      </div>
+    </div>
+    <div class="path-card">
+      <div class="path-num p4" style="font-size:20px;background:rgba(239,68,68,.10)">🌐</div>
+      <div>
+        <div class="path-title">분산 앵커링 (단일 장애점 없음)</div>
+        <p class="path-desc">
+          OpenHash 노드는 전 세계에 분산되어 있습니다. 고팡 서버가 해킹되거나 서비스가 중단되어도, 이미 앵커링된 해시는 전 세계 노드에 살아 있습니다. 어느 한 기관도 기록을 지울 수 없습니다.
+        </p>
+        <span class="path-badge badge-fallback">고가용성 · 탈중앙화</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow">
+    <div class="flow-title">PDV + OpenHash 인증 강화 흐름</div>
+    <pre>
+사용자 인증 완료 (gopang-sso.js)
+  │
+  ↓
+PDV 레코드 생성 (6하원칙)
+  │  who:   사용자 IPv6 GUID
+  │  when:  인증 타임스탬프
+  │  where: 서비스 URL
+  │  what:  인증 레벨, 행위 내용
+  │  how:   gopang-sso, auth_level
+  │  why:   목적(신고/조회/계약 등)
+  │
+  ↓
+<span class="f-yellow">seedHex</span> 기반 HMAC-SHA256 서명
+  │  서명 = sign(레코드, 사용자_시드)
+  │  → 고팡 서버도 위조 불가
+  │
+  ↓
+<span class="f-green">OpenHash 앵커링</span>
+  │  해시값 → PHLD 분산 원장에 즉시 등록
+  │  → 수학적으로 변경 불가
+  │
+  ↓
+<span class="f-blue">PDV 암호화 저장</span> (사용자 기기)
+  │  AES-256 암호화 → 사용자만 복호화 가능
+  │
+  ↓
+✅ 완료: 법적 증거 수준의 인증 기록 생성
+   "누가·언제·어디서·무엇을·어떻게·왜" 변조 불가 기록
+</pre>
+  </div>
+
+  <div class="callout callout-amber">
+    <div class="callout-icon">⚖️</div>
+    <div class="callout-body">
+      <strong>법적 효력:</strong> PDV + OpenHash의 결합이 만드는 것은 <strong>자기완결 증거 구조</strong>입니다. 피해자가 고팡을 통해 신고하거나, 계약을 체결하거나, 진술을 남기면, 그 순간 OpenHash가 내용과 시각을 불변으로 기록합니다. 상대방이 자신의 기기에서 메시지를 삭제해도, 피해자의 PDV와 OpenHash 앵커가 증거로 남습니다. 별도의 공증이나 법원 제출 없이도 증거 효력을 갖습니다.
+    </div>
+  </div>
+
+  <hr class="divider" style="margin: 40px 0;">
+
+  <h2 class="section-title" style="font-size: clamp(18px,2.5vw,24px);">PDV는 일상을 기록한다 — 그래서 거짓말을 탐지한다</h2>
+
+  <p>
+    PDV는 단순한 로그 파일이 아닙니다. 사용자의 <strong>일상과 업무 전체</strong>를 6하원칙에 따라 연속적으로 기록합니다. 사용자가 어디에 있었는지, 몇 시에 어떤 서비스에 접속했는지, 어떤 행위를 했는지가 모두 시계열로 쌓입니다.
+  </p>
+  <p>
+    이 기록은 오직 <strong>진실만을 반영</strong>합니다. 기기 핑거프린트, GPS 위치, 접속 시각은 사용자가 임의로 조작할 수 없기 때문입니다. 따라서 PDV 기록과 어긋나는 인증 시도는 즉시 <strong>이상 징후(Abnormal Login Attempt)</strong>로 식별됩니다.
+  </p>
+
+  <div class="analogy">
+    <p>
+      🗓️ <strong>일기장에 비유하면:</strong><br>
+      매일 빠짐없이 기록된 일기장이 있다면, "나는 그날 서울에 있었다"는 거짓 주장은 일기장이 반박합니다. PDV는 변조 불가능한 디지털 일기장입니다. 평소와 다른 시간대, 다른 나라, 다른 기기에서 로그인이 시도되면, 일기장과 맞지 않는 이 사건은 즉시 의심 대상이 됩니다.
+    </p>
+  </div>
+
+  <p>구체적으로 다음과 같은 이상 징후가 탐지됩니다.</p>
+
+  <div class="paths">
+    <div class="path-card">
+      <div class="path-num p1" style="font-size:20px;background:rgba(62,207,142,.12)">📍</div>
+      <div>
+        <div class="path-title">위치 이상 (Impossible Travel)</div>
+        <p class="path-desc">
+          PDV에 기록된 직전 접속 위치가 제주도인데, 10분 후 모스크바에서 로그인이 시도됩니다. 물리적으로 불가능한 이동입니다. 고팡은 이를 즉시 비정상으로 판정하고 해당 세션을 차단합니다.
+        </p>
+        <span class="path-badge badge-fast">위치 × 시간 교차 분석</span>
+      </div>
+    </div>
+    <div class="path-card">
+      <div class="path-num p2" style="font-size:20px;background:rgba(29,78,216,.10)">🕐</div>
+      <div>
+        <div class="path-title">시간대 이상 (Temporal Anomaly)</div>
+        <p class="path-desc">
+          사용자의 PDV 기록상 평소 접속 시간대가 오전 8시~오후 11시인데, 새벽 3시에 L2 레벨의 금융 거래가 시도됩니다. 패턴과 다른 시간대의 고위험 행위는 자동으로 추가 인증을 요구합니다.
+        </p>
+        <span class="path-badge badge-cached">행동 패턴 기반 탐지</span>
+      </div>
+    </div>
+    <div class="path-card">
+      <div class="path-num p3" style="font-size:20px;background:rgba(245,158,11,.10)">📱</div>
+      <div>
+        <div class="path-title">기기 불일치 (Device Mismatch)</div>
+        <p class="path-desc">
+          기기 핑거프린트가 평소와 다릅니다. 새 기기에서 접속하면 4단어 시드 복원 절차를 요구합니다. 시드 없이 반복 시도하면 해당 IPv6 계정을 임시 잠금하고 사용자에게 경고를 발송합니다.
+        </p>
+        <span class="path-badge badge-cross">기기 핑거프린트 연속 검증</span>
+      </div>
+    </div>
+    <div class="path-card">
+      <div class="path-num p4" style="font-size:20px;background:rgba(239,68,68,.10)">🔁</div>
+      <div>
+        <div class="path-title">반복 실패 (Brute Force)</div>
+        <p class="path-desc">
+          짧은 시간 안에 동일 계정에 대한 인증 실패가 반복됩니다. 고팡은 실패 횟수와 간격을 PDV에 기록하고, 임계값 초과 시 자동으로 접근을 차단하며 security.gopang.net에 즉시 경보를 발송합니다.
+        </p>
+        <span class="path-badge badge-fallback">자동 차단 · 경보 발송</span>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" style="margin: 40px 0;">
+
+  <h2 class="section-title" style="font-size: clamp(18px,2.5vw,24px);">security.gopang.net<br>— 나만을 위한 개인 경호원</h2>
+
+  <p>
+    기존의 보안 시스템은 <strong>중앙 서버가 수백만 명의 데이터를 한꺼번에 감시</strong>합니다. 은행의 이상거래탐지 시스템, 포털의 로그인 보안 알림 — 모두 타인(기업·정부)이 나의 활동을 들여다보는 구조입니다. 내 데이터는 그들의 서버에 있고, 그들이 판단합니다.
+  </p>
+  <p>
+    <strong>security.gopang.net은 근본적으로 다릅니다.</strong> 이 시스템은 수백만 명을 동시에 감시하는 관제탑이 아닙니다. <strong>단 한 명의 사용자 — 바로 나 — 의 PDV와 인증 과정만을 전담으로 관찰</strong>합니다. 나의 데이터는 내 기기에 있고, 내 PDV가 판단하며, 이상이 생기면 오직 나에게만 통보합니다. 타인은 관여하지 않습니다.
+  </p>
+
+  <div class="analogy">
+    <p>
+      🛡️ <strong>건물 경비원 vs 개인 경호원:</strong><br>
+      기존 보안 시스템은 <strong>건물 경비원</strong>입니다. CCTV로 건물 안 모든 사람을 지켜봅니다. 내 행동도 그들의 모니터에 찍힙니다. 반면 security.gopang.net은 <strong>내 전담 개인 경호원</strong>입니다. 오직 나만을 24시간 관찰하고, 위협이 감지되면 나에게만 보고합니다. 경비원은 내 사생활을 볼 수 있지만, 개인 경호원은 오직 나의 명령만 따릅니다.
+    </p>
+  </div>
+
+  <hr class="divider" style="margin: 40px 0;">
+
+  <h2 class="section-title" style="font-size: clamp(18px,2.5vw,24px);">이상 징후 감지 시<br>4단계 대응 절차</h2>
+
+  <p>
+    security.gopang.net이 나의 PDV에서 이상 징후를 감지하면, 외부 기관에 알리는 것이 아니라 <strong>나에게 직접 추가 인증을 요구</strong>합니다. 위협의 심각도에 따라 4단계가 순서대로 적용됩니다. 각 단계를 통과하면 이전 단계보다 강력한 신원 확인이 완료된 것입니다.
+  </p>
+
+  <div class="paths">
+    <div class="path-card">
+      <div class="path-num p1">1단계</div>
+      <div>
+        <div class="path-title">얼굴 인증 (Face)</div>
+        <p class="path-desc">
+          카메라로 얼굴을 촬영합니다. 등록 시 저장된 얼굴 벡터와 대조합니다. 얼굴 데이터는 내 기기 밖으로 전송되지 않습니다. 경미한 이상 징후(새 위치, 새 시간대)에 적용됩니다.
+        </p>
+        <span class="path-badge badge-fast">L1 인증 · 기기 내 처리</span>
+      </div>
+    </div>
+    <div class="path-card">
+      <div class="path-num p2">2단계</div>
+      <div>
+        <div class="path-title">지문 인증 (Fingerprint · WebAuthn)</div>
+        <p class="path-desc">
+          스마트폰 또는 컴퓨터의 생체 인증(지문·Face ID)을 통해 WebAuthn 방식으로 신원을 확인합니다. 피싱이나 원격 해킹으로는 절대 통과할 수 없습니다. 기기를 물리적으로 소지하고 있어야 합니다.
+        </p>
+        <span class="path-badge badge-cached">L2 인증 · WebAuthn 표준</span>
+      </div>
+    </div>
+    <div class="path-card">
+      <div class="path-num p3">3단계</div>
+      <div>
+        <div class="path-title">성문 인증 (Voice Print)</div>
+        <p class="path-desc">
+          마이크로 목소리를 녹음합니다. 등록된 성문(음성 지문)과 대조합니다. 얼굴·지문과 달리 원격 전화 통화 상황에서도 적용 가능합니다. 심각한 이상 징후(불가능한 위치 이동, 반복 실패)에 적용됩니다.
+        </p>
+        <span class="path-badge badge-cross">L2+ 인증 · 원격 적용 가능</span>
+      </div>
+    </div>
+    <div class="path-card">
+      <div class="path-num p4">4단계</div>
+      <div>
+        <div class="path-title">오프라인 인증 (Offline Verification)</div>
+        <p class="path-desc">
+          관공서·금융 기관을 직접 방문하거나, 4단어 시드를 입력하여 신원을 최종 확인합니다. 디지털 인증이 모두 실패했거나 계정이 완전히 잠긴 최고 위험 상황에 적용됩니다. 이 단계를 통과하면 계정이 완전히 복원됩니다.
+        </p>
+        <span class="path-badge badge-fallback">L3 인증 · 최후 수단</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow">
+    <div class="flow-title">security.gopang.net — 1인 전담 이상 징후 감지 및 대응 흐름</div>
+    <pre>
+나의 PDV (내 기기에만 존재)
+  │  나의 인증 이력·위치·시각·행위 연속 기록
+  │  오직 나만 열람 가능
+  │
+  ↓
+<span class="f-blue">security.gopang.net</span>  (나만을 위한 전담 시스템)
+  │  타인·고팡·정부 접근 불가
+  │
+  ├─ 이상 징후 감지
+  │    ├─ <span class="f-yellow">위치 이상</span>   : 물리적 불가능 이동
+  │    ├─ <span class="f-yellow">시간대 이상</span> : 평소 패턴 벗어난 접속
+  │    ├─ <span class="f-yellow">기기 불일치</span> : 핑거프린트 변경
+  │    └─ <span class="f-yellow">반복 실패</span>   : 인증 반복 시도
+  │
+  ↓ 감지 즉시 — 나에게만 통보
+  │
+  ├─ 1단계: <span class="f-green">얼굴 인증</span>        경미한 이상 징후
+  ├─ 2단계: <span class="f-green">지문 (WebAuthn)</span>   기기 소지 확인
+  ├─ 3단계: <span class="f-yellow">성문 인증</span>        심각한 이상 징후
+  └─ 4단계: <span class="f-red">오프라인·시드</span>     최고 위험·계정 잠금
+  │
+  ↓
+<span class="f-green">OpenHash 앵커링</span>
+  이상 징후 이벤트 + 대응 기록 → 변조 불가 보존
+  → 나중에 법적 증거로 활용 가능
+</pre>
+  </div>
+
+  <div class="callout callout-green">
+    <div class="callout-icon">🔑</div>
+    <div class="callout-body">
+      <strong>핵심 원칙:</strong> security.gopang.net은 <strong>"내가 아닌 다른 누군가가 나를 감시하는 시스템"이 아닙니다.</strong> 나의 PDV가 나를 위해 스스로 작동하는 시스템입니다. 고팡 서버는 이상 징후의 내용을 알 수 없습니다. 대응 절차를 촉발하는 것도, 최종적으로 통과시키는 것도 오직 나 자신입니다.
+    </div>
+  </div>
+
+  <hr class="divider" style="margin: 40px 0;">
+
+  <div style="text-align:center;padding:40px 0;border-top:1px solid var(--border)">
+    <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--ink3);margin-bottom:8px">
+      gopang-sso.js v1.0 · silent-auth.html · PDV · OpenHash PHLD · security.gopang.net · 백서 §12
+    </div>
+    <div style="font-size:13px;color:var(--ink3)">
+      © 2026 AI City Inc. · Gopang Authentication Whitepaper
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
