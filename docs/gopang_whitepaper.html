@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>고팡 기술 백서 v1.0 — Gopang: An AI-Parallel World</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+:root{
+  --bg:#f8f9fa;--sur:#fff;--sur2:#f8f9fa;
+  --border:#e5e7eb;--border2:#d1d5db;
+  --brand:#3ecf8e;--brand-dk:#1a9e6a;--brand-lt:#d1fae5;--brand-bg:#f0fdf8;
+  --blue:#3b82f6;--blue-lt:#eff6ff;
+  --amber:#f59e0b;--amber-lt:#fffbeb;
+  --red:#ef4444;--red-lt:#fef2f2;
+  --text:#0f172a;--text2:#1e293b;--text3:#374151;--text4:#6b7280;
+  --nav-h:56px;--r:6px;--r-lg:10px;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 6px -1px rgba(0,0,0,.07),0 2px 4px -1px rgba(0,0,0,.04);
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter','Noto Sans KR',-apple-system,sans-serif;font-size:14px;line-height:1.7;overflow-x:hidden}
+a{color:var(--brand-dk);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ── NAV ── */
+nav{position:sticky;top:0;z-index:200;height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.nav-logo{display:flex;align-items:center;gap:8px;font-family:'DM Mono',monospace;font-weight:500;font-size:15px;color:var(--text);text-decoration:none}
+.nav-logo-mark{width:28px;height:28px;background:var(--brand);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff}
+.nav-back{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:var(--r);background:var(--sur2);border:1px solid var(--border2);font-size:13px;color:var(--text3);text-decoration:none;transition:all .15s}
+.nav-back:hover{background:var(--brand-bg);border-color:var(--brand);color:var(--brand-dk)}
+.nav-badge{font-family:'DM Mono',monospace;font-size:10px;padding:2px 8px;border-radius:99px;background:var(--brand-lt);color:var(--brand-dk);border:1px solid #a7f3d0;font-weight:500;letter-spacing:.4px}
+
+/* ── HERO ── */
+.hero{background:var(--sur);border-bottom:1px solid var(--border);padding:56px 24px 48px;text-align:center}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:6px;padding:4px 14px;border-radius:99px;background:var(--brand-bg);border:1px solid var(--brand-lt);font-family:'DM Mono',monospace;font-size:12px;color:var(--brand-dk);margin-bottom:20px}
+.hero-dot{width:6px;height:6px;border-radius:50%;background:var(--brand);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.hero h1{font-size:clamp(32px,5vw,52px);font-weight:700;letter-spacing:-1.5px;line-height:1.1;color:var(--text);margin-bottom:10px}
+.hero h1 .brand{color:var(--brand-dk)}
+.hero-sub{font-size:16px;color:var(--text3);margin-bottom:24px;font-weight:400}
+.hero-meta{display:flex;justify-content:center;flex-wrap:wrap;gap:16px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text4);margin-bottom:32px}
+.hero-meta span{display:flex;align-items:center;gap:5px}
+.hero-stats{display:flex;justify-content:center;flex-wrap:wrap;gap:0;max-width:640px;margin:0 auto;border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;background:var(--sur)}
+.hs{flex:1;min-width:120px;padding:16px 20px;text-align:center;border-right:1px solid var(--border)}
+.hs:last-child{border-right:none}
+.hs-val{font-size:22px;font-weight:700;color:var(--brand-dk);margin-bottom:3px;font-family:'DM Mono',monospace}
+.hs-lbl{font-size:11px;color:var(--text4)}
+
+/* ── TOC ── */
+.toc-wrap{max-width:280px;background:var(--sur);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px;font-size:13px;position:sticky;top:calc(var(--nav-h) + 12px);align-self:flex-start}
+.toc-title{font-weight:600;color:var(--text);margin-bottom:12px;font-size:12px;text-transform:uppercase;letter-spacing:.6px;font-family:'DM Mono',monospace}
+.toc-wrap ol{list-style:none;display:flex;flex-direction:column;gap:3px}
+.toc-wrap li a{color:var(--text3);font-size:12px;display:block;padding:3px 6px;border-radius:4px;transition:all .12s}
+.toc-wrap li a:hover{color:var(--brand-dk);background:var(--brand-bg);text-decoration:none}
+
+/* ── LAYOUT ── */
+.page-body{max-width:1100px;margin:0 auto;padding:40px 24px 80px;display:grid;grid-template-columns:1fr 280px;gap:48px;align-items:start}
+@media(max-width:900px){.page-body{grid-template-columns:1fr}.toc-wrap{display:none}}
+.content-area{min-width:0}
+
+/* ── SECTIONS ── */
+.section{margin-bottom:64px;scroll-margin-top:calc(var(--nav-h) + 20px)}
+.section-tag{display:inline-block;font-family:'DM Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.8px;text-transform:uppercase;color:var(--brand-dk);background:var(--brand-bg);border:1px solid var(--brand-lt);padding:3px 10px;border-radius:99px;margin-bottom:10px}
+.section h2{font-size:clamp(22px,3vw,30px);font-weight:700;letter-spacing:-0.8px;line-height:1.2;color:var(--text);margin-bottom:12px}
+.section h3{font-size:18px;font-weight:600;letter-spacing:-.3px;color:var(--text);margin:28px 0 10px;border-left:3px solid var(--brand);padding-left:12px}
+.section p{font-size:14px;color:var(--text2);line-height:1.8;margin-bottom:14px}
+.section p strong{color:var(--text);font-weight:600}
+.section ul,.section ol{padding-left:0;list-style:none;margin-bottom:16px;display:flex;flex-direction:column;gap:6px}
+.section ul li,.section ol li{font-size:14px;color:var(--text2);line-height:1.7;padding-left:20px;position:relative}
+.section ul li::before{content:"·";position:absolute;left:6px;color:var(--brand)}
+.section ol{counter-reset:li}
+.section ol li::before{counter-increment:li;content:counter(li)".";position:absolute;left:0;color:var(--brand-dk);font-weight:600;font-size:13px}
+
+/* ── CODE BLOCKS ── */
+pre{background:#0f172a;border-radius:var(--r-lg);padding:20px;overflow-x:auto;margin:16px 0;font-size:12px;line-height:1.7;border:1px solid #1e293b}
+code{font-family:'DM Mono',monospace;font-size:12px;color:#e2e8f0}
+pre code{color:#e2e8f0}
+.inline-code{font-family:'DM Mono',monospace;font-size:12px;background:var(--sur2);border:1px solid var(--border);padding:1px 6px;border-radius:4px;color:var(--text2)}
+
+/* ── CARDS ── */
+.card-grid{display:grid;gap:12px;margin:16px 0}
+.card-grid.g2{grid-template-columns:1fr 1fr}
+.card-grid.g3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:640px){.card-grid.g2,.card-grid.g3{grid-template-columns:1fr}}
+.card{background:var(--sur);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px}
+.card-tag{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:var(--brand-dk);margin-bottom:6px}
+.card h4{font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px}
+.card p{font-size:13px;color:var(--text3);line-height:1.65;margin:0}
+.card.accent{border-color:var(--brand-lt);background:var(--brand-bg)}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto;margin:16px 0}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{background:var(--sur2);border:1px solid var(--border);padding:10px 14px;text-align:left;font-weight:600;color:var(--text);white-space:nowrap}
+tbody td{border:1px solid var(--border);padding:9px 14px;color:var(--text2);vertical-align:top;line-height:1.6}
+tbody tr:nth-child(even) td{background:var(--sur2)}
+
+/* ── STAT CARDS ── */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin:16px 0}
+@media(max-width:640px){.stat-row{grid-template-columns:1fr 1fr}}
+.stat-cell{background:var(--sur);padding:16px 18px}
+.stat-val{font-size:24px;font-weight:700;color:var(--brand-dk);font-family:'DM Mono',monospace;margin-bottom:3px}
+.stat-lbl{font-size:12px;color:var(--text4)}
+
+/* ── FLOW DIAGRAM ── */
+.flow-box{background:var(--sur);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px;margin:16px 0;overflow-x:auto}
+.flow-box pre{background:transparent;border:none;padding:0;margin:0}
+.flow-box code{color:var(--text2);font-size:12px}
+
+/* ── BADGE ROW ── */
+.badge-row{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.badge{font-family:'DM Mono',monospace;font-size:11px;padding:3px 10px;border-radius:99px;border:1px solid}
+.badge-green{background:var(--brand-lt);color:var(--brand-dk);border-color:#a7f3d0}
+.badge-blue{background:var(--blue-lt);color:#1d4ed8;border-color:#bfdbfe}
+.badge-amber{background:var(--amber-lt);color:#92400e;border-color:#fde68a}
+.badge-red{background:var(--red-lt);color:#b91c1c;border-color:#fecaca}
+.badge-gray{background:var(--sur2);color:var(--text3);border-color:var(--border2)}
+
+/* ── DIVIDER ── */
+.sep{border:none;border-top:1px solid var(--border);margin:40px 0}
+
+/* ── AGENT TABLE ── */
+.agent-tbl td:first-child{font-family:'DM Mono',monospace;font-size:12px;white-space:nowrap;color:var(--brand-dk)}
+.agent-tbl td:nth-child(2){font-weight:600;color:var(--text)}
+
+/* ── FOOTER ── */
+footer{border-top:1px solid var(--border);background:var(--sur);padding:32px 24px;text-align:center}
+.footer-inner{max-width:800px;margin:0 auto;font-size:13px;color:var(--text4)}
+.footer-inner .footer-logo{display:inline-flex;align-items:center;gap:8px;font-family:'DM Mono',monospace;font-weight:500;font-size:15px;color:var(--text);margin-bottom:10px}
+.footer-links{display:flex;justify-content:center;flex-wrap:wrap;gap:12px;margin:14px 0}
+.footer-links a{color:var(--text3);font-size:13px;transition:color .12s}
+.footer-links a:hover{color:var(--brand-dk);text-decoration:none}
+.footer-disc{max-width:640px;margin:16px auto 0;font-size:12px;color:var(--text4);line-height:1.7;padding:14px 18px;background:var(--sur2);border:1px solid var(--border);border-radius:var(--r)}
+
+/* ── SCROLL REVEAL ── */
+.reveal{opacity:0;transform:translateY(16px);transition:opacity .45s,transform .45s}
+.reveal.in{opacity:1;transform:none}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="https://gopang.net" class="nav-logo">
+    <div class="nav-logo-mark">G</div>
+    gopang
+  </a>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span class="nav-badge">WHITEPAPER v1.0</span>
+    <a href="https://gopang.net/desktop.html" class="nav-back">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M5 12l6-6"/><path d="M5 12l6 6"/></svg>
+      gopang.net
+    </a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow"><span class="hero-dot"></span>Gopang Technical Whitepaper</div>
+  <h1>고팡 — <span class="brand">AI 평행 세계</span></h1>
+  <div class="hero-sub">Gopang: An AI-Parallel World — Architecture, Governance &amp; Infrastructure</div>
+  <div class="hero-meta">
+    <span>📅 2026년 6월 발행</span>
+    <span>🏢 AI City Inc. · 팀 주피터</span>
+    <span>📧 tensor.city@gmail.com</span>
+    <span>📄 v1.0</span>
+  </div>
+  <div class="hero-stats">
+    <div class="hs"><div class="hs-val">4,399</div><div class="hs-lbl">TPS (OpenHash)</div></div>
+    <div class="hs"><div class="hs-val">0.246ms</div><div class="hs-lbl">AI Fast-Path</div></div>
+    <div class="hs"><div class="hs-val">–98.5%</div><div class="hs-lbl">에너지 절감</div></div>
+    <div class="hs"><div class="hs-val">22개</div><div class="hs-lbl">구현 완료 Agent</div></div>
+  </div>
+</div>
+
+<!-- PAGE BODY -->
+<div class="page-body">
+
+<!-- TOC -->
+<aside>
+  <div class="toc-wrap">
+    <div class="toc-title">목차</div>
+    <ol>
+      <li><a href="#s0">§0 한눈에 보는 고팡</a></li>
+      <li><a href="#s1">§1 철학과 비전</a></li>
+      <li><a href="#s2">§2 세 가지 시나리오</a></li>
+      <li><a href="#s3">§3 포털 아키텍처</a></li>
+      <li><a href="#s4">§4 AI Agent 생태계</a></li>
+      <li><a href="#s5">§5 데이터 주권 — PDV</a></li>
+      <li><a href="#s6">§6 OpenHash 분산원장</a></li>
+      <li><a href="#s7">§7 인증 시스템</a></li>
+      <li><a href="#s8">§8 K-Law 법적 감시</a></li>
+      <li><a href="#s9">§9 K-Police · K-119</a></li>
+      <li><a href="#s10">§10 GDC · SEOM</a></li>
+      <li><a href="#s11">§11 거버넌스</a></li>
+      <li><a href="#s12">§12 보안 모델</a></li>
+      <li><a href="#s13">§13 성과 및 로드맵</a></li>
+      <li><a href="#s14">§14 저장소 목록</a></li>
+    </ol>
+  </div>
+</aside>
+
+<!-- CONTENT -->
+<div class="content-area">
+
+<!-- § 0 -->
+<section class="section" id="s0">
+  <div class="section-tag reveal">Executive Summary</div>
+  <h2 class="reveal">§ 0. 한눈에 보는 고팡</h2>
+  <p class="reveal">고팡(Gopang)은 현실 세계의 <strong>AI 쌍둥이(AI Parallel World)</strong>입니다. 사용자가 말 한마디를 건네면 고팡의 AI 비서가 의도를 파악하고, 필요에 따라 전문 AI Agent를 호출하며, 모든 과정을 사용자 본인의 기기에 암호화 기록합니다. 외부 서버에는 인덱스만 보관되므로 대규모 해킹의 표적이 존재하지 않습니다.</p>
+  <div class="flow-box reveal">
+    <pre><code>사용자 입력
+    │
+    ▼
+고팡 AI 비서 (gopang.net)
+    ├── 직접 처리 ──────── 응답 + PDV 기록
+    ├── 전문 Agent 호출 ── 22개 도메인 Agent 중 매칭
+    └── 웹 검색 ─────────  응답 + PDV 기록
+                                │
+                                ▼
+                  OpenHash L1~L5 앵커링
+                  (위변조 원천 차단)</code></pre>
+  </div>
+  <div class="stat-row reveal">
+    <div class="stat-cell"><div class="stat-val">4,399</div><div class="stat-lbl">TPS (단일 노드)</div></div>
+    <div class="stat-cell"><div class="stat-val">0.246ms</div><div class="stat-lbl">AI Fast-Path</div></div>
+    <div class="stat-cell"><div class="stat-val">–98.5%</div><div class="stat-lbl">에너지 절감</div></div>
+    <div class="stat-cell"><div class="stat-val">GPL v3</div><div class="stat-lbl">오픈소스</div></div>
+  </div>
+</section>
+
+<hr class="sep">
+
+<!-- § 1 -->
+<section class="section" id="s1">
+  <div class="section-tag reveal">Philosophy &amp; Vision</div>
+  <h2 class="reveal">§ 1. 철학과 비전 — "AI 평행 세계"</h2>
+  <h3 class="reveal">1-1. 세 가지 구조적 문제</h3>
+  <div class="card-grid g3 reveal">
+    <div class="card">
+      <div class="card-tag">문제 1</div>
+      <h4>데이터 중앙화</h4>
+      <p>모든 개인 정보가 거대 플랫폼에 집중. 해킹 한 번으로 수억 명의 데이터 유출. 사용자는 자신의 데이터에 대한 실질적 통제권을 갖지 못함.</p>
+    </div>
+    <div class="card">
+      <div class="card-tag">문제 2</div>
+      <h4>서비스 파편화</h4>
+      <p>음식 주문, 택시, 병원, 세금이 각기 다른 앱. 이들 사이의 연결은 사용자 몫. AI 시대에도 사람이 여전히 중개자 역할.</p>
+    </div>
+    <div class="card">
+      <div class="card-tag">문제 3</div>
+      <h4>거버넌스 부재</h4>
+      <p>플랫폼 규칙은 소수 주주와 경영진이 결정. 사용자는 약관 변경을 통보받을 뿐, 결정에 참여하지 못함.</p>
+    </div>
+  </div>
+  <h3 class="reveal">1-2. 고팡의 답</h3>
+  <div class="card-grid g3 reveal">
+    <div class="card accent">
+      <div class="card-tag">해결 1</div>
+      <h4>데이터 주권 복원</h4>
+      <p>모든 데이터는 사용자 본인의 기기(PDV)에 저장. 서버에는 해시 인덱스만 존재.</p>
+    </div>
+    <div class="card accent">
+      <div class="card-tag">해결 2</div>
+      <h4>AI 통합 포털</h4>
+      <p>말 한마디로 50개 전문 Agent 자동 연결. AI 비서가 의도를 파악하고 최적 서비스를 호출.</p>
+    </div>
+    <div class="card accent">
+      <div class="card-tag">해결 3</div>
+      <h4>민주적 자치</h4>
+      <p>주주도 임직원도 없음. 운영 비용은 수익자 부담, 시스템 변경은 DAWN 투표로 결정.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="sep">
+
+<!-- § 2 -->
+<section class="section" id="s2">
+  <div class="section-tag reveal">Use Cases</div>
+  <h2 class="reveal">§ 2. 세 가지 시나리오로 보는 작동 원리</h2>
+
+  <h3 class="reveal">2-1. 음식 주문: "짜장면 두 그릇 주문해 줘"</h3>
+  <div class="flow-box reveal">
+    <pre><code>사용자 (제주시 한림읍)
+    │  "짜장면 두 그릇 주문해 줘"
+    ▼
+고팡 AI 비서 → K-Market Agent 호출 (market.gopang.net)
+    ├── GPS 현재 위치: 한림읍 금능남로 3
+    ├── PDV에서 사용자 식성·선호도 조회
+    ├── 등록 업체 중 거리순 + 평점순 중국 음식점 선정
+    ├── 해당 업체 AI 점원에게 주문 전달
+    │       └── "짜장면 2그릇, 30분 후 배달"
+    ├── GDC 결제 (gdc.gopang.net)  →  ₮24,000 (수수료 0%)
+    ├── K-Tax 실시간 세금 정산 (tax.gopang.net)
+    ├── 배달 완료 후 리뷰 → 업체 평가 반영
+    └── PDV 6하원칙 기록 + OpenHash 앵커링</code></pre>
+  </div>
+
+  <h3 class="reveal">2-2. 도시 이동: "내일 오전 9시 제주공항 가야 해"</h3>
+  <div class="flow-box reveal">
+    <pre><code>고팡 AI 비서 → K-Traffic Agent (traffic.gopang.net)
+    ├── 고팡 앱 설치 운전자 이동 패턴 분석
+    │       ├── 택시: ETA 8분, ₮12,000
+    │       ├── 카풀(A씨, 같은 방향): ₮5,000
+    │       └── 버스 421번: 오전 8:20 출발
+    ├── 사용자 선택: 카풀
+    ├── K-Insurance 자동 탑승 보험 적용
+    ├── 차량 내 고팡 블랙박스 활성화 → K-Security 감시
+    │       └── 범죄 감지 시 K-Police 자동 연동
+    ├── 도착 후 GDC 자동 결제 + K-Tax 정산
+    └── 전 과정 PDV + OpenHash 앵커링</code></pre>
+  </div>
+
+  <h3 class="reveal">2-3. 응급 대응: 교통사고 발생</h3>
+  <div class="flow-box reveal">
+    <pre><code>사고 감지 (블랙박스 또는 사용자 신고)
+    │
+    ▼
+K-119 Agent (911.gopang.net)
+    ├── 중증도 자동 분류: 1~4급
+    ├── 출동번호 발급: FD-20260604-XXXX
+    ├── Haversine 거리로 최근접 소방서·구급대 자동 배치
+    ├── 응급처치 가이드 실시간 제공
+    ├── 가용 응급실 자동 매칭
+    ├── 범죄 연루 시 → K-Police 자동 연동 (KP-번호 발급)
+    ├── K-Law → 법적 책임 AI 분석 + 예상 판결
+    ├── K-Insurance → 자동 청구 서류 생성
+    └── 전 과정 PDV + OpenHash 앵커링 (법적 증거)</code></pre>
+  </div>
+</section>
+
+<hr class="sep">
+
+<!-- § 3 -->
+<section class="section" id="s3">
+  <div class="section-tag reveal">Portal Architecture</div>
+  <h2 class="reveal">§ 3. 포털 아키텍처 — gopang.net AI 비서</h2>
+  <h3 class="reveal">3-1. AI 비서의 3단계 판단 로직</h3>
+  <div class="flow-box reveal">
+    <pre><code>Phase 0  소통 객체 식별 (Q0.1~Q0.8)
+    │        메시지 수신자가 누구인지 확인
+    ▼
+Phase 1  Fast-Path 검사 (실측 0.246ms)
+    ├── S3 위험 신호 → K-Law / K-Police / K-119 즉시 호출
+    └── 통과 → Phase 2
+    │
+    ▼
+Phase 2  gwp-registry.js 트리거 매칭
+    ├── 매칭 → GWP Agent 호출
+    └── 미매칭 → Phase 3
+    │
+    ▼
+Phase 3  AI 직접 처리 or 웹 검색
+    │
+    └── PDV 6하원칙 기록 + OpenHash 앵커링</code></pre>
+  </div>
+
+  <h3 class="reveal">3-2. GWP 프로토콜 (v2.1)</h3>
+  <p class="reveal">GWP(Gopang Widget Protocol)는 고팡 포털과 전문 Agent 사이의 표준 통신 규약입니다. <code class="inline-code">window.opener.postMessage</code> 방식으로 cross-origin 통신을 중계 서버 없이 구현합니다.</p>
+  <div class="flow-box reveal">
+    <pre><code>고팡 (gopang.net)                Agent webapp
+─────────────────                ─────────────
+gwpLaunch(svc, ctx, extra)
+  └─ window.open(url?gwp=1)  →  새 탭 로드
+  └─ 결과 대기                  작업 처리
+                                gwp.done({ summary, pdvData })
+_onGwpMessage(e)  ←──────────── window.opener.postMessage
+  └─ PDV 기록 + 완료 버블</code></pre>
+  </div>
+</section>
+
+<hr class="sep">
+
+<!-- § 4 -->
+<section class="section" id="s4">
+  <div class="section-tag reveal">Agent Ecosystem</div>
+  <h2 class="reveal">§ 4. AI Agent 생태계 (22개 저장소)</h2>
+
+  <h3 class="reveal">4-1. 생태계 연관 다이어그램</h3>
+  <div class="flow-box reveal">
+    <pre><code>                 ┌──────────────────────┐
+                 │    gopang.net         │
+                 │    AI 비서 포털       │
+                 └──────────┬───────────┘
+                            │ GWP 라우터
+        ┌───────────────────┼───────────────────┐
+        │                   │                   │
+ ┌──────▼──────┐    ┌───────▼──────┐    ┌──────▼──────┐
+ │  EMG · JUS  │    │  ECO · GOV   │    │MED·EDU·MKT  │
+ │ 911  police │    │ gdc  tax     │    │health school│
+ │ klaw securi │    │ stock insure │    │market       │
+ │ democr publi│    │ traffic logi │    │             │
+ └──────┬──────┘    └───────┬──────┘    └──────┬──────┘
+        └───────────────────┼───────────────────┘
+                            │
+                 ┌──────────▼──────────┐
+                 │  OpenHash L1~L5      │
+                 │  분산 원장 네트워크  │
+                 └──────────┬──────────┘
+                            │
+                 ┌──────────▼──────────┐
+                 │  사용자 PDV          │
+                 │  (로컬 기기 저장)    │
+                 └─────────────────────┘</code></pre>
+  </div>
+
+  <h3 class="reveal">4-2. Agent 카탈로그</h3>
+  <div class="tbl-wrap reveal">
+    <table class="agent-tbl">
+      <thead><tr><th>도메인</th><th>서비스명</th><th>URL</th><th>역할</th></tr></thead>
+      <tbody>
+        <tr><td>EMG</td><td>K-119</td><td>911.gopang.net</td><td>화재·구조·구급·재난 응급출동. 중증도 1~4급 자동 분류. 병원 자동 연결.</td></tr>
+        <tr><td>JUS</td><td>K-Police</td><td>police.gopang.net</td><td>AI 치안. GPS 위험 사전 감지. 사건번호(KP-) 자동 발급. 형사소송 패키지.</td></tr>
+        <tr><td>JUS</td><td>K-Law</td><td>klaw.gopang.net</td><td>법적 감시 + 판결 예측 v15.1. 193개국 법률. 모든 대화 백그라운드 모니터.</td></tr>
+        <tr><td>JUS</td><td>K-Security</td><td>security.gopang.net</td><td>CCTV·IoT 이상 감지. 해킹·랜섬웨어 대응. K-Police 자동 연동.</td></tr>
+        <tr><td>GOV</td><td>K-Democracy</td><td>democracy.gopang.net</td><td>DAWN 투표. 전자 투표·여론 수렴·정책 시뮬레이션.</td></tr>
+        <tr><td>GOV</td><td>K-Public</td><td>public.gopang.net</td><td>전국 228개 정부 기관 서비스 통합. 증명서 발급·민원·보조금.</td></tr>
+        <tr><td>ECO</td><td>GDC</td><td>gdc.gopang.net</td><td>글로벌 디지털 통화. 193개국 FIAT POOL. 요구불 발행. 수수료 0%.</td></tr>
+        <tr><td>ECO</td><td>K-Tax</td><td>tax.gopang.net</td><td>거래 즉시 실시간 세금 정산. 부가세·소득세·법인세 자동 분리.</td></tr>
+        <tr><td>ECO</td><td>K-Stock</td><td>stock.gopang.net</td><td>89개 자산군 AI 포트폴리오. GDC POOL 투자 운용.</td></tr>
+        <tr><td>ECO</td><td>K-Insurance</td><td>insurance.gopang.net</td><td>상황 기반 자동 보험 적용. 사고 시 청구 서류 자동 생성.</td></tr>
+        <tr><td>TRN</td><td>K-Traffic</td><td>traffic.gopang.net</td><td>실시간 이동 수단 조합. 택시·카풀·버스·AV 통합 관리.</td></tr>
+        <tr><td>TRN</td><td>K-Logistics</td><td>logistics.gopang.net</td><td>주문-출고-배송-반품 전 과정 자동화. K-Traffic 연동.</td></tr>
+        <tr><td>MED</td><td>K-Health</td><td>health.gopang.net</td><td>AI 주치의. 증상 분석·병원 예약·약 복용 관리. K-119 연동.</td></tr>
+        <tr><td>EDU</td><td>K-School</td><td>school.gopang.net</td><td>AI 개인 교사. PDV 기반 맞춤 커리큘럼. T2~T7 테스트 통과.</td></tr>
+        <tr><td>MKT</td><td>K-Market</td><td>market.gopang.net</td><td>AI 마켓플레이스. 자연어 주문. 업체 AI 점원(AI Twin) 배정.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="reveal">4-3. OpenHash 인프라 노드 (5계층)</h3>
+  <div class="tbl-wrap reveal">
+    <table>
+      <thead><tr><th>저장소</th><th>계층</th><th>관할</th></tr></thead>
+      <tbody>
+        <tr><td>openhash-L1-ido1</td><td>L1 (읍면동)</td><td>제주시 이도1동</td></tr>
+        <tr><td>openhash-L2-jeju-city</td><td>L2 (시군구)</td><td>제주시 전체</td></tr>
+        <tr><td>openhash-L3-jeju</td><td>L3 (광역)</td><td>제주특별자치도</td></tr>
+        <tr><td>openhash-L4-kr</td><td>L4 (국가)</td><td>대한민국</td></tr>
+        <tr><td>openhash-L5-global</td><td>L5 (글로벌)</td><td>전 세계</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr class="sep">
+
+<!-- § 5 -->
+<section class="section" id="s5">
+  <div class="section-tag reveal">Data Sovereignty</div>
+  <h2 class="reveal">§ 5. 데이터 주권 — PDV</h2>
+  <h3 class="reveal">5-1. 로컬 저장 원칙</h3>
+  <p class="reveal">PDV(Private Data Vault)는 사용자 기기에 암호화 저장되는 개인 데이터 금고입니다. 고팡 서버에는 OpenHash 해시 인덱스와 PDV 6하원칙 요약(Supabase 백업용)만 존재합니다.</p>
+  <div class="flow-box reveal">
+    <pre><code>기존 구조:
+  사용자 100만 명 → 중앙 서버 (1개) → 해킹 1회 = 100만 명 피해
+
+고팡 구조:
+  사용자 100만 명 → 각자 기기 (100만 개) → 해킹 1회 = 1명 피해
+                         │
+                    OpenHash 해시 인덱스만 공유 네트워크에 존재</code></pre>
+  </div>
+  <h3 class="reveal">5-2. 6하원칙 PDV 레코드 구조</h3>
+  <div class="flow-box reveal">
+    <pre><code>{
+  "svc":   "market",
+  "type":  "transaction",
+  "who":   { "ipv6": "2601:db80:bd05:...", "role": "user", "level": "L0" },
+  "when":  { "period_start": "2026-06-04T13:00:00Z", "period_end": "..." },
+  "where": { "svc_url": "https://market.gopang.net/webapp.html" },
+  "what":  { "summary": "짜장면 2그릇 주문, ₮24,000 결제" },
+  "how":   { "method": "K-Market AI 자동 주문" },
+  "why":   { "goal": "식사" }
+}</code></pre>
+  </div>
+</section>
+
+<hr class="sep">
+
+<!-- § 6 -->
+<section class="section" id="s6">
+  <div class="section-tag reveal">Distributed Ledger</div>
+  <h2 class="reveal">§ 6. 위변조 불가 원장 — OpenHash</h2>
+  <h3 class="reveal">6-1. 5계층 구조와 PLSM</h3>
+  <p class="reveal">OpenHash는 SHA-256 기반 확률론적 계층 분산원장입니다. 거래마다 확률적으로 하나의 노드를 선택하여 에너지를 절감합니다.</p>
+  <div class="tbl-wrap reveal">
+    <table>
+      <thead><tr><th>계층</th><th>단위</th><th>선택 확률</th><th>선택 범위</th></tr></thead>
+      <tbody>
+        <tr><td>L1</td><td>읍면동 (~7,000 노드)</td><td>60%</td><td>해시 mod 1000 → 0~599</td></tr>
+        <tr><td>L2</td><td>시군구 (226 노드)</td><td>20%</td><td>600~799</td></tr>
+        <tr><td>L3</td><td>광역 (17 노드)</td><td>10%</td><td>800~899</td></tr>
+        <tr><td>L4</td><td>국가 (최소 13 기관)</td><td>6%</td><td>900~959</td></tr>
+        <tr><td>L5</td><td>글로벌 (19+ 주체)</td><td>4%</td><td>960~999</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <h3 class="reveal">6-2. 핵심 모듈</h3>
+  <div class="card-grid g2 reveal">
+    <div class="card"><div class="card-tag">BIVM</div><h4>잔액 불변성 검증</h4><p>Σδ=0 원칙. 출금 합계 = 입금 합계. 위반 거래는 네트워크에서 자동 거부.</p></div>
+    <div class="card"><div class="card-tag">ILMV</div><h4>양방향 계층 검증</h4><p>L5→L1 하향 감사 + L1→L5 상향 모니터링 + 이웃 노드 교차 검증 동시 수행.</p></div>
+    <div class="card"><div class="card-tag">LPBFT</div><h4>합의 알고리즘</h4><p>L1 4노드 기준 ≤0.759ms. 5개 비상 조건 + 4개 복귀 메커니즘.</p></div>
+    <div class="card"><div class="card-tag">증거 패키지</div><h4>3요소 자기완결</h4><p>① PDV 암호화 기록 ② OpenHash 앵커 ref ③ 삼중 서명 → 법원 증거 능력.</p></div>
+  </div>
+  <div class="stat-row reveal">
+    <div class="stat-cell"><div class="stat-val">4,399</div><div class="stat-lbl">TPS (단일 노드)</div></div>
+    <div class="stat-cell"><div class="stat-val">0.228ms</div><div class="stat-lbl">L1 평균 지연</div></div>
+    <div class="stat-cell"><div class="stat-val">0.759ms</div><div class="stat-lbl">LPBFT 합의</div></div>
+    <div class="stat-cell"><div class="stat-val">–98.5%</div><div class="stat-lbl">에너지 절감</div></div>
+  </div>
+</section>
+
+<hr class="sep">
+
+<!-- § 7 -->
+<section class="section" id="s7">
+  <div class="section-tag reveal">Authentication</div>
+  <h2 class="reveal">§ 7. 인증 시스템 — 인증없는 인증</h2>
+  <p class="reveal">고팡의 인증 시스템은 <strong>"로그인 없이 인증"</strong>합니다. 기기 자체가 신원입니다.</p>
+  <div class="card-grid g2 reveal">
+    <div class="card"><div class="card-tag">L0 — 기기 자동 인식</div><h4>IPv6 + 기기 지문</h4><p>접속 즉시 자동 완료. 로그인 버튼 없음. 일반 조회·AI 상담·시장 이용.</p></div>
+    <div class="card"><div class="card-tag">L1 — 얼굴 인증</div><h4>Face ID (0.3초)</h4><p>신고 접수·법률 자문·고액 결제. 스마트폰 카메라로 즉시 완료.</p></div>
+    <div class="card"><div class="card-tag">L2 — 지문 (WebAuthn)</div><h4>FIDO2 / ECDSA</h4><p>진료 기록·금융 거래. 서버에 지문 저장 없음. 개인키는 기기 보안 칩에만.</p></div>
+    <div class="card"><div class="card-tag">L3 — 4단어 시드</div><h4>"정의의 물결 넘치는 꿈"</h4><p>계정 복원·최고 보안. 가능 조합 수 50,000⁴ = 6.25×10¹⁸. 어디에도 저장 없음.</p></div>
+  </div>
+  <h3 class="reveal">SSO 한 줄 구현</h3>
+  <p class="reveal">모든 하위 시스템은 <code class="inline-code">&lt;/body&gt;</code> 직전에 단 한 줄만 추가합니다.</p>
+  <div class="flow-box reveal">
+    <pre><code>&lt;script type="module" src="https://gopang.net/auth/subsystem-auth.js"&gt;&lt;/script&gt;
+
+window._onGopangAuth = async function(user) {
+  // user.ipv6  : 사용자 GUID
+  // user.level : 인증 레벨 (L0~L3)
+  // user.via   : 인증 경로 (session/iframe/gwp)
+};</code></pre>
+  </div>
+</section>
+
+<hr class="sep">
+
+<!-- § 8 -->
+<section class="section" id="s8">
+  <div class="section-tag reveal">Legal AI</div>
+  <h2 class="reveal">§ 8. 법적 감시 — K-Law 상시 모니터</h2>
+  <p class="reveal">K-Law는 두 가지 모드로 동작합니다. <strong>백그라운드 모니터</strong>는 모든 대화를 30초 쿨다운 간격으로 자동 분석하고, <strong>판결 예측 서비스</strong>는 사용자 요청 시 K-Law v15.1을 실행합니다.</p>
+  <div class="flow-box reveal">
+    <pre><code>모든 고팡 대화 (30초 쿨다운)
+    │
+    ▼
+K-Law 경량 모니터 (monitor_prompt.txt)
+    ├── 안전 → 대화 계속
+    └── 위험 감지
+            ├── S1 경미 → 노란 경고 배너
+            ├── S2 주의 → 법적 리스크 팝업
+            └── S3 즉각 → K-Police / K-119 자동 호출</code></pre>
+  </div>
+  <h3 class="reveal">예방적 법률 시스템</h3>
+  <p class="reveal">PDV가 모든 통신과 거래를 6하원칙으로 기록하므로, 분쟁 발생 시 증거를 즉시 추출합니다. 전체 분쟁의 <strong>90%는 대화 단계에서 해결</strong>, 9%는 K-Law 조정, 1%만 실제 소송으로 이어집니다.</p>
+</section>
+
+<hr class="sep">
+
+<!-- § 9 -->
+<section class="section" id="s9">
+  <div class="section-tag reveal">Public Safety</div>
+  <h2 class="reveal">§ 9. 안전망 — K-Police · K-119</h2>
+  <div class="flow-box reveal">
+    <pre><code>사건 발생
+    ├── 의료 응급 → K-119 주도, K-Police 보조
+    ├── 범죄 현장 → K-Police 주도, K-119 보조
+    ├── 교통사고  → K-119 + K-Police 동시 출동
+    └── 재난(화재·홍수) → K-119 주도, K-Police 현장 통제</code></pre>
+  </div>
+  <p class="reveal">모든 사건은 <strong>PDV + OpenHash 앵커링</strong>으로 기록됩니다. ① PDV 암호화 기록 ② OpenHash 앵커 참조값 ③ 삼중 서명의 3요소가 갖춰지면 법원 증거 능력이 확보됩니다. 가해자가 PDV를 삭제해도 ②③이 블록체인에 앵커링되어 증거는 유효합니다.</p>
+</section>
+
+<hr class="sep">
+
+<!-- § 10 -->
+<section class="section" id="s10">
+  <div class="section-tag reveal">Digital Currency</div>
+  <h2 class="reveal">§ 10. 화폐·금융 인프라 — GDC &amp; SEOM</h2>
+  <h3 class="reveal">GDC 요구불 발행 메커니즘</h3>
+  <div class="flow-box reveal">
+    <pre><code>사용자가 KRW 10,000원 입금
+    │  교환비: ₮1 = KRW 1,000
+    ▼
+₮10 즉시 발행 → 사용자 계좌 귀속
+    │
+    ▼
+KRW 10,000 → 한국 주요 은행 → KOSPI Index ETF 투자
+    │  투자 수익 → GDC 가치 상승
+    ▼
+사용자 출금 요청 → ₮10 소각 → KRW + 수익 반환</code></pre>
+  </div>
+  <p class="reveal">193개국 국적 통화가 각국 POOL에 분산 보관됩니다. POOL 간 이동이므로 환전 수수료 없이 <strong>0.1초 내 완료</strong>됩니다. SEOM(Sovereign Equity OpenHash Market)은 OpenHash 네트워크 참여자 보상 단위로, 거버넌스 투표와 수수료 지불에 활용됩니다.</p>
+</section>
+
+<hr class="sep">
+
+<!-- § 11 -->
+<section class="section" id="s11">
+  <div class="section-tag reveal">Governance</div>
+  <h2 class="reveal">§ 11. 거버넌스 — 비영리·오픈소스·DAWN 민주주의</h2>
+  <h3 class="reveal">11-1. 주주 없는 시스템</h3>
+  <div class="flow-box reveal">
+    <pre><code>전통 기업:  주주 → 이사회 → CEO → 직원 → 서비스 → 사용자
+
+고팡:  사용자 = 운영자 = 수혜자
+    ├── DAWN 투표로 시스템 규칙 변경
+    ├── OpenHash 노드 운영으로 인프라 유지
+    └── 수익자 부담으로 비용 자동 분담</code></pre>
+  </div>
+  <h3 class="reveal">11-2. DAWN 투표 메커니즘</h3>
+  <div class="flow-box reveal">
+    <pre><code>시스템 변경 제안 (누구나 가능)
+    │
+    ▼
+K-Democracy (democracy.gopang.net) 등록
+    │
+    ▼
+공개 토론 7일 → 투표 14일
+    ├── GDC ≥1 보유자: 1인 1표
+    ├── OpenHash L1 노드 운영자: 1노드 1표
+    └── 비영리 DAWN: 반민주적 변경 강제 거부권
+    │
+    ▼
+2/3 이상 찬성 → 자동 적용 + OpenHash 앵커링</code></pre>
+  </div>
+  <h3 class="reveal">11-3. 오픈소스 투명성</h3>
+  <p class="reveal">모든 소스코드는 <strong>GPL v3.0</strong>으로 공개됩니다. AI 시스템 프롬프트(SP 파일)도 공개되어 사용자가 AI 비서의 판단 기준을 직접 검증할 수 있습니다.</p>
+  <div class="badge-row reveal">
+    <span class="badge badge-green">GPL v3.0</span>
+    <span class="badge badge-blue">22개 저장소 공개</span>
+    <span class="badge badge-amber">SP 프롬프트 공개</span>
+    <span class="badge badge-gray">DAWN 민주적 운영</span>
+  </div>
+</section>
+
+<hr class="sep">
+
+<!-- § 12 -->
+<section class="section" id="s12">
+  <div class="section-tag reveal">Security</div>
+  <h2 class="reveal">§ 12. 보안 모델 종합</h2>
+  <div class="tbl-wrap reveal">
+    <table>
+      <thead><tr><th>계층</th><th>위협</th><th>고팡의 대응</th></tr></thead>
+      <tbody>
+        <tr><td>사용자 기기</td><td>기기 분실·탈취</td><td>L3 4단어 시드로 복원. 개인키 없이 복호화 불가.</td></tr>
+        <tr><td>통신 구간</td><td>중간자 공격</td><td>TLS 1.3 + ECDSA 서명. 모든 메시지 타임스탬프 서명.</td></tr>
+        <tr><td>PDV 저장</td><td>무단 열람</td><td>사용자 공개키 암호화. 고팡 팀조차 열람 불가.</td></tr>
+        <tr><td>OpenHash</td><td>데이터 위변조</td><td>SHA-256 해시체인 + ILMV 양방향 검증.</td></tr>
+        <tr><td>AI 시스템</td><td>프롬프트 인젝션</td><td>입력 검증 + K-Law 백그라운드 모니터.</td></tr>
+        <tr><td>GDC 결제</td><td>이중 지불</td><td>BIVM Σδ=0 + OpenHash 앵커링.</td></tr>
+        <tr><td>신원 시스템</td><td>Sybil 공격</td><td>ECDSA 키 생성 비용 + L1 노드 신원 검증 + 스테이킹.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr class="sep">
+
+<!-- § 13 -->
+<section class="section" id="s13">
+  <div class="section-tag reveal">Status &amp; Roadmap</div>
+  <h2 class="reveal">§ 13. 현재 구현 성과 및 로드맵</h2>
+  <div class="stat-row reveal">
+    <div class="stat-cell"><div class="stat-val">4,399</div><div class="stat-lbl">TPS (단일 노드)</div></div>
+    <div class="stat-cell"><div class="stat-val">9.99/10</div><div class="stat-lbl">K-Law 판결 정확도</div></div>
+    <div class="stat-cell"><div class="stat-val">22개</div><div class="stat-lbl">구현 완료 Agent</div></div>
+    <div class="stat-cell"><div class="stat-val">50개</div><div class="stat-lbl">목표 Agent 수</div></div>
+  </div>
+  <h3 class="reveal">로드맵</h3>
+  <div class="card-grid g3 reveal">
+    <div class="card"><div class="card-tag">2026 하반기</div><h4>Agent 확장</h4><p>22개 → 30개 (농업·문화·에너지 추가). iOS/Android 네이티브. OpenHash 전국 L1 확장.</p></div>
+    <div class="card"><div class="card-tag">2027</div><h4>글로벌화</h4><p>OpenHash SCI 논문 최종 게재. Agent 50개 달성. 193개국 GDC POOL 개설. GDUDA 상용화.</p></div>
+    <div class="card"><div class="card-tag">장기</div><h4>완전 분산화</h4><p>L5 글로벌 노드 19개국 독립 운영. SEOM 거래소 상장. UN 디지털 거버넌스 제안.</p></div>
+  </div>
+</section>
+
+<hr class="sep">
+
+<!-- § 14 -->
+<section class="section" id="s14">
+  <div class="section-tag reveal">References</div>
+  <h2 class="reveal">§ 14. 참고문헌 및 저장소</h2>
+  <div class="tbl-wrap reveal">
+    <table>
+      <thead><tr><th>저장소</th><th>역할</th></tr></thead>
+      <tbody>
+        <tr><td><a href="https://github.com/Openhash-Gopang/gopang_v2" target="_blank">gopang_v2</a></td><td>고팡 포털 (gopang.net)</td></tr>
+        <tr><td><a href="https://github.com/Openhash-Gopang/911" target="_blank">911</a></td><td>K-119 응급출동 (911.gopang.net)</td></tr>
+        <tr><td><a href="https://github.com/Openhash-Gopang/police" target="_blank">police</a></td><td>K-Police 치안 (police.gopang.net)</td></tr>
+        <tr><td><a href="https://github.com/Openhash-Gopang/klaw" target="_blank">klaw</a></td><td>K-Law 법률 AI</td></tr>
+        <tr><td><a href="https://github.com/Openhash-Gopang/gdc" target="_blank">gdc</a></td><td>GDC 글로벌 디지털 통화</td></tr>
+        <tr><td><a href="https://github.com/Openhash-Gopang/market" target="_blank">market</a></td><td>K-Market 마켓플레이스</td></tr>
+        <tr><td><a href="https://github.com/Openhash-Gopang/tax" target="_blank">tax</a></td><td>K-Tax 세무</td></tr>
+        <tr><td><a href="https://github.com/Openhash-Gopang/school" target="_blank">school</a></td><td>K-School 교육</td></tr>
+        <tr><td><a href="https://github.com/Openhash-Gopang/health" target="_blank">health</a></td><td>K-Health 의료</td></tr>
+        <tr><td><a href="https://github.com/Openhash-Gopang/traffic" target="_blank">traffic</a></td><td>K-Traffic 교통</td></tr>
+        <tr><td><a href="https://github.com/Openhash-Gopang/logistics" target="_blank">logistics</a></td><td>K-Logistics 물류</td></tr>
+        <tr><td><a href="https://github.com/Openhash-Gopang/stock" target="_blank">stock</a></td><td>K-Stock 자산관리</td></tr>
+        <tr><td><a href="https://github.com/Openhash-Gopang/insurance" target="_blank">insurance</a></td><td>K-Insurance 보험</td></tr>
+        <tr><td><a href="https://github.com/Openhash-Gopang/security" target="_blank">security</a></td><td>K-Security 보안</td></tr>
+        <tr><td><a href="https://github.com/Openhash-Gopang/democracy" target="_blank">democracy</a></td><td>K-Democracy 입법</td></tr>
+        <tr><td><a href="https://github.com/Openhash-Gopang/public" target="_blank">public</a></td><td>K-Public 행정</td></tr>
+        <tr><td><a href="https://github.com/Openhash-Gopang/openhash-L1-ido1" target="_blank">openhash-L1-ido1</a></td><td>OpenHash L1 노드 (이도1동)</td></tr>
+        <tr><td><a href="https://github.com/Openhash-Gopang/openhash-L2-jeju-city" target="_blank">openhash-L2-jeju-city</a></td><td>OpenHash L2 노드 (제주시)</td></tr>
+        <tr><td><a href="https://github.com/Openhash-Gopang/openhash-L3-jeju" target="_blank">openhash-L3-jeju</a></td><td>OpenHash L3 노드 (제주도)</td></tr>
+        <tr><td><a href="https://github.com/Openhash-Gopang/openhash-L4-kr" target="_blank">openhash-L4-kr</a></td><td>OpenHash L4 노드 (대한민국)</td></tr>
+        <tr><td><a href="https://github.com/Openhash-Gopang/openhash-L5-global" target="_blank">openhash-L5-global</a></td><td>OpenHash L5 노드 (글로벌)</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="badge-row reveal">
+    <span class="badge badge-green">GPL v3.0 오픈소스</span>
+    <span class="badge badge-blue">IEEE 논문 심사 중</span>
+    <span class="badge badge-gray">github.com/Openhash-Gopang</span>
+  </div>
+</section>
+
+</div><!-- /.content-area -->
+</div><!-- /.page-body -->
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo">
+      <div class="nav-logo-mark">G</div>
+      gopang
+    </div>
+    <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text4);margin-bottom:10px">© 2026 AI City Inc. (비영리) · DAWN: Democracy is All We Need</div>
+    <div class="footer-links">
+      <a href="https://gopang.net">gopang.net</a>
+      <a href="https://klaw.gopang.net">K-Law</a>
+      <a href="https://market.gopang.net">K-Market</a>
+      <a href="https://911.gopang.net">K-119</a>
+      <a href="https://police.gopang.net">K-Police</a>
+      <a href="https://github.com/Openhash-Gopang" target="_blank">GitHub</a>
+      <a href="gopang-auth-guide.html">인증 안내</a>
+      <a href="gopang-id-whitepaper.html">ID 백서</a>
+    </div>
+    <div class="footer-disc">
+      본 백서는 연구·기술 실증 목적으로 작성되었습니다. AI 시뮬레이션 결과(판결문·세무 계산·의료 정보 등)는 참고용이며 법적·의료적·재무적 효력을 갖지 않습니다. 실제 법률·의료·금융 문제는 해당 분야 전문가에게 문의하십시오.
+    </div>
+  </div>
+</footer>
+
+<script>
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
+}, { threshold: 0.08, rootMargin: '0px 0px -24px 0px' });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+</body>
+</html>
