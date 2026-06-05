@@ -54,8 +54,8 @@ body {
   color: var(--text);
   font-family: 'Inter', 'Noto Sans KR', -apple-system, sans-serif;
   font-weight: 400;
-  font-size: 14px;
-  line-height: 1.6;
+  font-size: 16px;
+  line-height: 1.75;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -184,7 +184,7 @@ nav {
   animation: fadeUp 0.5s 0.14s ease both;
 }
 .hero-desc {
-  max-width: 580px; font-size: 15px; font-weight: 400;
+  max-width: 580px; font-size: 16px; font-weight: 400;
   color: var(--text3); line-height: 1.75;
   margin: 0 auto 36px;
   animation: fadeUp 0.5s 0.2s ease both;
@@ -255,11 +255,11 @@ nav {
 }
 .section-title strong { font-weight: 600; }
 .section-body {
-  font-size: 14px; font-weight: 400;
+  font-size: 16px; font-weight: 400;
   color: var(--text2); line-height: 1.75;
   max-width: 100%;
 }
-.section-body p { margin-bottom: 8px; }
+.section-body p { margin-bottom: 10px; }
 .section-body p:last-child { margin-bottom: 0; }
 .overview-list {
   list-style: none;
@@ -269,7 +269,7 @@ nav {
 }
 .overview-list li {
   display: flex; align-items: flex-start; gap: 8px;
-  font-size: 14px; font-weight: 400; color: var(--text2); line-height: 1.75;
+  font-size: 16px; font-weight: 400; color: var(--text2); line-height: 1.75;
 }
 .overview-list li::before {
   content: '—';
@@ -309,7 +309,7 @@ nav {
 }
 .step-num::before { content:''; width:20px; height:1px; background:var(--brand); }
 .step-card h3 { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 8px; letter-spacing: -0.3px; }
-.step-card p { font-size: 13px; font-weight: 400; color: var(--text2); line-height: 1.65; }
+.step-card p { font-size: 15px; font-weight: 400; color: var(--text2); line-height: 1.7; }
 .step-tag {
   display: inline-block; margin-top: 14px;
   font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 400;
@@ -366,11 +366,11 @@ nav {
 .badge-dev   { color: #d97706; background: #fffbeb; border-color: #fde68a; }
 .badge-soon  { color: var(--text4); background: var(--bg-subtle); border-color: var(--border); }
 .agent-desc {
-  font-size: 13px; font-weight: 400; color: var(--text2);
-  line-height: 1.65; margin-bottom: 16px;
+  font-size: 15px; font-weight: 400; color: var(--text2);
+  line-height: 1.7; margin-bottom: 16px;
 }
 .agent-inst {
-  font-size: 12px; font-weight: 500; color: var(--text3);
+  font-size: 14px; font-weight: 500; color: var(--text3);
   display: flex; align-items: center; gap: 5px;
   padding-top: 14px; border-top: 1px solid var(--border);
 }
@@ -403,7 +403,7 @@ nav {
 .metric-big.amber { color: var(--amber); }
 .metric-big.red   { color: var(--red); }
 .metric-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; letter-spacing: -0.3px; }
-.metric-sub { font-size: 13px; font-weight: 400; color: var(--text3); line-height: 1.55; }
+.metric-sub { font-size: 15px; font-weight: 400; color: var(--text3); line-height: 1.6; }
 
 /* ── TABLE ── */
 .table-bg { background: var(--bg-alt); }
@@ -422,7 +422,7 @@ th {
 tbody tr { border-bottom: 1px solid var(--border); transition: background 0.12s; }
 tbody tr:last-child { border-bottom: none; }
 tbody tr:hover { background: #f8fafc; }
-td { padding: 14px 18px; font-size: 13px; font-weight: 400; color: var(--text2); }
+td { padding: 14px 18px; font-size: 15px; font-weight: 400; color: var(--text2); }
 td:first-child { font-weight: 600; color: var(--text); }
 .td-bad { color: var(--red); font-weight: 400; }
 .td-bad small { display: block; color: var(--text3); font-size: 14px; font-family: 'DM Mono', monospace; margin-top: 2px; }
@@ -447,7 +447,7 @@ td:first-child { font-weight: 600; color: var(--text); }
   line-height: 1; margin-bottom: 10px; letter-spacing: -1.5px;
 }
 .dist-role { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 5px; }
-.dist-note { font-size: 12px; font-weight: 400; color: var(--text3); }
+.dist-note { font-size: 14px; font-weight: 400; color: var(--text3); }
 .dc-green  { color: var(--brand); }
 .dc-blue   { color: var(--blue); }
 .dc-amber  { color: var(--amber); }
@@ -564,6 +564,7 @@ footer {
     <li><a href="#metrics">성능</a></li>
     <li><a href="#compare">비교</a></li>
     <li><a href="/docs/gopang_whitepaper.html" target="_blank" style="color:var(--brand-dk);font-weight:500">기술 백서</a></li>
+    <li><a href="https://democracy.gopang.net/desktop.html" target="_blank" style="color:var(--brand-dk);font-weight:500">K-Democracy</a></li>
   </ul>
   <button class="nav-cta" onclick="openWebApp()">
     <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M6 3a1 1 0 000 2h2.586L3.293 10.293a1 1 0 101.414 1.414L10 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1H6z"/></svg>
@@ -625,6 +626,9 @@ footer {
       <a href="/gopang-id-whitepaper.html" target="_blank" class="btn-lg btn-outline">
         ID 백서 →
       </a>
+      <a href="https://democracy.gopang.net/desktop.html" target="_blank" class="btn-lg btn-outline">
+        K-Democracy →
+      </a>
     </div>
   </div>
 </section>
@@ -634,6 +638,7 @@ footer {
 <!-- ── OVERVIEW ── -->
 <section class="section" id="overview">
   <div class="section-inner">
+    <p style="font-size:16px;color:var(--text2);line-height:1.8;margin-bottom:28px;font-weight:400">고팡은 카카오톡처럼 AI 메신저 플랫폼입니다. 사용자가 자신의 전용 AI 비서에게 지시하면, AI 비서가 100여 종의 전문 분야 AI Agent를 호출하여 지시를 수행합니다. 전문 분야는 입법, 사법, 행정, 교육, 의료, 시장, 교통, 물류, 경찰, 소방/응급, 금융(은행, 보험, 증권), 산업, 기업 등입니다. AI 비서와 AI Agent들은 세상의 모든 지식을 갖추고 있습니다.</p>
     <div class="section-tag reveal">Platform Overview</div>
     <h2 class="section-title reveal"><strong>AI 평행 세계</strong>란?</h2>
     <div class="section-body reveal">
@@ -653,6 +658,21 @@ footer {
       </ul>
 
       <p class="overview-p3">고팡은 현실 세계의 모든 기관과 사물, 전문직의 AI 쌍둥이가 존재하는 평행 세계이며, 나의 AI 비서는 이들 기관 등과 소통하는 창구입니다.</p>
+
+      <div style="margin-top:24px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+        <div style="background:#f0fdf8;border:1px solid #a7f3d0;border-radius:8px;padding:16px 18px">
+          <div style="font-size:12px;font-weight:700;color:#1a9e6a;letter-spacing:.5px;margin-bottom:6px">💬 하나의 앱</div>
+          <div style="font-size:13px;color:#374151;line-height:1.75">카카오톡처럼 사용합니다. 채팅으로 다른 사용자와 소통하거나, AI 비서에게 지시하세요. 100여 종의 전문 AI Agent가 자동 호출됩니다.</div>
+        </div>
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:16px 18px">
+          <div style="font-size:12px;font-weight:700;color:#1d4ed8;letter-spacing:.5px;margin-bottom:6px">💰 비용 모델</div>
+          <div style="font-size:13px;color:#374151;line-height:1.75">사용한 만큼만 지불합니다. 평균 <strong>월 100원</strong> 내외. AI를 많이 사용하더라도 최대 월 수천 원 수준입니다.</div>
+        </div>
+        <div style="background:#fefce8;border:1px solid #fde68a;border-radius:8px;padding:16px 18px">
+          <div style="font-size:12px;font-weight:700;color:#92400e;letter-spacing:.5px;margin-bottom:6px">🔐 데이터 보안</div>
+          <div style="font-size:13px;color:#374151;line-height:1.75">모든 업무 결과는 사용자 기기의 PDV에 6하원칙으로 기록됩니다. 대규모 해킹은 원천적으로 불가능합니다.</div>
+        </div>
+      </div>
     </div>
 
     <div class="steps-grid">
@@ -709,7 +729,8 @@ footer {
     <div class="section-tag reveal">AI Agents</div>
     <h2 class="section-title reveal">등록된 <strong>AI 에이전트</strong></h2>
     <div class="section-body reveal">
-      <p>아래는 우리가 구축한 AI 평행 세계의 쌍둥이들입니다. 가령, K-Law는 현실의 모든 법원을 통합한 AI 쌍둥이로써, 수 년이 소요되는 소송 기간을 5~10초로 줄이는 한 편, 그 가상 판결문의 법리는 현실 대법원과 큰 차이가 없습니다(v20.0 기준). 사실, <strong>"큰 차이가 없다"</strong>는 표현은 겸손한 말입니다. K-Law가 작성한 판결문 법리를 인간 법조인이 깨뜨리기 쉽지 않습니다. 다른 모든 AI 쌍둥이들도 같습니다. 아래 링크에서 직접 확인해 보십시오.</p>
+      <p>아래는 우리가 구축한 AI 평행 세계의 쌍둥이들입니다. 각 Agent는 해당 분야 전용 System Prompt를 보유하며, 이로 인해 일반 AI 모델(Claude, GPT 등)보다 월등히 우수한 성능을 발휘합니다. 가령, K-Law의 System Prompt를 적용한 Claude는 그렇지 않은 Claude에 비해 법리 분석과 판결 성능이 압도적으로 뛰어납니다. K-Law는 수 년이 소요되는 소송 기간을 <strong>5~10초</strong>로, 비용을 <strong>100원 내외</strong>로 줄입니다. 다른 모든 AI 쌍둥이들도 같습니다.</p>
+      <p style="margin-top:10px;font-size:13px;color:var(--text3)">전문 Agent가 업무를 완료하면, 결과를 자체 DB에 저장하고 6하원칙 보고서를 AI 비서에게 제출합니다. AI 비서는 이를 사용자의 PDV에 기록하며, PDV의 해시값은 OpenHash Network에 앵커링되어 위변조를 원천 차단합니다.</p>
     </div>
 
     <div class="agents-grid">
@@ -842,7 +863,7 @@ footer {
             <div class="agent-url">democracy.gopang.net</div>
           </div>
         </div>
-        <p class="agent-desc"><strong>AI 민주주의</strong><br>전자 투표·여론 수렴·정책 시뮬레이션 자동화. 블록체인 기반 투명한 의사결정 지원.</p>
+        <p class="agent-desc"><strong>AI 민주주의</strong><br>고팡의 운영 원칙과 규칙을 제안·심의·의결하는 플랫폼. 누구나 안건을 제안하고, 공헌도에 비례한 투표권으로 결정하며, 결과는 OpenHash에 영구 기록됩니다.</p>
         <div class="agent-inst">선거관리위원회 · 국회 · 지방의회</div>
       </div>
 
@@ -1023,6 +1044,53 @@ footer {
 
 <hr class="sep">
 
+<!-- ── GDC & K-MARKET ── -->
+<section class="section" id="gdc">
+  <div class="section-inner">
+    <div class="section-tag reveal">Revenue Model</div>
+    <h2 class="section-title reveal">수익 모델 — <strong>GDC 글로벌 디지털 화폐</strong></h2>
+    <div class="section-body reveal">
+      <p>고팡의 모든 AI 서비스(법률·의료·교육·행정 등)는 <strong>무료</strong>입니다. 고팡의 수익은 오직 <strong>GDC(Gopang Digital Currency)</strong>에서 발생합니다. GDC는 글로벌 디지털 화폐로, 고팡 마켓의 기본 결제 수단입니다.</p>
+    </div>
+
+    <div class="reveal" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:32px">
+
+      <div style="background:#fff;border:1px solid #d0d5dd;border-top:3px solid var(--brand);border-radius:6px;padding:24px 22px">
+        <div style="font-size:13px;font-weight:700;color:var(--brand-dk);margin-bottom:14px;display:flex;align-items:center;gap:8px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          GDC — 금융 통합
+        </div>
+        <ul style="list-style:none;padding:0;display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--text2);line-height:1.7">
+          <li>— 결제 수수료: Visa·Master 대비 <strong>1/10 이하</strong></li>
+          <li>— 은행·보험·증권 기능 통합</li>
+          <li>— 예금 이자율: 기존 대비 <strong>10배</strong></li>
+          <li>— 대출 이자율: 기존 대비 <strong>1/2 이하</strong></li>
+          <li>— 193개국 POOL 분산 보관, 환전 수수료 0%</li>
+          <li>— 고팡 마켓 내 유일한 결제 수단</li>
+        </ul>
+      </div>
+
+      <div style="background:#fff;border:1px solid #d0d5dd;border-top:3px solid var(--blue);border-radius:6px;padding:24px 22px">
+        <div style="font-size:13px;font-weight:700;color:#1d4ed8;margin-bottom:14px;display:flex;align-items:center;gap:8px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+          K-Market — 수수료 0%
+        </div>
+        <ul style="list-style:none;padding:0;display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--text2);line-height:1.7">
+          <li>— 플랫폼 수수료 <strong>0%</strong> (쿠팡 5~10% 대비)</li>
+          <li>— 소비자 개인정보 수집 <strong>0%</strong></li>
+          <li>— 자연어로 원하는 상품·시각·장소 지정</li>
+          <li>— 모든 거래의 재무제표 자동 생성·갱신</li>
+          <li>— 세금 납부 자동화 (K-Tax 연동)</li>
+          <li>— AI가 공정 거래 보장</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<hr class="sep">
+
 <!-- ── PRINCIPLES ── -->
 <section class="section" id="principles">
   <div class="section-inner">
@@ -1183,6 +1251,8 @@ footer {
       <a href="https://fiil.kr" target="_blank">K-Cleaner</a>
       <a href="/gopang-auth-guide.html" target="_blank">인증 안내</a>
       <a href="/gopang-id-whitepaper.html" target="_blank">ID 백서</a>
+      <a href="https://democracy.gopang.net/desktop.html" target="_blank" style="color:var(--brand-dk);font-weight:500">K-Democracy ↗</a>
+      <a href="https://gdc.gopang.net" target="_blank">GDC ↗</a>
       <a href="/docs/gopang_whitepaper.html" target="_blank" style="color:var(--brand-dk);font-weight:500">기술 백서 ↗</a>
       <a href="/docs/gopang_whitepaper.html" target="_blank" style="color:var(--brand-dk);font-weight:500">기술 백서</a>
       <a href="https://github.com/Openhash-Gopang/gopang_v2" target="_blank">GitHub</a>
