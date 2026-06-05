@@ -1,5 +1,5 @@
 /**
- * subsystem-auth.js  v1.1
+ * subsystem-auth.js  v1.2
  * 고팡 하위 시스템 공용 인증 모듈
  *
  * 배포 위치: https://gopang.net/auth/subsystem-auth.js
@@ -18,6 +18,10 @@
  * v1.1 변경사항:
  *   - 인증 완료 후 K-Security 에이전트 자동 로드 (방안 2)
  *   - data-security="false" 로 개별 시스템에서 비활성화 가능
+ *
+ * v1.2 변경사항:
+ *   - _detectServiceId() 함수 추가 (gopang-sso.js 의존 제거)
+ *   - ReferenceError: _detectServiceId is not defined 수정
  */
 
 // ── gopang-sso.js 로드 ────────────────────────────────────
@@ -57,6 +61,15 @@ export async function initAuth() {
   // 비활성화: <script ... data-security="false">
   _loadSecurityAgent();
   return _user;
+}
+
+// ── 서비스 ID 추출 (hostname에서 자동) ──────────────────
+// gopang-sso.js의 동일 함수와 동기화 유지
+function _detectServiceId() {
+  const host = location.hostname;
+  if (host === 'localhost' || host === '127.0.0.1') return 'dev';
+  const sub = host.replace(/\.gopang\.net$/, '');
+  return sub !== host ? sub : 'unknown';
 }
 
 // ── K-Security 에이전트 동적 로드 ────────────────────────
