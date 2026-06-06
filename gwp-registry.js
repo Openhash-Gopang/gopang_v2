@@ -13,7 +13,7 @@
 // 등록 서비스: 16개 (gopang.net DNS 기준)
 // ═══════════════════════════════════════════════════════════
 
-export const GWP_REGISTRY = [
+const GWP_REGISTRY = [
 
   // ── 0. 긴급·재난 (EMG) ── 항상 최우선 ─────────────────────
   {
@@ -349,7 +349,7 @@ export const GWP_REGISTRY = [
  * @param {string} [gwpSvc]  GWP svc 파라미터 (있으면 직접 반환)
  * @returns {{ service, confidence, hits }}
  */
-export function matchService(input, gwpSvc = null) {
+function matchService(input, gwpSvc = null) {
   // GWP svc 파라미터 직접 라우팅
   if (gwpSvc) {
     const direct = GWP_REGISTRY.find(s => s.id === gwpSvc);
@@ -388,13 +388,19 @@ export function matchService(input, gwpSvc = null) {
 /**
  * 서비스 ID로 레지스트리 항목 조회
  */
-export function getService(id) {
+function getService(id) {
   return GWP_REGISTRY.find(s => s.id === id) || null;
 }
 
 /**
  * 카테고리별 서비스 목록 조회
  */
-export function getByCategory(category) {
+function getByCategory(category) {
   return GWP_REGISTRY.filter(s => s.category === category);
 }
+
+// ── 전역 노출 (classic script 호환) ──
+window.GWP_REGISTRY  = GWP_REGISTRY;
+window.gwpMatch      = gwpMatch;
+window.getService    = getService;
+window.getByCategory = getByCategory;
