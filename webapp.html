@@ -4032,7 +4032,7 @@ async function callAI(userText, imageFile = null, _preTab = null) {
         console.info('[GWP] LLM 판단 → 새 탭:', svcId);
         // 버블에서 [GWP:...] 태그 제거 후 렌더링
         if (bubble) _updateStreamBubble(bubble, fullReply.replace(/\[GWP:[\w-]+\]\s*/, ''));
-        _gwpLaunch(svcDef, text || userText, _preTab);
+        _gwpLaunch(svcDef, userText, _preTab);
       } else {
         console.warn('[GWP] 알 수 없는 서비스 ID:', svcId);
       }
