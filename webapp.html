@@ -2619,7 +2619,7 @@ function _initLocation() {
         }
       },
       (err) => {
-        // PERMISSION_DENIED: 사용자가 팝업에서 거부한 것 — 정상 경로, warn만
+        // PERMISSION_DENIED: 사용자가 팝업에서 거부 — 정상 경로, log만
         if (err.code === err.PERMISSION_DENIED) {
           console.log('[Location] GPS 권한 거부 — IP 폴백 사용');
         } else {
@@ -2628,11 +2628,9 @@ function _initLocation() {
         navigator.geolocation.clearWatch(_watchId);
         _watchId = null;
         if (!highAccuracy && err.code !== err.PERMISSION_DENIED) {
-          // 저정밀 기술 오류 → 고정밀로 재시도 (권한 거부면 재시도 불필요)
           console.log('[Location] 고정밀 GPS로 재시도...');
           _startWatch(true);
         } else {
-          // 권한 거부 or 고정밀도 실패 → PDV/IP 폴백
           _locationPending = false;
           _loadLocationFromPDV().finally(() => { _locationReady = true; });
         }
@@ -2645,21 +2643,19 @@ function _initLocation() {
     );
   }
 
-  // ── Permission API로 현재 상태 먼저 확인 ──────────────────────
-  // granted → 바로 watch / prompt → 팝업 뜬 후 결과에 따라 처리
-  // denied  → 팝업 없이 즉시 IP 폴백 (팝업 전 오류 메시지 방지)
+  // ── Permission API로 현재 상태 먼저 확인 ─────────────────────
+  // denied → 팝업 없이 즉시 IP 폴백 (팝업 전 오류 메시지 방지)
+  // prompt → 팝업 표시 후 결과 처리
+  // granted → 바로 watch 시작
   if (navigator.permissions) {
     navigator.permissions.query({ name: 'geolocation' }).then(result => {
       if (result.state === 'denied') {
-        // 이미 거부됨 — 팝업도 없고 에러도 없이 조용히 IP 폴백
         console.log('[Location] GPS 권한 이미 거부됨 — IP 폴백 사용');
         _locationPending = false;
         _loadLocationFromPDV().finally(() => { _locationReady = true; });
       } else {
-        // 'granted' or 'prompt' → watchPosition 시작 (prompt면 팝업 표시됨)
         _startWatch(false);
       }
-      // 권한 상태 변경 감지 (사용자가 설정에서 바꿀 경우)
       result.onchange = () => {
         if (result.state === 'granted' && !_locationReady) {
           _locationPending = false;
@@ -2667,12 +2663,8 @@ function _initLocation() {
           _initLocation();
         }
       };
-    }).catch(() => {
-      // Permission API 미지원 브라우저 → 기존 방식 폴백
-      _startWatch(false);
-    });
+    }).catch(() => { _startWatch(false); });
   } else {
-    // Permission API 없음 → 기존 방식 (저정밀 먼저)
     _startWatch(false);
   }
 }
@@ -2842,11 +2834,6 @@ function _topLogoSetProgress(active) {
 
 // 로고 탭 핸들러
 function _onLogoTap() {
-  // GWP 서비스 모드 중이면 → 고팡으로 복귀
-  if (_gwpActive) {
-    _gwpClose(true);
-    return;
-  }
   if (!_progressJob) return;   // 진행 중 없으면 무반응
   _renderProgressSteps();
   document.getElementById('progress-overlay').classList.add('open');
@@ -3027,12 +3014,6 @@ async function sendMessage() {
   inp.style.height = 'auto';
   updateSendBtn();
   removeAttach();
-
-  // ── GWP: 위젯 활성 중이면 서비스로 입력 전달 ──────────
-  if (_gwpActive) {
-    _gwpForwardInput(text, capturedFile);
-    return;
-  }
 
   // ── GWP: 의도 분석 → 서비스 자동 실행 (aiActive 무관하게 항상 먼저)
   // 고팡은 포털 — 학습·법률 등 전문 질문은 하위 시스템이 처리
@@ -4334,10 +4315,7 @@ async function callAI(userText, imageFile = null) {
 
   } catch (err) {
     hideTyping();
-    // 스트리밍 버블이 이미 생성된 경우 그 버블에 오류 표시
     const existingBubble = document.querySelector('.bubble-ai.streaming');
-
-    // 402 Payment Required — 프록시 크레딧 소진
     let userMsg = `⚠️ API 오류: ${err.message}`;
     if (err.message.includes('402') || err.message.includes('Insufficient Balance')) {
       userMsg =
@@ -4345,7 +4323,6 @@ async function callAI(userText, imageFile = null) {
         '잠시 후 다시 시도하거나, 설정(⚙️)에서\n' +
         'BYOK(내 API 키)를 입력하면 계속 이용할 수 있습니다.';
     }
-
     if (existingBubble) {
       existingBubble.classList.remove('streaming');
       existingBubble.innerHTML = userMsg.replace(/\n/g, '<br>');
@@ -5404,8 +5381,10 @@ Object.defineProperty(window, '_gopangHistory', {
 });
 
 // ══════════════════════════════════════════════════════════════════════
-// Gopang Widget Protocol (GWP) 호스트 엔진 v1.0
-// 고팡이 개별 서비스 webapp을 iframe으로 호출하고 제어권을 관리합니다.
+// ══════════════════════════════════════════════════════════════════════
+// Gopang Widget Protocol (GWP) 호스트 엔진 v2.0 — 새 탭 방식
+// iframe 방식 제거 → JS 전역 충돌·SyntaxError·CFG 미초기화 문제 원천 해결
+// 새 탭이 닫히면 고팡 탭이 자동으로 포커스를 되찾고 복귀 메시지 표시
 // ══════════════════════════════════════════════════════════════════════
 
 // ── 서비스 레지스트리 ─────────────────────────────────────────────
@@ -5413,124 +5392,152 @@ Object.defineProperty(window, '_gopangHistory', {
 // GWP_REGISTRY 전역 변수는 gwp-registry.js 가 선언함
 
 // ── GWP 상태 ─────────────────────────────────────────────────────
-let _gwpActive           = false;
-let _gwpService          = null;
-let _gwpIframe           = null;
-let _gwpSavedPlaceholder = '메시지를 입력하세요…';
+let _gwpActive    = false;
+let _gwpService   = null;
+let _gwpTab       = null;   // 열린 새 탭 참조
+let _gwpTabTimer  = null;   // 탭 닫힘 감지 인터벌
 
 // ── 의도 → 서비스 매칭 ─────────────────────────────────────────
 function _gwpMatch(text) {
   if (!text) return null;
+  if (typeof GWP_REGISTRY === 'undefined') return null;
   for (const svc of GWP_REGISTRY) {
     if (svc.triggers.some(t => text.includes(t))) return svc;
   }
   return null;
 }
 
-// ── 서비스 실행 ─────────────────────────────────────────────────
+// ── 서비스 실행 (새 탭) ─────────────────────────────────────────
 function _gwpLaunch(service, context) {
-  if (_gwpActive) _gwpClose(false);
+  // 이미 열려 있는 탭이 있으면 포커스만 이동
+  if (_gwpActive && _gwpTab && !_gwpTab.closed) {
+    _gwpTab.focus();
+    return;
+  }
+
   _gwpActive  = true;
   _gwpService = service;
 
-  // top-bar 타이틀 전환
-  const logoText = document.getElementById('top-logo-text');
-  if (logoText) {
-    logoText.style.transition = 'opacity 0.2s';
-    logoText.style.opacity    = '0';
-    setTimeout(() => {
-      logoText.textContent = service.icon + ' ' + service.name;
-      logoText.style.opacity = '1';
-    }, 200);
+  const svcName = service?.name || 'K-서비스';
+  const svcIcon = service?.icon || '🤖';
+
+  // ctx: 한국어 포함 시 SyntaxError 방지 — Base64 ASCII-safe 인코딩
+  const safeCtx = context
+    ? btoa(unescape(encodeURIComponent(context)))
+    : '';
+
+  const svcUrl = new URL(service.url);
+  svcUrl.searchParams.set('gwp',      '1');
+  svcUrl.searchParams.set('token',    _USER?.guid || '');
+  svcUrl.searchParams.set('origin',   location.origin);
+  svcUrl.searchParams.set('ctx',      safeCtx);
+  svcUrl.searchParams.set('ctx_enc',  'b64');  // 수신 측에 인코딩 방식 명시
+
+  // 새 탭으로 열기
+  _gwpTab = window.open(svcUrl.toString(), '_blank');
+
+  if (!_gwpTab) {
+    // 팝업 차단 시 링크 버블로 안내
+    appendBubble('ai',
+      `${svcIcon} <b>${svcName}</b>을 열려면 팝업 차단을 해제하거나 아래 링크를 탭하세요.<br>` +
+      `<a href="${svcUrl}" target="_blank" style="color:var(--tint);font-weight:600;">${svcUrl}</a>`,
+      true
+    );
+    _gwpActive  = false;
+    _gwpService = null;
+    return;
   }
 
-  // iframe 삽입
-  const iframeUrl = new URL(service.url);
-  iframeUrl.searchParams.set('gwp',    '1');
-  iframeUrl.searchParams.set('token',  _USER.guid);
-  iframeUrl.searchParams.set('origin', location.origin);
-  iframeUrl.searchParams.set('ctx',    context || '');  // searchParams.set이 자동 인코딩 — 이중 인코딩 금지
+  appendBubble('ai',
+    `${svcIcon} <b>${svcName}</b>을 새 탭에서 열었습니다.<br>` +
+    `<span style="font-size:12px;color:var(--label-3);">탭을 닫으면 고팡으로 자동 복귀합니다.</span>`,
+    true
+  );
+  console.info('[GWP] 새 탭 실행:', service.id, svcUrl.toString());
 
-  const iframe = document.createElement('iframe');
-  iframe.id    = 'gwp-iframe';
-  iframe.src   = iframeUrl.toString();
-  iframe.style.cssText = 'width:100%;height:100%;border:none;background:var(--bg);opacity:0;transition:opacity 0.3s';
-  iframe.allow = 'camera; microphone; geolocation';
-  iframe.onload = () => { iframe.style.opacity = '1'; };
-  _gwpIframe = iframe;
-
-  document.getElementById('message-list').style.display = 'none';
-  const wrap = document.createElement('div');
-  wrap.id = 'gwp-wrap';
-  wrap.style.cssText = 'position:absolute;top:calc(44px + var(--safe-top));left:0;right:0;bottom:80px;overflow:hidden;';
-  wrap.appendChild(iframe);
-  document.getElementById('app').appendChild(wrap);
-
-  _gwpSavedPlaceholder = document.getElementById('msg-input').placeholder;
-  document.getElementById('msg-input').placeholder = '로딩 중…';
-
-  appendBubble('ai', service.icon + ' <b>' + service.name + '</b> 서비스를 시작합니다.', true);
-  console.info('[GWP] 실행:', service.id);
+  // ── 탭 닫힘 감지 — 200ms 폴링 ─────────────────────────────
+  _gwpTabTimer = setInterval(() => {
+    if (_gwpTab && _gwpTab.closed) {
+      _gwpOnTabClose();
+    }
+  }, 200);
 }
 
-// ── 서비스 종료 → 고팡 복귀 ────────────────────────────────────
-function _gwpClose(showReturn = true) {
-  if (!_gwpActive) return;
-  const wrap = document.getElementById('gwp-wrap');
-  if (wrap) wrap.remove();
-  _gwpIframe = null;
-  document.getElementById('message-list').style.display = '';
+// ── 새 탭이 닫혔을 때 → 고팡 복귀 처리 ─────────────────────────
+function _gwpOnTabClose() {
+  clearInterval(_gwpTabTimer);
+  _gwpTabTimer = null;
+  _gwpTab      = null;
 
-  const logoText = document.getElementById('top-logo-text');
-  if (logoText) {
-    logoText.style.opacity = '0';
-    setTimeout(() => { logoText.textContent = '고팡'; logoText.style.opacity = '1'; }, 200);
-  }
-  const inp = document.getElementById('msg-input');
-  if (inp) inp.placeholder = _gwpSavedPlaceholder;
-  if (showReturn) appendBubble('ai', '✅ 고팡으로 돌아왔습니다.', false);
+  const svcName = _gwpService?.name || 'K-서비스';
+  const svcIcon = _gwpService?.icon || '🤖';
+
   _gwpActive  = false;
   _gwpService = null;
-  console.info('[GWP] 종료, 고팡 복귀');
+
+  // 고팡 탭 포커스
+  window.focus();
+
+  appendBubble('ai',
+    `✅ <b>${svcIcon} ${svcName}</b> 탭이 닫혔습니다. 고팡으로 돌아왔습니다.`,
+    true
+  );
+  console.info('[GWP] 새 탭 닫힘 — 고팡 복귀');
 }
 
-// ── postMessage 수신 (서비스 → 고팡) ───────────────────────────
+// ── 탭 강제 종료 (고팡에서 직접 닫기) ─────────────────────────
+function _gwpClose(showReturn = true) {
+  if (!_gwpActive) return;
+  clearInterval(_gwpTabTimer);
+  _gwpTabTimer = null;
+
+  if (_gwpTab && !_gwpTab.closed) {
+    _gwpTab.close();
+  }
+  _gwpTab = null;
+
+  const svcName = _gwpService?.name || 'K-서비스';
+  const svcIcon = _gwpService?.icon || '🤖';
+
+  _gwpActive  = false;
+  _gwpService = null;
+
+  if (showReturn) {
+    appendBubble('ai',
+      `✅ <b>${svcIcon} ${svcName}</b>을 닫고 고팡으로 돌아왔습니다.`,
+      true
+    );
+  }
+  console.info('[GWP] 탭 종료, 고팡 복귀');
+}
+
+// ── postMessage 수신 (서비스 새 탭 → 고팡) ─────────────────────
+// 새 탭에서 작업 완료·오류 시 고팡에 결과 전달
 window.addEventListener('message', (e) => {
-  if (!_gwpActive || !_gwpIframe) return;
+  if (!_gwpActive) return;
+
+  // origin 검증 — 등록된 서비스 도메인만 허용
   const svcOrigin = _gwpService ? new URL(_gwpService.url).origin : null;
   if (svcOrigin && e.origin !== svcOrigin) return;
+
   const msg = e.data;
   if (!msg?.type?.startsWith('GWP_')) return;
 
   switch (msg.type) {
-    case 'GWP_READY': {
-      const inp = document.getElementById('msg-input');
-      if (inp && msg.placeholder) inp.placeholder = msg.placeholder;
-      break;
-    }
     case 'GWP_MESSAGE': {
+      // 서비스에서 고팡 채팅창에 메시지 추가
       appendBubble(msg.role === 'user' ? 'user' : 'ai', msg.html || msg.text || '', !!msg.html);
       break;
     }
-    case 'GWP_INPUT_CTRL': {
-      const inp = document.getElementById('msg-input');
-      if (inp) {
-        if (msg.placeholder !== undefined) inp.placeholder = msg.placeholder;
-        inp.disabled = !!msg.disabled;
-      }
-      break;
-    }
     case 'GWP_DONE': {
+      // 작업 완료 — PDV 기록 후 탭 닫힘 대기
       if (msg.summary) appendBubble('ai', '✅ ' + msg.summary, false);
-
-      // 6하 원칙 필드 추출 후 PDV 기록
       const p = msg.pdvData || {};
       _recordPDV({
         type:      'service_task',
         serviceId: _gwpService?.id   || null,
         service:   _gwpService?.name || null,
         summary:   msg.summary       || null,
-        // 6하 원칙 — 서비스가 보고한 값을 그대로 전달
         who:       p.who   || null,
         when:      p.when  || null,
         where:     p.where || null,
@@ -5540,25 +5547,22 @@ window.addEventListener('message', (e) => {
         data:      p.data  || p,
         ts:        p.when  || new Date().toISOString(),
       });
-      _gwpClose(false);
       break;
     }
     case 'GWP_ERROR': {
-      appendBubble('ai', '⚠️ ' + (_gwpService?.name||'서비스') + ' 오류: ' + msg.message, false);
+      appendBubble('ai',
+        '⚠️ ' + (_gwpService?.name || '서비스') + ' 오류: ' + (msg.message || '알 수 없는 오류'),
+        false
+      );
+      break;
+    }
+    case 'GWP_CLOSE': {
+      // 서비스가 직접 닫기를 요청
       _gwpClose(false);
       break;
     }
   }
 });
-
-// ── 고팡 입력 → 위젯으로 전달 ──────────────────────────────────
-function _gwpForwardInput(text, file) {
-  if (!_gwpIframe || !_gwpService) return;
-  _gwpIframe.contentWindow.postMessage(
-    { type: 'GWP_INPUT', text: text || '', file: file || null },
-    new URL(_gwpService.url).origin
-  );
-}
 
 // ── PDV 메타데이터 기록 ────────────────────────────────────────
 async function _recordPDV(record) {
