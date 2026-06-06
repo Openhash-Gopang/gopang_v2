@@ -3014,7 +3014,10 @@ async function sendMessage() {
   // _gwpMatch / runRouter 제거 — LLM 1회 호출로 통합
   if (text) {
     if (aiActive) {
-      await callAI(text, capturedFile);
+      // 모바일 팝업 차단 우회: 사용자 탭 직후(동기) 빈 탭 예약
+      // LLM 응답 완료 후 비동기 시점에 window.open()하면 차단됨
+      const _preTab = (!_gwpActive) ? window.open('', '_blank') : null;
+      await callAI(text, capturedFile, _preTab);
     } else {
       _runPipelineBackground(text);
       appendBubble('ai', '🔵 AI 버튼을 눌러 AI 비서를 활성화하세요.');
@@ -3780,7 +3783,7 @@ function applyRouterResult(result) {
 // ── 현재 라우팅 결과 저장 (callAI에서 참조) ────────────────
 let _lastRouterResult = null;
 
-async function callAI(userText, imageFile = null) {
+async function callAI(userText, imageFile = null, _preTab = null) {
   showTyping();
 
   // urgent=true → kemergency면 경고 표시 후 계속 처리
@@ -4198,7 +4201,7 @@ async function callAI(userText, imageFile = null) {
         console.info('[GWP] LLM 판단 → 새 탭:', svcId);
         // 버블에서 [GWP:...] 태그 제거 후 렌더링
         if (bubble) _updateStreamBubble(bubble, fullReply.replace(/\[GWP:[\w-]+\]\s*/, ''));
-        _gwpLaunch(svcDef, text || userText);
+        _gwpLaunch(svcDef, text || userText, _preTab);
       } else {
         console.warn('[GWP] 알 수 없는 서비스 ID:', svcId);
       }
@@ -5410,10 +5413,11 @@ function _gwpMatch(text) {
 }
 
 // ── 서비스 실행 (새 탭) ─────────────────────────────────────────
-function _gwpLaunch(service, context) {
+function _gwpLaunch(service, context, _preTab = null) {
   // 이미 열려 있는 탭이 있으면 포커스만 이동
   if (_gwpActive && _gwpTab && !_gwpTab.closed) {
     _gwpTab.focus();
+    if (_preTab && !_preTab.closed) _preTab.close(); // 예약 탭 불필요 → 닫기
     return;
   }
 
@@ -5436,13 +5440,20 @@ function _gwpLaunch(service, context) {
   svcUrl.searchParams.set('ctx_enc',  'b64');  // 수신 측에 인코딩 방식 명시
 
   // 새 탭으로 열기
-  _gwpTab = window.open(svcUrl.toString(), '_blank');
+  // 모바일 팝업 차단 우회: 사용자 탭 직후 예약한 빈 탭(_preTab)이 있으면
+  // window.open() 대신 그 탭의 URL을 교체 (비동기 맥락에서도 차단 없음)
+  if (_preTab && !_preTab.closed) {
+    _preTab.location.href = svcUrl.toString();
+    _gwpTab = _preTab;
+  } else {
+    _gwpTab = window.open(svcUrl.toString(), '_blank');
+  }
 
   if (!_gwpTab) {
-    // 팝업 차단 시 링크 버블로 안내
+    // 팝업 차단 시 — 클릭 가능한 링크로 안내
     appendBubble('ai',
-      `${svcIcon} <b>${svcName}</b>을 열려면 팝업 차단을 해제하거나 아래 링크를 탭하세요.<br>` +
-      `<a href="${svcUrl}" target="_blank" style="color:var(--tint);font-weight:600;">${svcUrl}</a>`,
+      `${svcIcon} <b>${svcName}</b> 에이전트를 호출합니다. ` +
+      `<a href="${svcUrl}" target="_blank" style="color:var(--tint);font-weight:600;text-decoration:underline;">탭하여 연결</a>`,
       true
     );
     _gwpActive  = false;
@@ -5532,7 +5543,7 @@ window.addEventListener('message', (e) => {
       break;
     }
     case 'GWP_DONE': {
-      // 작업 완료 — PDV 기록 후 탭 닫힘 대기
+      // 작업 완료 — PDV 기록 → 탭 자동 닫기 → gopang 복귀
       if (msg.summary) appendBubble('ai', '✅ ' + msg.summary, false);
       const p = msg.pdvData || {};
       _recordPDV({
@@ -5549,6 +5560,11 @@ window.addEventListener('message', (e) => {
         data:      p.data  || p,
         ts:        p.when  || new Date().toISOString(),
       });
+      // 하위 시스템 탭 자동 닫기 → gopang 탭 포커스 복귀
+      setTimeout(() => {
+        if (_gwpTab && !_gwpTab.closed) _gwpTab.close();
+        window.focus();
+      }, 800);  // 하위 시스템의 "완료" 메시지를 잠깐 보여준 뒤 닫힘
       break;
     }
     case 'GWP_ERROR': {
