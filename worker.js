@@ -8,7 +8,7 @@
 // v4.3 변경: SVC_ALIAS 추가 — gwp-registry.js k-prefix ID 자동 resolve
 // v4.4 변경: /kakao/appkey (GET) + /ai/chat (POST) 라우트 추가
 //            traffic·logistics Kakao Maps SDK 동적 로드 지원
-// v4.5 변경: 기본 모델 deepseek-chat → deepseek-v4-pro
+// v4.5 변경: 기본 모델 deepseek-chat → deepseek-v4-flash
 //            handleAIChat system 필드 undefined 버그 수정
 //            callOpenAIFromGeminiBody fallback 모델 동일 적용
 // v4.6 변경: /pdv/query 추가 — PDV 읽기(read) 프로토콜
@@ -45,7 +45,7 @@ const OPENAI_URL     = 'https://api.openai.com/v1/chat/completions';
 const DEEPSEEK_URL   = 'https://api.deepseek.com/v1/chat/completions';
 const KAKAO_BASE     = 'https://dapi.kakao.com/v2/local/geo/coord2address.json';
 const OPENAI_MODEL   = 'gpt-4o-mini';
-const DEEPSEEK_MODEL = 'deepseek-v4-pro';
+const DEEPSEEK_MODEL = 'deepseek-v4-flash';
 const SUPABASE_URL   = 'https://ebbecjfrwaswbdybbgiu.supabase.co';
 
 // ── 허용 scope 목록 (PDV_QUERY_PROTOCOL_v1_0.md §scope) ─────
