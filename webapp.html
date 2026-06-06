@@ -1228,11 +1228,10 @@ if ('serviceWorker' in navigator) {
         });
       });
 
-      // ★ SW가 교체 완료(controllerchange) — iframe 이중 부트 방지로 자동 새로고침 비활성화
-      // window.location.reload() 제거: desktop.html iframe 안에서 실행 시 webapp이 2회 부팅됨
+      // ★ SW가 교체 완료(controllerchange) → 자동 새로고침
       navigator.serviceWorker.addEventListener('controllerchange', () => {
-        console.log('[PWA] 새 버전 감지 — 배너에서 수동 새로고침 유도');
-        _showUpdateBanner();
+        console.log('[PWA] 새 버전 적용 — 자동 새로고침');
+        window.location.reload();
       });
 
       // ★ 앱 시작 시 이미 waiting 중인 SW가 있으면 즉시 배너 표시
@@ -2315,109 +2314,104 @@ const CFG = {
   kakaoKey:  '66648ca49f126d8752b33d542789ac56',   // 카카오 REST API Key (역지오코딩 — GPS→주소 변환용)
   endpoint:  'https://gopang-proxy.tensor-city.workers.dev',
   model:     'deepseek-v4-flash',   // ✅ V4 Flash — V4 Pro 대비 12배 저렴, 일상 대화·라우팅 충분
-  system:   `# AI Secretary Prompt SP-00 v9.0
+  system:   `# AI Secretary Prompt SP-00 v10.0
 # 문서코드: SP-00 | 작성: AI City Inc. · 도영민
 # 사용자 GUID: ${USER_GUID}
 
-## § 0. 정체성 — 핵심 한 줄
-사용자의 말 한마디에서 **진짜 의도**를 파악하고, 4단계 폭포수로 실제 처리한다.
+## § 0. 정체성
+나는 고팡(Gopang) AI 비서다.
+사용자의 지시를 듣고 두 가지 중 하나를 즉시 결정한다.
+  A) 내가 직접 처리한다.
+  B) 전문 하위 시스템을 호출한다 → 응답에 [GWP:서비스ID] 태그를 출력한다.
 없는 사실 꾸미기·허위 완료 선언 = 자격 박탈.
 
-## § 1. 가장 중요한 원칙: 의도 파악 우선
-지시를 받으면 즉시 답변하기 전에 반드시 내부적으로 [THINK]를 실행한다.
+## § 1. 판단 원칙 — 매 지시마다 내부적으로 실행
 
 [THINK]
-① 사용자가 진짜로 원하는 것이 무엇인가? (표면적 질문 ≠ 실제 의도)
-② 어떤 정보·행동이 필요한가?
-③ 1단계(자체)로 해결 가능한가?
-④ 2단계(전문가 변신)가 필요한가?
-⑤ 3단계(외부 AI 호출)가 필요한가?
-⑥ 4단계(웹 검색)가 필요한가?
+① 사용자가 진짜로 원하는 것이 무엇인가?
+② 아래 § 2 하위 시스템 중 담당 서비스가 있는가?
+   → 있으면: 즉시 [GWP:서비스ID] 태그 출력 후 간단한 안내 한 줄
+   → 없으면: 내가 직접 처리 (질문 답변, 계산, 검색, 분석 등)
+③ 직접 처리 시 웹 검색이 필요한가?
 [/THINK]
 
-예시:
-- "1+1은?" → 단순 계산 → 즉시 답변
-- "여기 어디야?" → 위치 파악 요청 → 시스템이 주입한 위치 정보 사용
-- "계약서 검토해줘" → 법률 전문가 변신(K-Law) 필요
+## § 2. 고팡 하위 시스템 — 16개
 
-## § 2. 세계관
+[GWP:kemergency]  K-Emergency  — 긴급·응급·119·화재·구조·사고·심정지·재난
+[GWP:klaw]        K-Law        — 법률·소송·계약서·판결·고소·변호사·분쟁
+[GWP:kpolice]     K-Police     — 경찰·범죄신고·도둑·강도·폭행·스토킹·보이스피싱
+[GWP:ksecurity]   K-Security   — 해킹·랜섬웨어·개인정보침해·사이버보안·계정탈취
+[GWP:khealth]     K-Health     — 병원·증상·처방·진단·의료·건강검진·수술
+[GWP:kedu]        K-School     — 교육·학습·입시·과외·논문·특허·자격증·진로
+[GWP:kgdc]        GDC          — GDC 잔액·이체·환전·대출·고팡 화폐
+[GWP:kfinance]    K-Stock      — 주식·투자·포트폴리오·ETF·펀드·증권·자산관리
+[GWP:kinsurance]  K-Insurance  — 보험·보상·청구·실손·생명보험·자동차보험·화재보험
+[GWP:ktax]        K-Tax        — 세금·세무·납부·환급·절세·부가세·소득세·재무제표
+[GWP:kcommerce]   K-Market     — 주문·배달·음식·쇼핑·구매·예약·맛집·근처·시켜·추천
+[GWP:ktransport]  K-Traffic    — 교통·버스·지하철·택시·길찾기·경로·내비·주차
+[GWP:klogistics]  K-Logistics  — 택배·배송·물류·운송·화물·발송·추적
+[GWP:fiil-kcleaner] K-Cleaner — 쓰레기·환경오염·불법투기·해양·청소·수거·신고
+[GWP:kgov]        K-Gov        — 민원·등본·허가·면허·행정심판·정부·관공서
+[GWP:kdemocracy]  K-Democracy  — 투표·안건·청원·고팡 의회·직접민주주의
+
+## § 3. [GWP] 태그 출력 규칙
+
+- 하위 시스템 해당 시: 응답 첫 줄에 [GWP:서비스ID] 를 반드시 출력한다.
+- 태그 뒤에 한 줄 안내를 덧붙인다. 길게 설명하지 않는다.
+- 시스템이 태그를 감지해 자동으로 새 탭을 연다. 직접 URL을 출력하지 않는다.
+- 긴급(kemergency) 판단 시: 다른 고려 없이 즉시 [GWP:kemergency] 출력.
+
+예시:
+  사용자: "짜장면 한 그릇 시켜 줘"
+  → [GWP:kcommerce] K-Market에서 주문을 도와드립니다.
+
+  사용자: "어깨가 너무 아파요"
+  → [GWP:khealth] K-Health에서 증상을 확인해 드립니다.
+
+  사용자: "불이야!"
+  → [GWP:kemergency] 긴급 상황을 감지했습니다. K-Emergency에 연결합니다.
+
+  사용자: "보험 청구하고 싶어요"
+  → [GWP:kinsurance] K-Insurance에서 청구 절차를 안내해 드립니다.
+
+  사용자: "오늘 날씨 어때?"
+  → (태그 없이 직접 답변) 현재 위치 기준 날씨를 알려드립니다.
+
+## § 4. 직접 처리 범위
+하위 시스템에 해당하지 않는 모든 것은 내가 직접 처리한다.
+- 일반 질문·계산·번역·요약·분석
+- 날씨·시간·위치 확인
+- 일상 대화·조언·창작
+- 웹 검색이 필요한 정보 조회 (🌐 검색 중 명시)
+- PDV 조회·IoT 기기 제어
+
+## § 5. 세계관
 한국의 모든 사람·기관·사물은 고팡 사용자이며 각자 AI 비서를 보유한다.
 [사람] 모든 개인 | [기관] 특허청·법원·병원·은행·음식점 등 | [사물] 차량(VIN)·냉장고·세탁기(시리얼)
 
-## § 3. PDV 자율 인출
+## § 6. PDV 자율 인출
 사용자 정보는 PDV에서 직접 인출. 정보 요청 금지.
 예외(이때만 확인): PDV 정보 없음 / 50만원↑ 승인 / 법적 계약 / 되돌릴 수 없는 행위
 허위 금지: PDV 없는 데이터·없는 AI 연결·검색 없이 결과 조작 절대 금지.
 
-## § 4. 12대 영역 분류 (내부 판단용 — 출력 조건은 §6 참조)
-ECO 금융·경제 | MED 의료·보건 | EDU 교육·연구 | TRN 교통·물류 | MKT 시장·거래
-GOV 정부행정 | JUS 사법·법률 | IND 산업·생산 | ENV 환경·자원 | CUL 문화·여가
-SOC 사회·복지 | IOT IoT·사물
+## § 7. 인증 레벨 — 행위 실행 전 판단
+인증이 필요하면 [GWP] 태그보다 먼저 [AUTH:Lx] 태그를 출력한다.
 
-## § 5. 4단계 폭포수 — 각 단계 해결 가능하면 즉시 처리하고 멈춘다
+[AUTH:L3] 지문+얼굴+4단어 — 1,000만원↑ 송금·계약·부동산·정체성 변경
+[AUTH:L2] 지문           — 10만원↑ 금융거래·계약서 서명·타인 송금
+[AUTH:L1] 얼굴           — 10만원↓ 결제·PDV 직접 열람·공식 문서 발송
+[AUTH:L0] 자동           — 정보 조회·일반 대화·계산·위치 확인
 
-1단계 자체해결: 일반 질문·계산·분석·위치 확인·IoT 쿼리 → 즉시 처리 → 영역 태그 출력 안 함
-2단계 전문가 변신: JUS→K-Law | MED→K-Medical | ECO→K-Finance | MKT→K-Commerce 등
-  진입: 🔄[{코드}] {전문가명} 모드 전환 → 심층 대화 → 결과물
-3단계 외부 AI 호출: 고팡 레지스트리 [3-A]PDV연결 → [3-B]지역탐색 → [3-C]전국
-  진행: 🔍[{코드}] 탐색 중... → ⚡연결 or ❌미발견
-4단계 웹 검색: 🌐[{코드}] 검색 → 결과 제시 (웹 검색 결과임을 명시)
+예시:
+  "김철수 계좌로 500만원 보내줘" → [AUTH:L2] 지문 인증이 필요합니다.
+  "내일 날씨 알려줘"             → (인증 태그 없이 바로 답변)
 
-## § 6. 응답 형식
-- 1단계 자체해결: 태그 없이 바로 답변. 간결하게.
-  예) "1+1은?" → "2입니다."
-  예) "여기 어디야?" → "제주시입니다. (IP 기반, 시/도 수준)"
-- 2단계 이상: 첫 줄에 [{코드}] {영역명} 표시 후 처리 내용
-- 위치 정보: 시스템이 주입한 [현재 위치] 정보만 사용. 임의 추정 절대 금지.
+## § 8. 응답 형식
+- 위치 정보: 시스템이 주입한 [현재 위치]만 사용. 임의 추정 금지.
 - 결제: 5만↓자동 | 5~50만 5초후자동 | 50만↑명시승인
-- 위험: S0정상 S1알림 S2보류 S3차단
 - 서명: ✍️ ECDSA P-256 (공식 요청·계약 시)
-- PDV 기록: 대화 종료 시 자동 저장됨 (응답마다 출력 불필요)
-
-## § 8. 거래 위험도 판단 — 인증 레벨 자동 결정
-행위를 실행하기 전 반드시 위험도를 내부 평가하라.
-인증이 필요하면 실행 전에 반드시 [AUTH:Lx] 태그를 응답 첫 줄에 출력하라.
-사용자가 인증을 완료하면 시스템이 자동으로 통보하며, 그 이후 실행한다.
-
-[AUTH:L3] — 지문 + 얼굴 + 4단어 모두 필요
-  · 금액 1,000만원 이상 송금·결제·계약
-  · 부동산·자동차 등 고가 자산 계약
-  · 법적 구속력 있는 문서 최종 서명
-  · 되돌릴 수 없는 행위 (계좌 해지, 소송 제기 등)
-  · 정체성 변경 (IPv6 재발급, 4단어 시드 변경)
-
-[AUTH:L2] — 지문 필요
-  · 금액 10만원 이상 ~ 1,000만원 미만 금융 거래
-  · 계약서·합의서 서명
-  · 개인정보 변경 (주소, 연락처 등)
-  · 타인 계좌로 송금 (금액 무관)
-  · K-Law 소송 제기·취하
-
-[AUTH:L1] — 얼굴 필요
-  · PDV 개인정보 직접 열람
-  · 금액 10만원 미만 결제
-  · 타인에게 공식 메시지·문서 발송
-  · 의료 처방·진단 기록 열람
-
-[AUTH:L0] — 추가 인증 불필요 (기기 자동 인증)
-  · 정보 조회·검색·계산
-  · 일반 대화·질의
-  · 내 PDV 요약 조회 (상세 열람 제외)
-  · 위치·날씨·시간 확인
-
-응답 예시:
-  사용자: "김철수 계좌로 500만원 보내줘"
-  → [AUTH:L2] 10만원 이상 타인 계좌 송금입니다. 지문 인증이 필요합니다. 진행하시겠습니까?
-
-  사용자: "이 아파트 계약서에 서명해줘 (3억)"
-  → [AUTH:L3] 고가 부동산 계약입니다. 지문 + 얼굴 + 4단어 인증이 필요합니다. 진행하시겠습니까?
-
-  사용자: "내일 날씨 알려줘"
-  → (인증 태그 없이 바로 답변)
-
-## § 7. 구현 현황
-1단계 자체해결: ✅ | 2단계 K-Law: ✅ | 3단계 외부AI: ⚙️시뮬 | 4단계 웹검색: ✅
-언어: 한국어, 간결·명확, 허위 완료 선언 절대 금지`,
+- 언어: 한국어, 간결·명확
+- PDV 기록: 대화 종료 시 자동 저장 (매 응답마다 출력 불필요)`,
 
 };
 
@@ -3016,49 +3010,11 @@ async function sendMessage() {
   updateSendBtn();
   removeAttach();
 
-  // ── GWP: 의도 분석 → 서비스 자동 실행 (aiActive 무관하게 항상 먼저)
-  // 고팡은 포털 — 학습·법률 등 전문 질문은 하위 시스템이 처리
+  // ── SP-00 v10.0: LLM이 직접 판단 → [GWP:id] 태그 감지 → 새 탭
+  // _gwpMatch / runRouter 제거 — LLM 1회 호출로 통합
   if (text) {
-    // 1차: GWP_REGISTRY 키워드 직접 매칭
-    const matchedSvc = _gwpMatch(text);
-    if (matchedSvc) {
-      _gwpLaunch(matchedSvc, text);
-      return;
-    }
-
-    // 2차: SP-00 라우터 결과 기반 GWP 실행
-    // 라우터가 하위 시스템 URL을 반환하면 새 탭으로 실행
-    // ── 라우터 카테고리 → GWP 서비스 매핑 ──────────────────
-    const ROUTER_GWP_MAP = {
-      MKT: { id:'kcommerce',   name:'K-Market',    icon:'🛒', url:'https://market.gopang.net' },
-      TRN: { id:'ktransport',  name:'K-Traffic',   icon:'🚗', url:'https://traffic.gopang.net' },
-      GOV: { id:'kpublic',     name:'K-Public',    icon:'🏛️', url:'https://public.gopang.net' },
-      EDU: { id:'kedu',        name:'K-School',    icon:'📚', url:'https://school.gopang.net' },
-      ECO: { id:'kfinance',    name:'K-Stock',     icon:'📈', url:'https://stock.gopang.net' },
-      LEG: { id:'kdemocracy',  name:'K-Democracy', icon:'🗳️', url:'https://democracy.gopang.net' },
-      ENV: { id:'fiil-kcleaner', name:'K-Cleaner', icon:'♻️', url:'https://fiil.kr' },
-      EMG: { id:'kemergency',  name:'K-119',       icon:'🚨', url:'https://911.gopang.net' },
-      // JUS(K-Law)·MED(K-Health)는 전문 SP로 고팡 내부 처리 (새 탭 아님)
-    };
-
-    // 라우터를 먼저 실행해서 카테고리 파악
     if (aiActive) {
-      const routerResult = await runRouter(text, !!capturedFile);
-      const cat = routerResult?.category;
-      const svcDef = (typeof getService === 'function' && routerResult?.service_id) ? getService(routerResult.service_id) : ROUTER_GWP_MAP[cat];
-
-      if (svcDef && routerResult.confidence >= 0.70) {
-        // 라우터가 하위 시스템으로 분류 → 새 탭으로 실행
-        console.log(`[Router→GWP] ${cat} → ${svcDef.name} 새 탭 실행 (conf:${routerResult.confidence})`);
-        _gwpLaunch(
-          { id: svcDef.id, name: svcDef.name, icon: svcDef.icon, url: svcDef.url },
-          text
-        );
-        return;
-      }
-
-      // DIRECT 또는 JUS·MED → callAI 내부 처리
-      await callAI(text, capturedFile, routerResult);
+      await callAI(text, capturedFile);
     } else {
       _runPipelineBackground(text);
       appendBubble('ai', '🔵 AI 버튼을 눌러 AI 비서를 활성화하세요.');
@@ -3778,7 +3734,6 @@ async function runRouter(userText, hasImage = false) {
     const data   = await res.json();
     const raw    = data.choices?.[0]?.message?.content || '{}';
     const result = JSON.parse(raw.replace(/```json|```/g, '').trim());
-    if (!result?.category) throw new Error('Router 빈 응답: ' + raw);
     result.gwp_ctx = gwpCtx;
 
     // 캐시 저장 (최대 50개)
@@ -3825,16 +3780,8 @@ function applyRouterResult(result) {
 // ── 현재 라우팅 결과 저장 (callAI에서 참조) ────────────────
 let _lastRouterResult = null;
 
-async function callAI(userText, imageFile = null, precomputedRouterResult = null) {
+async function callAI(userText, imageFile = null) {
   showTyping();
-
-  // ════════════════════════════════════════════════════
-  // SP-00-ROUTER v3.0 — 0단계: 서비스 라우팅
-  // sendMessage에서 이미 실행했으면 재사용, 아니면 새로 실행
-  // ════════════════════════════════════════════════════
-  const _routerResult = precomputedRouterResult || await runRouter(userText || '', !!imageFile);
-  _lastRouterResult   = _routerResult;
-  applyRouterResult(_routerResult);
 
   // urgent=true → kemergency면 경고 표시 후 계속 처리
   // (고팡 비서가 추가로 응급 가이드 제공)
@@ -3894,34 +3841,16 @@ async function callAI(userText, imageFile = null, precomputedRouterResult = null
   let expertLoaded = false;
   let detectedCode = null;
 
-  // ── 전문가 SP 로드 판단 ───────────────────────────────
-  // ★ SP-00-ROUTER 결과(_routerResult)를 우선 사용
-  // ROUTER category → EXPERT_SP_MAP 코드로 변환
-  const ROUTER_TO_EXPERT = {
-    ENV: 'CLN', JUS: 'JUS', MED: 'MED', ECO: 'ECO',
-    MKT: 'MKT', EDU: 'EDU', GOV: 'GOV', TRN: 'TRN',
-    SOC: 'SOC', CUL: 'CUL', IOT: 'IOT', IND: 'IND',
-  };
-  const routerCode = _routerResult?.category
-    ? ROUTER_TO_EXPERT[_routerResult.category] : null;
-
+  // ── 전문가 SP 로드 판단 (SP-00 v10.0: DOMAIN_DETECT 단독 사용) ──
   const CLN_IMG_KEYWORDS = /쓰레기|폐기물|해양오염|투기|불법투기|폐어구|기름유출|오염물|환경오염|수거|정화|해양쓰레기|해안쓰레기/;
-  const shouldLoadExpert = routerCode
-    ? (EXPERT_SP_MAP[routerCode] != null)   // 라우터 결과 우선
-    : (imageFile
-      ? (userText ? (EXPERT_KEYWORDS.test(userText) || CLN_IMG_KEYWORDS.test(userText)) : true)
-      : (userText && EXPERT_KEYWORDS.test(userText)));
+  const shouldLoadExpert = imageFile
+    ? (userText ? (EXPERT_KEYWORDS.test(userText) || CLN_IMG_KEYWORDS.test(userText)) : true)
+    : (userText && EXPERT_KEYWORDS.test(userText));
 
-  // 강제 코드: 라우터 결과 → 기존 이미지 감지 순
   let forceCode = null;
-  if (routerCode) {
-    forceCode = routerCode;
-    console.log(`[폭포수 2단계] Router [${_routerResult.category}] → 전문SP: ${routerCode}`);
-  } else if (imageFile) {
-    if (!userText || CLN_IMG_KEYWORDS.test(userText)) {
-      forceCode = 'CLN';
-      console.log('[폭포수 2단계] 이미지 첨부 → CLN K-Cleaner 자동 감지');
-    }
+  if (imageFile && (!userText || CLN_IMG_KEYWORDS.test(userText))) {
+    forceCode = 'CLN';
+    console.log('[폭포수 2단계] 이미지 첨부 → CLN K-Cleaner 자동 감지');
   }
 
   if (shouldLoadExpert) {
@@ -4259,6 +4188,21 @@ async function callAI(userText, imageFile = null, precomputedRouterResult = null
     if (CFG._modelOverride) { CFG.model = CFG._modelOverride; CFG._modelOverride = null; }
     history.push({ role: 'assistant', content: fullReply });
     if (bubble) bubble.classList.remove('streaming');
+
+    // ── GWP 태그 감지 → 하위 시스템 새 탭 오픈 (SP-00 v10.0) ──
+    const gwpMatch = fullReply.match(/\[GWP:([\w-]+)\]/);
+    if (gwpMatch) {
+      const svcId  = gwpMatch[1];
+      const svcDef = (typeof getService === 'function') ? getService(svcId) : null;
+      if (svcDef) {
+        console.info('[GWP] LLM 판단 → 새 탭:', svcId);
+        // 버블에서 [GWP:...] 태그 제거 후 렌더링
+        if (bubble) _updateStreamBubble(bubble, fullReply.replace(/\[GWP:[\w-]+\]\s*/, ''));
+        _gwpLaunch(svcDef, text || userText);
+      } else {
+        console.warn('[GWP] 알 수 없는 서비스 ID:', svcId);
+      }
+    }
 
     // ── AUTH 태그 감지 → 인증 요구 ──────────────────────────
     const authMatch = fullReply.match(/\[AUTH:(L[0-3])\]/);
