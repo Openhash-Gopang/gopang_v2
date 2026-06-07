@@ -79,6 +79,10 @@ self.addEventListener('activate', (event) => {
 
 // ── Fetch 전략: Network First + Cache Fallback ─────────────
 self.addEventListener('fetch', (event) => {
+  // ★ http/https 이외 스킴 제외 (chrome-extension://, data: 등)
+  // Cache API는 http/https 스킴만 허용하므로 그 외는 즉시 반환
+  if (!event.request.url.startsWith('http')) return;
+
   const url = new URL(event.request.url);
 
   // ── 외부 API 요청은 캐시 안 함 ──────────────────────────
