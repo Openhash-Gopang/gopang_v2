@@ -679,6 +679,7 @@ const CFG = {
 - 언어: 한국어, 간결·명확
 - PDV 기록: 대화 종료 시 자동 저장 (매 응답마다 출력 불필요)`,
 
+  system_base: null,  // callAI() 진입 시 최초 1회 고정 — localStorage 오염 방지용 백업
 };
 
 let aiActive   = false;
@@ -2075,7 +2076,9 @@ async function callAI(userText, imageFile = null, _preTab = null) {
   //   (이미지 내용이 환경오염이면 LLM이 [GWP:fiil-kcleaner] 태그 출력)
 
   // system을 항상 base로 유지 (전문가 SP 오염 방지)
-  if (CFG.system_base) CFG.system = CFG.system_base;
+  // system_base 최초 1회 고정 — 이후 callAI 재진입 시 항상 원본으로 복원
+  if (!CFG.system_base) CFG.system_base = CFG.system;
+  CFG.system = CFG.system_base;
 
   // ── 이미지 첨부 시: Gemini 범용 분석 → SP-00 컨텍스트 주입 ──
   if (imageFile && CFG.geminiKey) {
@@ -2574,7 +2577,7 @@ function saveSettings() {
     localStorage.setItem('gopang_cfg', JSON.stringify({
       model:     CFG.model,
       endpoint:  CFG.endpoint,
-      system:    CFG.system,
+      // system은 저장하지 않음 — localStorage 오염 방지
       apiKey:    CFG.apiKey,
       geminiKey: CFG.geminiKey,
     }));
@@ -2597,7 +2600,7 @@ function loadSettings() {
       CFG.model = MODEL_MIGRATION[saved.model] ?? saved.model;
     }
     if (saved.endpoint)  CFG.endpoint  = saved.endpoint;
-    if (saved.system)    CFG.system    = saved.system;
+    // system은 localStorage에서 복원하지 않음 — gopang-app.js 하드코딩 SP-00이 항상 우선
     // 하드코딩 키가 있으면 localStorage 값으로 덮어쓰지 않음
     if (saved.apiKey    && !CFG.apiKey)    CFG.apiKey    = saved.apiKey;
     if (saved.geminiKey && !CFG.geminiKey) CFG.geminiKey = saved.geminiKey;
