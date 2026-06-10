@@ -322,6 +322,7 @@ window._registerFingerprint = async function(ipv6) {
       lastSeenAt: new Date().toISOString(),
     };
     localStorage.setItem('gopang_user_v3', JSON.stringify(updated));
+    if (window.gopangWallet && updated.ipv6) { window.gopangWallet.setIdentity({ guid: updated.ipv6, handle: updated.handle || null }); console.info('[GopangWallet] guid 연결(지문):', updated.ipv6.slice(-8)); }
 
     appendBubble('ai',
       `✅ 지문 등록 완료! 인증 레벨 <b>L2</b> 달성.<br><br>` +
@@ -418,6 +419,7 @@ window._verifyRestore = async function(newFpHex) {
   };
   localStorage.setItem('gopang_user_v3', JSON.stringify(updated));
   _upsertUserRecord(updated);
+  if (window.gopangWallet && updated.ipv6) { window.gopangWallet.setIdentity({ guid: updated.ipv6, handle: updated.handle || null }); console.info('[GopangWallet] guid 연결(시드복구):', updated.ipv6.slice(-8)); }
 
   document.querySelectorAll('.msg-row.ai').forEach(el => {
     if (el.querySelector('#_restore-seed')) el.remove();
@@ -2522,6 +2524,7 @@ window._settingsRegisterFace = async function() {
     lastSeenAt: new Date().toISOString(),
   };
   localStorage.setItem('gopang_user_v3', JSON.stringify(updated));
+  if (window.gopangWallet && updated.ipv6) { window.gopangWallet.setIdentity({ guid: updated.ipv6, handle: updated.handle || null }); console.info('[GopangWallet] guid 연결(얼굴재등록):', updated.ipv6.slice(-8)); }
   appendBubble('ai', '✅ 얼굴 재등록 완료!', true);
 };
 function handleOverlayClick(e) {
