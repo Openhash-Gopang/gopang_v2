@@ -1,64 +1,497 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-  <title>고팡</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="고팡">
+<meta name="theme-color" content="#ffffff">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="description" content="고팡(Gopang) AI 메신저 플랫폼">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png">
+<link rel="icon" type="image/png" href="/icons/icon-192.png">
+<title>고팡</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap">
+<script src="/gopang-wallet.js"></script>
+<script src="/gwp-registry.js"></script>
+<style>
 
-  <!-- ── PWA 핵심 ──────────────────────────────────────── -->
-  <link rel="manifest" href="/manifest.json"/>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;height:100dvh;overflow:hidden;
+  font-family:'Pretendard',-apple-system,'Helvetica Neue',sans-serif;
+  font-size:15px;background:#fff;color:#111;-webkit-font-smoothing:antialiased}
+:root{
+  --green:#16a34a;--green-lt:#dcfce7;--green-dk:#15803d;--green-bd:#86efac;
+  --border:#e5e7eb;--txt2:#6b7280;--txt3:#9ca3af;
+  --chip-bg:#f9fafb;--chip-border:#e5e7eb;
+  --safe-t:env(safe-area-inset-top,0px);
+  --safe-b:env(safe-area-inset-bottom,0px);
+  /* 레거시 호환 */
+  --tint:#16a34a;--tint-dim:rgba(22,163,74,.1);
+  --bg:#fff;--bg-subtle:#f9fafb;--bg-input:#f3f4f6;
+  --label:#111;--label-2:#6b7280;--label-3:#9ca3af;
+  --sep:#e5e7eb;--sep-strong:#d1d5db;
+  --green-color:#16a34a;
+  --font:'Pretendard',-apple-system,sans-serif;
+  --r-md:12px;
+}
 
-  <!-- iOS Safari — 홈 화면 추가 -->
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-  <meta name="apple-mobile-web-app-title" content="고팡"/>
-  <link rel="apple-touch-icon" href="/icons/icon-192.png"/>
-  <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png"/>
-  <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192.png"/>
-  <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512.png"/>
+/* ── 앱 레이아웃 ── */
+#app,.app{display:flex;flex-direction:column;height:100%;height:100dvh;
+  max-width:480px;margin:0 auto;background:#fff;overflow:hidden}
 
-  <!-- iOS 스플래시 스크린 배경색 -->
-  <meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+/* ── 상단 바 ── */
+.top-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:calc(var(--safe-t)+10px) 12px 10px;
+  border-bottom:1px solid var(--border);flex-shrink:0;background:#fff;
+}
+#top-logo{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;flex-shrink:0}
+.topbar-icon{width:28px;height:28px;background:var(--green);border-radius:7px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.topbar-icon svg{width:14px;height:14px;stroke:#fff;stroke-width:2.2;fill:none;
+  stroke-linecap:round;stroke-linejoin:round}
+#top-logo-text{font-size:15px;font-weight:800;color:#111;letter-spacing:-.3px}
+#top-progress-dot{width:7px;height:7px;border-radius:50%;background:#f59e0b;
+  animation:pulse-dot 1.5s ease-in-out infinite;flex-shrink:0}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
 
-  <!-- Android Chrome -->
-  <meta name="theme-color" content="#1A1F29"/>
-  <meta name="mobile-web-app-capable" content="yes"/>
+/* 상단 우측 버튼 그룹 */
+.top-bar-right{display:flex;align-items:center;gap:4px}
+.top-btn{
+  display:flex;align-items:center;justify-content:center;
+  width:34px;height:34px;border-radius:8px;
+  color:var(--txt2);background:none;border:none;
+  cursor:pointer;transition:background .12s,color .12s;flex-shrink:0;
+}
+.top-btn:hover,.top-btn:active{background:var(--chip-bg);color:#111}
+.top-btn svg{width:17px;height:17px;stroke:currentColor;stroke-width:2;fill:none;
+  stroke-linecap:round;stroke-linejoin:round}
 
-  <!-- 일반 메타 -->
-  <meta name="description" content="고팡(Gopang) AI 법률·의료·생활 비서"/>
-  <meta name="application-name" content="고팡"/>
-  <link rel="icon" type="image/png" href="/icons/icon-192.png"/>
+/* AI 버튼 — 비활성:회색, 활성:파란 불 */
+.btn-ai{
+  display:flex;align-items:center;gap:5px;
+  width:auto;padding:0 10px;height:30px;
+  border-radius:8px;border:1.5px solid var(--border);
+  background:none;color:var(--txt3);
+  font-size:12px;font-weight:700;cursor:pointer;
+  transition:border-color .15s,color .15s;
+}
+.btn-ai:hover{background:var(--chip-bg)}
+.ai-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--txt4);flex-shrink:0;
+  transition:background .2s;
+}
+/* 활성 상태 — JS로 .active 클래스 부여 */
+.btn-ai.active{border-color:#3b82f6;color:#1d4ed8}
+.btn-ai.active .ai-dot{background:#3b82f6;box-shadow:0 0 6px rgba(59,130,246,.6)}
 
-  <!-- safe-area 대응 (노치·홈인디케이터) -->
-  <style>
-    :root {
-      --safe-top:    env(safe-area-inset-top,    0px);
-      --safe-bottom: env(safe-area-inset-bottom, 0px);
-      --safe-left:   env(safe-area-inset-left,   0px);
-      --safe-right:  env(safe-area-inset-right,  0px);
-    }
-  </style>
+/* ── 라우터 뱃지 ── */
+#router-badge{
+  display:none;font-size:10px;font-weight:600;
+  color:var(--green-dk);background:var(--green-lt);
+  border:1px solid var(--green-bd);
+  border-radius:6px;padding:3px 10px;
+  margin:6px 16px 0;text-align:center;letter-spacing:.3px;
+}
 
-  <!-- ══ 고팡 디자인 시스템 ══ -->
-  <link rel="stylesheet" href="/gopang-style.css"/>
+/* ── 메시지 목록 ── */
+#message-list{
+  flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:12px 16px;display:flex;flex-direction:column;gap:10px;
+  background:#fff;
+}
 
-  <!-- GWP 레지스트리 -->
-  <script src="/gwp-registry.js"></script>
+/* 메시지 버블 */
+.msg-bubble-ai,.b-ai{
+  max-width:88%;align-self:flex-start;
+  background:#f9fafb;border:1px solid var(--border);
+  border-radius:4px 16px 16px 16px;
+  padding:10px 14px;font-size:14px;line-height:1.75;color:#111;
+  box-shadow:0 1px 2px rgba(0,0,0,.04);
+}
+.msg-bubble-user,.b-user{
+  max-width:88%;align-self:flex-end;
+  background:var(--green);color:#fff;
+  border-radius:16px 16px 4px 16px;
+  padding:10px 14px;font-size:14px;line-height:1.75;
+}
+.msg-bubble-ai b,.b-ai b{font-weight:700}
+.msg-bubble-ai code,.b-ai code{background:#f1f5f9;padding:1px 5px;border-radius:4px;font-size:13px}
+.msg-time{font-size:10px;color:var(--txt3);margin-top:3px;padding:0 2px}
+.msg-ai-wrap,.b-ai-wrap{display:flex;flex-direction:column;align-self:flex-start;max-width:88%}
+.msg-user-wrap,.b-user-wrap{display:flex;flex-direction:column;align-items:flex-end;max-width:88%;align-self:flex-end}
+
+/* 타이핑 인디케이터 */
+.typing-indicator{display:flex;gap:4px;padding:2px 0}
+.typing-indicator span{width:7px;height:7px;border-radius:50%;background:var(--txt3);
+  animation:typing-bounce .8s infinite}
+.typing-indicator span:nth-child(2){animation-delay:.15s}
+.typing-indicator span:nth-child(3){animation-delay:.3s}
+@keyframes typing-bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
+
+/* 인트로 (빈 화면) */
+.intro-wrap{
+  display:flex;flex-direction:column;align-items:center;
+  padding:48px 16px 28px;gap:14px;text-align:center;
+}
+.intro-icon{
+  width:64px;height:64px;border-radius:18px;background:var(--green);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 24px rgba(22,163,74,.25);
+}
+.intro-icon svg{width:30px;height:30px;stroke:#fff;stroke-width:1.8;fill:none;
+  stroke-linecap:round;stroke-linejoin:round}
+.intro-title{font-size:19px;font-weight:800;color:#111;letter-spacing:-.4px}
+.intro-sub{font-size:13px;color:var(--txt2);line-height:1.65}
+.chip-row{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;padding:0 8px}
+.chip{
+  display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:20px;
+  background:#fff;border:1.5px solid var(--chip-border);
+  font-size:12px;font-weight:600;color:#374151;cursor:pointer;
+  transition:border-color .12s,background .12s,color .12s;white-space:nowrap;
+}
+.chip svg{width:12px;height:12px;stroke:currentColor;stroke-width:2;fill:none;flex-shrink:0}
+.chip:hover,.chip:active{background:var(--green-lt);border-color:var(--green);color:var(--green-dk)}
+
+/* ── 하단 입력 ── */
+.input-dock{
+  background:#fff;border-top:1px solid var(--border);
+  padding:8px 0 calc(8px + var(--safe-b));
+  flex-shrink:0;
+}
+/* 첨부 미리보기 */
+.attach-preview{
+  display:flex;align-items:center;gap:8px;
+  padding:6px 14px;margin-bottom:6px;
+  background:var(--chip-bg);
+  font-size:13px;color:var(--txt2);
+  border-bottom:1px solid var(--border);
+}
+.remove-attach{
+  margin-left:auto;background:none;border:none;cursor:pointer;
+  color:var(--txt3);font-size:14px;line-height:1;padding:2px 4px;
+}
+
+/* 입력 행 전체 */
+.input-row{
+  display:flex;align-items:flex-end;padding:0 8px;gap:6px;
+}
+
+/* 좌측 보조 버튼 그룹 */
+.input-actions-left{
+  display:flex;align-items:center;gap:0;flex-shrink:0;align-self:flex-end;
+  overflow:hidden;
+  max-width:120px;           /* 펼쳐진 너비 */
+  transition:max-width .18s ease, opacity .18s ease;
+  opacity:1;
+}
+/* 입력 중 → 숨김 */
+.input-actions-left.hidden{
+  max-width:0;opacity:0;pointer-events:none;
+}
+.ia-btn{
+  width:38px;height:38px;border-radius:50%;background:none;border:none;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  color:var(--txt3);transition:background .12s,color .12s;flex-shrink:0;
+}
+.ia-btn:hover,.ia-btn:active{background:var(--chip-bg);color:#111}
+.ia-btn svg{stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.ia-btn.active{color:var(--green)}
+
+/* 입력 wrap — pill 형태, 좌우 여백 없이 확장 */
+.input-wrap{
+  flex:1;display:flex;align-items:flex-end;
+  background:#f3f4f6;
+  border:1.5px solid transparent;border-radius:22px;
+  padding:7px 10px 7px 14px;
+  transition:border-color .15s,background .15s;
+  min-width:0;
+}
+.input-wrap:focus-within{border-color:var(--green);background:#fff}
+
+/* 텍스트 영역 */
+#msg-input{
+  flex:1;background:transparent;border:none;
+  font-family:'Pretendard',sans-serif;font-size:14px;
+  resize:none;outline:none;
+  min-height:22px;max-height:160px;
+  line-height:1.55;color:#111;
+  padding:1px 0;min-width:0;
+  overflow-y:auto;
+}
+#msg-input::placeholder{color:var(--txt3)}
+
+/* 전송 버튼 */
+.send-btn{
+  width:34px;height:34px;border-radius:50%;background:var(--green);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;border:none;cursor:pointer;
+  transition:background .12s;align-self:flex-end;
+}
+.send-btn:disabled{background:var(--green-bd);cursor:not-allowed}
+.send-btn svg{width:14px;height:14px;stroke:#fff;stroke-width:2.2;fill:none;
+  stroke-linecap:round;stroke-linejoin:round}
+
+/* 상태 스트립 */
+.status-strip{
+  display:flex;align-items:center;gap:6px;
+  font-size:10px;color:var(--txt3);
+  padding:0 14px 6px;
+}
+.status-dot{width:5px;height:5px;border-radius:50%;background:var(--green);flex-shrink:0}
+.version-select{
+  background:none;border:none;outline:none;
+  font-family:inherit;font-size:11px;color:var(--txt3);cursor:pointer;
+}
+
+/* ── 설정 패널 (오른쪽 슬라이드) ── */
+.settings-panel,.settings-overlay-wrap{
+  position:fixed;inset:0;z-index:999;display:flex;justify-content:flex-end;
+  visibility:hidden;
+}
+.settings-panel.open,.settings-overlay-wrap.open{visibility:visible}
+/* 반투명 배경 */
+.settings-bg,.settings-overlay{
+  flex:1;background:rgba(0,0,0,.3);
+  opacity:0;transition:opacity .25s;cursor:pointer;
+}
+.settings-panel.open .settings-bg,
+.settings-overlay-wrap.open .settings-overlay{opacity:1}
+/* 드로어 */
+.settings-drawer,.settings-sheet{
+  width:88%;max-width:340px;background:#fff;height:100%;
+  display:flex;flex-direction:column;
+  transform:translateX(100%);transition:transform .25s;
+  box-shadow:-4px 0 24px rgba(0,0,0,.12);overflow-y:auto;
+}
+.settings-panel.open .settings-drawer,
+.settings-overlay-wrap.open .settings-sheet{transform:translateX(0)}
+/* 헤더 */
+.settings-head,.sheet-title{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:calc(var(--safe-t)+14px) 16px 14px;
+  border-bottom:1px solid var(--border);flex-shrink:0;
+  font-size:15px;font-weight:800;color:#111;
+}
+.sheet-title{padding:16px;font-size:15px;font-weight:800}
+.sheet-handle{width:36px;height:4px;background:var(--border);border-radius:2px;
+  margin:10px auto 4px;}
+.settings-close{background:none;border:none;cursor:pointer;padding:4px;
+  display:flex;align-items:center;justify-content:center;border-radius:6px}
+.settings-close:hover{background:var(--chip-bg)}
+.settings-close svg{width:18px;height:18px;stroke:#6b7280;stroke-width:2;fill:none;
+  stroke-linecap:round;stroke-linejoin:round}
+/* 바디 */
+.settings-body{flex:1;overflow-y:auto;padding:12px 0}
+.settings-section,.setting-group{padding:8px 16px 12px}
+.settings-section-title,.setting-label{
+  font-size:11px;font-weight:700;color:var(--txt3);
+  text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:block;
+}
+.settings-item{
+  display:flex;align-items:center;gap:12px;padding:11px 16px;
+  cursor:pointer;transition:background .12s;
+}
+.settings-item:hover{background:var(--chip-bg)}
+.settings-item svg{width:18px;height:18px;stroke:#374151;stroke-width:1.8;fill:none;
+  stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.settings-item-label{font-size:14px;font-weight:500;color:#111}
+.settings-item-sub{font-size:12px;color:var(--txt2);margin-top:1px}
+.settings-sep{height:1px;background:var(--border);margin:4px 16px}
+/* 설정 폼 요소 */
+.setting-field{
+  width:100%;padding:9px 12px;border-radius:8px;
+  border:1px solid var(--border);background:var(--chip-bg);
+  font-family:inherit;font-size:13px;color:#111;outline:none;
+  transition:border-color .12s;
+}
+.setting-field:focus{border-color:var(--green)}
+.setting-field-mono{font-family:monospace}
+.sheet-save{
+  display:block;width:calc(100% - 32px);margin:8px 16px;
+  padding:12px;border-radius:10px;background:var(--green);
+  color:#fff;font-size:14px;font-weight:700;border:none;cursor:pointer;
+  transition:opacity .12s;
+}
+.sheet-save:hover{opacity:.88}
+
+/* 하단 시트 공통 (bottom sheet) */
+.bottom-overlay{
+  position:fixed;inset:0;z-index:999;
+  background:rgba(0,0,0,.45);
+  display:flex;align-items:flex-end;justify-content:center;
+  visibility:hidden;opacity:0;transition:opacity .2s,visibility .2s;
+}
+.bottom-overlay.open{visibility:visible;opacity:1}
+.bottom-sheet{
+  width:100%;max-width:480px;background:#fff;
+  border-radius:20px 20px 0 0;max-height:80dvh;
+  display:flex;flex-direction:column;
+  transform:translateY(100%);transition:transform .25s;overflow:hidden;
+}
+.bottom-overlay.open .bottom-sheet{transform:translateY(0)}
+
+/* ── 대화 기록 모달 ── */
+.history-modal{
+  position:fixed;inset:0;z-index:1000;
+  background:rgba(0,0,0,.45);
+  display:flex;align-items:flex-end;justify-content:center;
+  visibility:hidden;opacity:0;transition:opacity .2s,visibility .2s;
+}
+.history-modal.open{visibility:visible;opacity:1}
+.history-sheet{
+  width:100%;max-width:480px;background:#fff;
+  border-radius:20px 20px 0 0;max-height:75dvh;
+  display:flex;flex-direction:column;
+  transform:translateY(100%);transition:transform .25s;
+}
+.history-modal.open .history-sheet{transform:translateY(0)}
+.history-sheet-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 16px 12px;border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.history-sheet-title{font-size:15px;font-weight:800;color:#111}
+.history-sheet-close{background:none;border:none;cursor:pointer;padding:4px;
+  border-radius:6px;display:flex;align-items:center;justify-content:center}
+.history-sheet-close:hover{background:var(--chip-bg)}
+.history-sheet-close svg{width:18px;height:18px;stroke:#6b7280;stroke-width:2;fill:none;
+  stroke-linecap:round;stroke-linejoin:round}
+.history-body{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:8px}
+.history-empty{text-align:center;color:var(--txt3);font-size:14px;padding:32px 0}
+.history-item{border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.6}
+.history-item.user{background:var(--green-lt);color:var(--green-dk);align-self:flex-end;max-width:88%;text-align:right}
+.history-item.ai{background:var(--chip-bg);color:#374151;align-self:flex-start;max-width:88%}
+.history-item-role{font-size:10px;font-weight:700;margin-bottom:3px;opacity:.7}
+
+/* ── PWA 설치 배너 ── */
+.install-banner{
+  position:fixed;top:calc(var(--safe-t)+8px);left:8px;right:8px;z-index:2000;
+  background:#fff;border:1px solid var(--border);border-radius:14px;
+  padding:12px 14px;display:none;align-items:center;gap:12px;
+  box-shadow:0 4px 20px rgba(0,0,0,.1);
+}
+.install-banner.show{display:flex}
+.install-banner-icon img{width:36px;height:36px;border-radius:8px}
+.install-banner-text{flex:1}
+.install-banner-title{font-size:13px;font-weight:700;color:#111;margin-bottom:2px}
+.install-banner-sub{font-size:11px;color:var(--txt2);line-height:1.5}
+.install-banner-actions{display:flex;gap:6px;flex-shrink:0}
+.install-btn{padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;
+  border:none;cursor:pointer;white-space:nowrap}
+.install-btn-primary{background:var(--green);color:#fff}
+.install-btn-dismiss{background:var(--chip-bg);color:var(--txt2);border:1px solid var(--border)}
+
+/* ── AI 오버레이 카드 ── */
+.ai-overlay{
+  position:fixed;inset:0;z-index:998;
+  display:flex;align-items:flex-end;justify-content:center;
+  visibility:hidden;opacity:0;transition:opacity .2s,visibility .2s;
+}
+.ai-overlay.open{visibility:visible;opacity:1}
+.ai-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.4);cursor:pointer}
+.ai-card{
+  position:relative;z-index:1;
+  width:100%;max-width:480px;background:#fff;
+  border-radius:24px 24px 0 0;padding:28px 24px calc(24px + var(--safe-b));
+  text-align:center;
+}
+.ai-card-icon{font-size:40px;margin-bottom:10px}
+.ai-card-title{font-size:18px;font-weight:800;color:#111;margin-bottom:6px}
+.ai-card-sub{font-size:13px;color:var(--txt2);line-height:1.65;margin-bottom:20px}
+.ai-card-btn{
+  display:block;width:100%;padding:13px;border-radius:12px;
+  font-size:14px;font-weight:700;border:none;cursor:pointer;margin-bottom:8px;
+  transition:opacity .12s;
+}
+.ai-card-btn-primary{background:var(--green);color:#fff}
+.ai-card-btn-primary:hover{opacity:.88}
+.ai-card-btn-secondary{background:var(--chip-bg);color:var(--txt2);
+  border:1px solid var(--border)}
+
+/* ── 토스트 ── */
+.toast{
+  position:fixed;bottom:calc(80px + var(--safe-b));left:50%;
+  transform:translateX(-50%) translateY(10px);
+  background:#111;color:#fff;border-radius:10px;
+  padding:10px 18px;font-size:13px;font-weight:500;
+  z-index:9999;opacity:0;transition:all .25s;white-space:nowrap;pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── 검색 오버레이 ── */
+#search-overlay{
+  position:fixed;inset:0;z-index:999;
+  background:rgba(0,0,0,.45);
+  display:flex;align-items:flex-end;justify-content:center;
+  visibility:hidden;opacity:0;transition:opacity .2s,visibility .2s;
+}
+#search-overlay.open{visibility:visible;opacity:1}
+#search-overlay .settings-sheet{
+  width:100%;max-width:480px;background:#fff;
+  border-radius:20px 20px 0 0;
+  padding:0 0 calc(16px + var(--safe-b));
+  transform:translateY(100%);transition:transform .25s;
+  box-shadow:none;height:auto;max-height:80dvh;
+}
+#search-overlay.open .settings-sheet{transform:translateY(0)}
+
+/* ── 진행 시트 ── */
+#progress-overlay{
+  position:fixed;inset:0;z-index:999;
+  background:rgba(0,0,0,.45);
+  display:flex;align-items:flex-end;justify-content:center;
+  visibility:hidden;opacity:0;transition:opacity .2s,visibility .2s;
+}
+#progress-overlay.open{visibility:visible;opacity:1}
+#progress-overlay .settings-sheet{
+  width:100%;max-width:480px;background:#fff;
+  border-radius:20px 20px 0 0;
+  padding:0 0 calc(16px + var(--safe-b));
+  max-height:70vh;overflow-y:auto;
+  transform:translateY(100%);transition:transform .25s;
+  box-shadow:none;height:auto;
+}
+#progress-overlay.open .settings-sheet{transform:translateY(0)}
+
+/* ── 설정 오버레이 ── */
+#settings-overlay{
+  position:fixed;inset:0;z-index:999;
+  background:rgba(0,0,0,.45);
+  display:flex;align-items:flex-end;justify-content:center;
+  visibility:hidden;opacity:0;transition:opacity .2s,visibility .2s;
+}
+#settings-overlay.open{visibility:visible;opacity:1}
+#settings-overlay .settings-sheet{
+  width:100%;max-width:480px;background:#fff;
+  border-radius:20px 20px 0 0;
+  padding:0 0 calc(16px + var(--safe-b));
+  max-height:90dvh;overflow-y:auto;
+  transform:translateY(100%);transition:transform .25s;
+  box-shadow:none;height:auto;
+}
+#settings-overlay.open .settings-sheet{transform:translateY(0)}
+/* 설정 시트 내부 스타일 정리 */
+#perm-guide{
+  background:var(--chip-bg);border:1px solid var(--border);
+  border-radius:12px;padding:14px 16px;margin:0 16px 14px;
+  font-size:13px;line-height:1.7;color:#374151;
+}
+</style>
 </head>
 <body>
 
-<!-- ── PWA 설치 배너 ─────────────────────────────────── -->
+<!-- ── PWA 설치 배너 ── -->
 <div class="install-banner" id="install-banner">
-  <div class="install-banner-icon">
-    <img src="/icons/icon-192.png" alt="고팡 아이콘"/>
-  </div>
+  <div class="install-banner-icon"><img src="/icons/icon-192.png" alt="고팡"></div>
   <div class="install-banner-text">
     <div class="install-banner-title">고팡 앱 설치</div>
-    <div class="install-banner-sub">
-      홈 화면에 추가하면<br>
-      주소창 없이 바로 실행됩니다
-    </div>
+    <div class="install-banner-sub">홈 화면에 추가하면<br>주소창 없이 바로 실행됩니다</div>
   </div>
   <div class="install-banner-actions">
     <button class="install-btn install-btn-primary" onclick="installPWA()">설치</button>
@@ -66,16 +499,13 @@
   </div>
 </div>
 
-<!-- iOS Safari 전용 설치 안내 (beforeinstallprompt 미지원) -->
 <div class="install-banner" id="ios-install-banner">
-  <div class="install-banner-icon">
-    <img src="/icons/icon-192.png" alt="고팡 아이콘"/>
-  </div>
+  <div class="install-banner-icon"><img src="/icons/icon-192.png" alt="고팡"></div>
   <div class="install-banner-text">
     <div class="install-banner-title">홈 화면에 추가</div>
     <div class="install-banner-sub" id="ios-install-text">
-      Safari 하단 <strong style="color:var(--tint)">공유 버튼 →</strong>
-      <strong style="color:var(--tint)">홈 화면에 추가</strong>
+      Safari 하단 <strong style="color:var(--green)">공유 버튼 →</strong>
+      <strong style="color:var(--green)">홈 화면에 추가</strong>
     </div>
   </div>
   <div class="install-banner-actions">
@@ -85,321 +515,174 @@
 
 <div id="app">
 
-  <!-- ── 상단 바 (빈 영역 + 우상단 버튼만) ───────────── -->
+  <!-- ── 상단 바 ── -->
   <div class="top-bar">
-    <!-- 좌측 로고 / 진행 상황 버튼 -->
-    <div id="top-logo" onclick="_onLogoTap()"
-         style="color:var(--label);font-size:15px;font-weight:700;
-                letter-spacing:-0.3px;flex:1;cursor:pointer;
-                display:flex;align-items:center;gap:6px;user-select:none;">
+    <div id="top-logo" onclick="_onLogoTap()">
+      <div class="topbar-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
       <span id="top-logo-text">고팡</span>
-      <span id="top-progress-dot" style="display:none;width:7px;height:7px;
-            border-radius:50%;background:var(--yellow);
-            animation:pulse-dot 1.5s ease-in-out infinite;flex-shrink:0;"></span>
+      <span id="top-progress-dot" style="display:none"></span>
     </div>
-    <!-- 홈 화면 설치 버튼 (미설치 시에만 표시) -->
-    <button class="top-btn" id="btn-install" onclick="requestInstall()"
-            title="홈 화면에 설치" style="display:none">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="2.2"
-           stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 2v13M7 11l5 5 5-5"/>
-        <path d="M3 19h18"/>
-      </svg>
-    </button>
-    <!-- 검색 버튼 -->
-    <button class="top-btn" id="btn-search" onclick="openSearch()" title="검색">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-           stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="8"/>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
-    </button>
-    <!-- AI 비서 버튼 -->
-    <button class="top-btn btn-ai" id="btn-ai" onclick="toggleAI()" title="AI 비서">
-      <span class="ai-dot" id="ai-dot"></span>
-      AI
-    </button>
-    <!-- 설정 버튼 -->
-    <button class="top-btn" id="btn-settings" onclick="openSettings()" title="설정">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="3"/>
-        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06
-                 a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09
-                 A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83
-                 l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09
-                 A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83
-                 l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09
-                 a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83
-                 l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09
-                 a1.65 1.65 0 0 0-1.51 1z"/>
-      </svg>
-    </button>
+
+    <div class="top-bar-right">
+      <button class="top-btn" id="btn-install" onclick="requestInstall()" title="홈 화면에 설치" style="display:none">
+        <svg viewBox="0 0 24 24"><path d="M12 2v13M7 11l5 5 5-5"/><path d="M3 19h18"/></svg>
+      </button>
+      <button class="top-btn" id="btn-search" onclick="openSearch()" title="검색">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+      <button class="top-btn btn-ai" id="btn-ai" onclick="toggleAI()" title="AI 비서">
+        <span class="ai-dot" id="ai-dot"></span>AI
+      </button>
+      <button class="top-btn" id="btn-settings" onclick="openSettings()" title="설정">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
   </div>
 
-  <!-- ── 메시지 목록 ─────────────────────────────────── -->
-  <div id="router-badge" style="
-  display:none;
-  font-size:10px;font-weight:600;
-  color:#3ecf8e;background:rgba(62,207,142,.08);
-  border:1px solid rgba(62,207,142,.2);
-  border-radius:4px;padding:2px 8px;
-  margin:4px 12px 0;text-align:center;
-  letter-spacing:.3px;
-"></div>
-<div id="message-list" style="background:var(--bg)"></div>
+  <!-- ── 라우터 뱃지 ── -->
+  <div id="router-badge"></div>
 
-  <!-- ── 하단 입력 독 ───────────────────────────────── -->
+  <!-- ── 메시지 목록 ── -->
+  <div id="message-list" style="background:var(--bg)"></div>
+
+  <!-- ── 하단 입력 ── -->
   <div class="input-dock">
 
-    <!-- 상태 스트립 (숨김) -->
     <div class="status-strip" style="display:none">
       <div class="status-dot" id="status-dot"></div>
       <span id="status-text">PDV 암호화</span>
       <span>·</span>
-      <span>OpenHash <code id="hash-ref">대기중</code></span>
+      <span>OpenHash <code id="hash-ref" style="font-size:10px;background:var(--chip-bg);padding:1px 4px;border-radius:3px">대기중</code></span>
       <span id="layer-lbl">L1</span>
       <span style="margin-left:auto">
-        <select class="version-select" id="version-select" title="고팡 버전"
-                style="color:var(--label-2);font-size:11px">
+        <select class="version-select" id="version-select" title="고팡 버전">
           <option value="v2">고팡 v2</option>
           <option value="v1">고팡 v1</option>
         </select>
       </span>
     </div>
 
-    <!-- 첨부 미리보기 -->
     <div id="attach-preview" style="display:none" class="attach-preview">
       <span>📎</span>
       <span id="attach-name"></span>
       <button class="remove-attach" onclick="removeAttach()">✕</button>
     </div>
 
-    <!-- 입력 래퍼 -->
-    <div class="input-wrap">
-
-      <!-- 좌측 버튼 그룹 -->
-      <div class="input-actions-left">
-        <!-- + 첨부 -->
+    <div class="input-row">
+      <!-- 좌측 보조 버튼 — 입력 시 숨김 -->
+      <div class="input-actions-left" id="input-aux-btns">
         <button class="ia-btn" onclick="triggerAttach()" title="파일 첨부">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="2.2"
-               stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="8" x2="12" y2="16"/>
-            <line x1="8" y1="12" x2="16" y2="12"/>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
           </svg>
         </button>
-
-        <!-- 📷 카메라 -->
-        <button class="ia-btn" id="btn-camera" title="카메라 촬영">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="2.2"
-               stroke-linecap="round" stroke-linejoin="round">
-            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8
-                     a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+        <button class="ia-btn" id="btn-camera" title="카메라">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
             <circle cx="12" cy="13" r="4"/>
           </svg>
         </button>
-
-        <!-- 마이크 -->
         <button class="ia-btn" id="btn-mic" title="음성 입력">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="2.2"
-               stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-            <line x1="12" y1="19" x2="12" y2="23"/>
-            <line x1="8" y1="23" x2="16" y2="23"/>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="2" width="6" height="11" rx="3"/>
+            <path d="M5 10a7 7 0 0 0 14 0"/>
+            <line x1="12" y1="19" x2="12" y2="22"/>
+            <line x1="8" y1="22" x2="16" y2="22"/>
           </svg>
         </button>
       </div>
 
-      <!-- 텍스트 입력 -->
-      <textarea id="msg-input"
-                placeholder="메시지를 입력하세요…"
-                rows="1"
-></textarea>
-
-      <!-- 전송 버튼 -->
-      <button class="send-btn" id="send-btn" disabled>
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
-        </svg>
-      </button>
+      <!-- 입력 wrap -->
+      <div class="input-wrap">
+        <textarea id="msg-input" placeholder="메시지를 입력하세요…" rows="1"></textarea>
+        <button class="send-btn" id="send-btn" disabled>
+          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
     </div>
 
-    <input type="file" id="file-input" style="display:none"
-           accept="image/*,.pdf,.txt,.docx"
-           onchange="handleFileSelect(event)"/>
-    <input type="file" id="camera-input" style="display:none"
-           accept="image/*"
-           capture="environment"
-           onchange="handleFileSelect(event)"/>
-    <!-- 인증용 전면 카메라 (MediaPipe) -->
-    <input type="file" id="camera-selfie" style="display:none"
-           accept="image/*"
-           capture="user"
-           onchange="_authHandleSelfie(event)"/>
+    <input type="file" id="file-input" style="display:none" accept="image/*,.pdf,.txt,.docx" onchange="handleFileSelect(event)">
+    <input type="file" id="camera-input" style="display:none" accept="image/*" capture="environment" onchange="handleFileSelect(event)">
+    <input type="file" id="camera-selfie" style="display:none" accept="image/*" capture="user" onchange="_authHandleSelfie(event)">
   </div>
-</div>
+</div><!-- /#app -->
 
-<!-- ── 진행 상황 시트 ─────────────────────────────────────── -->
+<!-- ── 진행 상황 시트 ── -->
 <div class="settings-overlay" id="progress-overlay" onclick="_closeProgressSheet(event)">
-  <div class="settings-sheet" style="max-height:70vh;overflow-y:auto;">
+  <div class="settings-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-title" id="progress-sheet-title">진행 상황</div>
-    <div id="progress-steps" style="margin-bottom:20px;"></div>
-    <button class="sheet-save"
-            style="background:var(--bg-subtle);color:var(--label-2);border:1px solid var(--sep-strong);"
-            onclick="document.getElementById('progress-overlay').classList.remove('open')">
-      닫기
-    </button>
+    <div id="progress-steps" style="padding:0 16px 16px"></div>
+    <button class="sheet-save" style="background:var(--chip-bg);color:var(--txt2);border:1px solid var(--border)"
+            onclick="document.getElementById('progress-overlay').classList.remove('open')">닫기</button>
   </div>
 </div>
 
-<!-- ── 검색 오버레이 ──────────────────────────────────── -->
+<!-- ── 검색 오버레이 ── -->
 <div class="settings-overlay" id="search-overlay" onclick="handleSearchOverlayClick(event)">
   <div class="settings-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-title">검색</div>
-
-    <!-- 검색 범위 안내 -->
-    <div style="display:flex;gap:8px;margin-bottom:14px">
-      <span style="font-size:11px;padding:4px 10px;border-radius:20px;
-                   background:var(--tint-dim);color:var(--tint);font-weight:600">
-        👤 대화 상대
-      </span>
-      <span style="font-size:11px;padding:4px 10px;border-radius:20px;
-                   background:rgba(48,209,88,0.12);color:var(--green);font-weight:600">
-        🔐 PDV 데이터
-      </span>
+    <div style="display:flex;gap:8px;margin:0 16px 14px;flex-wrap:wrap">
+      <span style="font-size:11px;padding:4px 10px;border-radius:20px;background:var(--green-lt);color:var(--green-dk);font-weight:600">👤 대화 상대</span>
+      <span style="font-size:11px;padding:4px 10px;border-radius:20px;background:var(--chip-bg);color:var(--txt2);font-weight:600">🔐 PDV 데이터</span>
     </div>
-
-    <div class="setting-group">
-      <div class="input-wrap" style="border-radius:var(--r-md);padding:8px 12px">
-        <textarea id="search-input"
-                  class="version-select"
-                  style="flex:1;background:transparent;border:none;outline:none;
-                         color:var(--label);font-family:var(--font);font-size:15px;
-                         resize:none;line-height:1.4;width:100%;height:36px"
+    <div style="padding:0 16px">
+      <div class="input-wrap" style="border-radius:12px;padding:8px 12px">
+        <textarea id="search-input" style="flex:1;background:transparent;border:none;outline:none;color:#111;font-family:'Pretendard',sans-serif;font-size:14px;resize:none;line-height:1.4;width:100%;height:36px"
                   placeholder="이름, GUID, 또는 PDV 키워드 입력"
                   onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();runSearch();}"></textarea>
-        <button class="send-btn" style="flex-shrink:0" onclick="runSearch()">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="2.5"
-               stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
+        <button class="send-btn" onclick="runSearch()">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </button>
       </div>
+      <div style="font-size:11px;color:var(--txt3);margin:8px 0 12px;line-height:1.6">※ 웹 검색은 AI 비서(AI 버튼)에게 직접 지시하세요.</div>
+      <div id="search-result" style="font-size:14px;color:var(--txt2);line-height:1.6;max-height:280px;overflow-y:auto;padding:4px 0"></div>
     </div>
-
-    <!-- 안내 문구 -->
-    <div style="font-size:11px;color:var(--label-3);margin-bottom:12px;line-height:1.6">
-      ※ 웹 검색은 AI 비서(AI 버튼)에게 직접 지시하세요.
-    </div>
-
-    <div id="search-result"
-         style="font-size:14px;color:var(--label-2);line-height:1.6;
-                max-height:280px;overflow-y:auto;padding:4px 0">
-    </div>
-
-    <button class="sheet-save" style="margin-top:16px;background:var(--bg-input);
-            color:var(--label-2)" onclick="closeSearch()">닫기</button>
+    <button class="sheet-save" style="background:var(--chip-bg);color:var(--txt2);border:1px solid var(--border);margin-top:8px" onclick="closeSearch()">닫기</button>
   </div>
 </div>
 
-<!-- ── AI 비서 카드 ────────────────────────────────────── -->
+<!-- ── AI 비서 카드 ── -->
 <div class="ai-overlay" id="ai-overlay">
   <div class="ai-backdrop" onclick="closeAI()"></div>
   <div class="ai-card">
     <div class="ai-card-icon">🤖</div>
     <div class="ai-card-title">AI 비서</div>
-    <div class="ai-card-sub" id="ai-card-sub">
-      DeepSeek v3을 AI 대화 상대로 연결합니다.<br>
-      고팡 법률·의료 분석과 함께 동작합니다.
-    </div>
-    <button class="ai-card-btn ai-card-btn-primary" onclick="activateAI(false); closeAI()">
-      AI 비서 시작
-    </button>
-    <button class="ai-card-btn ai-card-btn-secondary" onclick="closeAI()">
-      취소
-    </button>
+    <div class="ai-card-sub" id="ai-card-sub">DeepSeek v3을 AI 대화 상대로 연결합니다.<br>고팡 법률·의료 분석과 함께 동작합니다.</div>
+    <button class="ai-card-btn ai-card-btn-primary" onclick="activateAI(false); closeAI()">AI 비서 시작</button>
+    <button class="ai-card-btn ai-card-btn-secondary" onclick="closeAI()">취소</button>
   </div>
 </div>
 
-<!-- ── 설정 시트 ──────────────────────────────────────── -->
+<!-- ── 설정 시트 ── -->
 <div class="settings-overlay" id="settings-overlay" onclick="handleOverlayClick(event)">
   <div class="settings-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-title">설정</div>
 
-    <!-- ── 권한 설정 안내 ─────────────────────────────────── -->
-    <div id="perm-guide" style="
-      background:#1C1C1E; border:1px solid #3A3A3C;
-      border-radius:14px; padding:14px 16px; margin-bottom:16px;
-      font-size:13px; line-height:1.7; color:#EBEBF5;">
-
-      <div style="font-weight:600; font-size:14px; margin-bottom:10px;">
-        📱 스마트폰 권한 설정 안내
-      </div>
-
-      <!-- Android -->
-      <details style="margin-bottom:10px;">
-        <summary style="cursor:pointer; font-weight:600; color:#0057A8; outline:none;">
-          🤖 Android (크롬 브라우저)
-        </summary>
-        <div style="margin-top:8px; padding-left:4px; color:#AEAEB2;">
-          <b style="color:#EBEBF5;">① 크롬에서 접속 시</b><br>
-          상단 우측의 <span style="
-            display:inline-flex; flex-direction:column; gap:2px;
-            vertical-align:middle; margin:0 3px;">
-            <span style="width:4px;height:4px;background:#0057A8;border-radius:50%;display:block;"></span>
-            <span style="width:4px;height:4px;background:#0057A8;border-radius:50%;display:block;"></span>
-            <span style="width:4px;height:4px;background:#0057A8;border-radius:50%;display:block;"></span>
-          </span> 터치<br>
-          → 아래로 스크롤 → <b>사이트 설정</b> 터치<br>
-          → <b>위치 · 카메라 · 마이크</b> 각각 터치 → <b>허용</b><br><br>
-
-          <b style="color:#EBEBF5;">② 고팡 앱(홈 화면) 사용 시</b><br>
-          Android 설정 → 앱 → Chrome<br>
-          → 권한 → 위치: <b>앱 사용 중 허용</b><br>
-          → 권한 → 마이크: <b>허용</b>
+    <div id="perm-guide">
+      <div style="font-weight:700;font-size:13px;margin-bottom:10px">📱 스마트폰 권한 설정 안내</div>
+      <details style="margin-bottom:10px">
+        <summary style="cursor:pointer;font-weight:600;color:var(--green-dk);outline:none">🤖 Android (크롬 브라우저)</summary>
+        <div style="margin-top:8px;padding-left:4px;color:var(--txt2);font-size:12px;line-height:1.7">
+          <b style="color:#111">① 크롬에서 접속 시</b><br>상단 우측 ⋮ 터치 → 아래로 스크롤 → <b>사이트 설정</b> 터치<br>→ <b>위치·카메라·마이크</b> 각각 → <b>허용</b><br><br>
+          <b style="color:#111">② 고팡 앱(홈 화면) 사용 시</b><br>Android 설정 → 앱 → Chrome → 권한 → 위치: <b>앱 사용 중 허용</b>
         </div>
       </details>
-
-      <!-- iOS -->
       <details>
-        <summary style="cursor:pointer; font-weight:600; color:#30D158; outline:none;">
-          🍎 iPhone / iPad (Safari)
-        </summary>
-        <div style="margin-top:8px; padding-left:4px; color:#AEAEB2;">
-          <b style="color:#EBEBF5;">① Safari에서 접속 시</b><br>
-          주소창 왼쪽 <b>AA 아이콘</b> 탭<br>
-          → 웹사이트 설정<br>
-          → 위치: <b>허용</b> / 마이크: <b>허용</b><br><br>
-
-          <b style="color:#EBEBF5;">② 위 방법이 안 될 경우</b><br>
-          iPhone 설정 → Safari<br>
-          → 위치: <b>물어보기 또는 허용</b><br>
-          → 마이크: <b>켬</b><br><br>
-
-          <b style="color:#EBEBF5;">③ 고팡 앱(홈 화면) 사용 시</b><br>
-          iPhone 설정 → Safari → 카메라·마이크·위치<br>
-          → <b>물어보기 또는 허용</b><br><br>
-
-          <b style="color:#FF9F0A;">⚠️ 음성 입력 안내</b><br>
-          iOS Safari는 Web Speech API 미지원.<br>
-          마이크 녹음 후 자동 텍스트 변환 방식으로 동작합니다.
+        <summary style="cursor:pointer;font-weight:600;color:var(--green-dk);outline:none">🍎 iPhone / iPad (Safari)</summary>
+        <div style="margin-top:8px;padding-left:4px;color:var(--txt2);font-size:12px;line-height:1.7">
+          <b style="color:#111">① Safari에서 접속 시</b><br>주소창 왼쪽 <b>AA 아이콘</b> 탭 → 웹사이트 설정 → 위치·마이크: <b>허용</b><br><br>
+          <b style="color:#f59e0b">⚠️ 음성 입력 안내</b><br>iOS Safari는 Web Speech API 미지원. 마이크 녹음 후 자동 변환 방식으로 동작합니다.
         </div>
       </details>
     </div>
 
     <div class="setting-group">
-      <div class="setting-label">LLM 모델</div>
+      <label class="setting-label">LLM 모델</label>
       <select class="setting-field" id="setting-model">
         <option value="deepseek-v4-pro" selected>DeepSeek V4 Pro ✦ 이미지 지원</option>
         <option value="deepseek-v4-flash">DeepSeek V4 Flash ✦ 이미지 지원 (빠름)</option>
@@ -412,7 +695,7 @@
     </div>
 
     <div class="setting-group">
-      <div class="setting-label">API 엔드포인트</div>
+      <label class="setting-label">API 엔드포인트</label>
       <select class="setting-field" id="setting-endpoint">
         <option value="https://gopang-proxy.tensor-city.workers.dev" selected>고팡 프록시 (보안 권장)</option>
         <option value="https://api.deepseek.com/v1">DeepSeek API (직접)</option>
@@ -423,90 +706,102 @@
     </div>
 
     <div class="setting-group" id="custom-endpoint-group" style="display:none">
-      <div class="setting-label">커스텀 엔드포인트 URL</div>
-      <input class="setting-field setting-field-mono" id="custom-endpoint-url"
-             type="text" placeholder="https://..."/>
+      <label class="setting-label">커스텀 엔드포인트 URL</label>
+      <input class="setting-field setting-field-mono" id="custom-endpoint-url" type="text" placeholder="https://...">
     </div>
 
     <div class="setting-group">
-      <div class="setting-label">API Key (DeepSeek 직접 사용 시)</div>
-      <input class="setting-field setting-field-mono" id="setting-apikey"
-             type="password"
-             placeholder="sk-…"
-             autocomplete="off" spellcheck="false"/>
+      <label class="setting-label">API Key (DeepSeek 직접 사용 시)</label>
+      <input class="setting-field setting-field-mono" id="setting-apikey" type="password" placeholder="sk-…" autocomplete="off" spellcheck="false">
     </div>
 
     <div class="setting-group">
-      <div class="setting-label">Gemini API Key (이미지 분석용)</div>
-      <input class="setting-field setting-field-mono" id="setting-gemini-key"
-             type="password"
-             placeholder="AIza…"
-             autocomplete="off" spellcheck="false"/>
-      <div style="font-size:11px;color:var(--label-2);margin-top:4px;">
-        K-Cleaner 이미지 분석에 사용 · <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--tint);">무료 발급 →</a>
-      </div>
+      <label class="setting-label">Gemini API Key (이미지 분석용)</label>
+      <input class="setting-field setting-field-mono" id="setting-gemini-key" type="password" placeholder="AIza…" autocomplete="off" spellcheck="false">
+      <div style="font-size:11px;color:var(--txt3);margin-top:4px">K-Cleaner 이미지 분석에 사용 · <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--green-dk)">무료 발급 →</a></div>
     </div>
 
     <div class="setting-group">
-      <div class="setting-label">시스템 프롬프트</div>
-      <textarea class="setting-field" id="setting-system"
-                rows="4"
-                style="resize:vertical; font-size:13px; line-height:1.5"
-                placeholder="AI 비서의 역할과 동작 방식을 정의하세요…"></textarea>
+      <label class="setting-label">시스템 프롬프트</label>
+      <textarea class="setting-field" id="setting-system" rows="4" style="resize:vertical;font-size:13px;line-height:1.5" placeholder="AI 비서의 역할과 동작 방식을 정의하세요…"></textarea>
     </div>
 
     <button class="sheet-save" onclick="saveSettings()">저장</button>
 
-    <!-- ── 보안 · 인증 섹션 ──────────────────────────── -->
-    <div class="setting-group" style="margin-top:16px;" id="security-section">
-      <div class="setting-label">🔐 보안 · 인증</div>
-
-      <!-- 현재 인증 레벨 표시 -->
-      <div id="auth-level-display" style="
-        background:var(--bg-input);border:1px solid var(--sep);
-        border-radius:10px;padding:12px 14px;margin-bottom:12px;
-        font-size:13px;color:var(--label-2);line-height:1.6;">
-        로딩 중…
-      </div>
-
-      <!-- 지문 등록/재등록 버튼 -->
+    <div class="setting-group" style="margin-top:8px" id="security-section">
+      <label class="setting-label">🔐 보안 · 인증</label>
+      <div id="auth-level-display" style="background:var(--chip-bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:var(--txt2);line-height:1.6">로딩 중…</div>
       <button id="btn-register-fp" onclick="_settingsRegisterFingerprint()"
-        style="width:100%;padding:12px;border-radius:10px;
-               background:var(--tint);color:#fff;border:none;
-               font-size:14px;font-weight:600;cursor:pointer;
-               margin-bottom:8px;">
+        style="width:100%;padding:12px;border-radius:10px;background:var(--green);color:#fff;border:none;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px">
         🔐 지문 등록
       </button>
-
-      <!-- 얼굴 재등록 버튼 -->
       <button onclick="_settingsRegisterFace()"
-        style="width:100%;padding:12px;border-radius:10px;
-               background:var(--bg-input);color:var(--label);
-               border:1px solid var(--sep);
-               font-size:14px;cursor:pointer;margin-bottom:8px;">
+        style="width:100%;padding:12px;border-radius:10px;background:var(--chip-bg);color:#374151;border:1px solid var(--border);font-size:14px;cursor:pointer;margin-bottom:8px">
         📷 얼굴 재등록
       </button>
-
-      <!-- 고팡 ID 표시 -->
-      <div id="gopang-id-display" style="
-        font-size:10px;color:var(--label-3);
-        font-family:-apple-system,monospace;
-        word-break:break-all;padding:8px 0;">
-      </div>
+      <div id="gopang-id-display" style="font-size:10px;color:var(--txt3);font-family:monospace;word-break:break-all;padding:8px 0"></div>
     </div>
 
-    <button onclick="clearSWCache()" style="
-      width:100%; margin-top:10px; padding:12px;
-      background:transparent; border:1px solid #3A3A3C;
-      border-radius:12px; color:#FF453A; font-size:14px;
-      font-family:-apple-system,sans-serif; cursor:pointer;">
-      🗑 앱 캐시 초기화 (새로 시작하기)
+    <button onclick="clearSWCache()"
+      style="width:calc(100% - 32px);margin:0 16px 16px;padding:12px;background:transparent;border:1px solid #fca5a5;border-radius:10px;color:#dc2626;font-size:14px;font-family:inherit;cursor:pointer">
+      🗑 앱 캐시 초기화
     </button>
   </div>
 </div>
 
+<!-- ── 입력 필드 제어 ── -->
+<script>
+(function(){
+  const inp    = document.getElementById('msg-input');
+  const aux    = document.getElementById('input-aux-btns');
+  const sendBtn= document.getElementById('send-btn');
 
-<!-- 고팡 모듈 — DOM 완성 후 로드 -->
+  function autoResize(){
+    inp.style.height = 'auto';
+    inp.style.height = Math.min(inp.scrollHeight, 160) + 'px';
+  }
+
+  function syncState(){
+    const hasText = inp.value.length > 0;
+    // 보조 버튼 토글
+    if(hasText){ aux.classList.add('hidden'); }
+    else        { aux.classList.remove('hidden'); }
+    // 전송 버튼 활성
+    if(sendBtn) sendBtn.disabled = !hasText;
+    autoResize();
+  }
+
+  if(inp){
+    inp.addEventListener('input', syncState);
+    inp.addEventListener('keydown', function(e){
+      if(e.key === 'Enter' && !e.shiftKey){
+        e.preventDefault();
+        // gopang-app.js 의 전송 함수 호출 시도
+        if(typeof sendMessage === 'function') sendMessage();
+        else if(typeof _send === 'function') _send();
+        else sendBtn && sendBtn.click();
+      }
+    });
+  }
+
+  // AI 버튼 활성 상태 감시 (gopang-app.js 가 aiActive 변수를 노출하면 연동)
+  // MutationObserver로 btn-ai 클래스 변화 감지
+  const btnAI = document.getElementById('btn-ai');
+  if(btnAI){
+    const obs = new MutationObserver(function(){
+      const active = btnAI.classList.contains('active');
+      const dot = document.getElementById('ai-dot');
+      if(dot){
+        dot.style.background = active ? '#3b82f6' : 'var(--txt4)';
+        dot.style.boxShadow  = active ? '0 0 6px rgba(59,130,246,.6)' : 'none';
+      }
+    });
+    obs.observe(btnAI, {attributes:true, attributeFilter:['class']});
+  }
+})();
+</script>
+
+<!-- 고팡 모듈 -->
 <script src="/src/pwa/gopang-pwa.js"></script>
 <script src="/src/auth/gopang-auth.js"></script>
 <script src="/gopang-app.js"></script>
