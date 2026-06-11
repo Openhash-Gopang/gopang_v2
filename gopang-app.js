@@ -3583,7 +3583,7 @@ window.addEventListener('message', (e) => {
     }
     case 'GWP_DONE': {
       // 작업 완료 — PDV 중복 방지 확인 → 필요 시 기록 → 탭 자동 닫기
-      if (msg.summary) appendBubble('ai', '✅ ' + msg.summary, false);
+      if (msg.summary) appendBubble('ai', msg.summary, false);
 
       // STEP 24 준비: reporter_svc가 있으면 하위 시스템이 이미 PDV 기록 → 고팡 중복 방지
       const reporterSvc = msg.reporter_svc || msg.pdvData?.reporter_svc || null;
@@ -3624,9 +3624,9 @@ window.addEventListener('message', (e) => {
         }).then(({ fs, applied }) => {
           console.info('[GWP_DONE] redeemClaim 완료 — block_hash:',
             msg.block_hash.slice(0, 8), '| applied:', applied, '| bs-cash:', fs['bs-cash']);
+          appendBubble('ai', `거래 완료. 잔액 ₩${fs['bs-cash']?.toLocaleString()}`, false);
         }).catch(err => console.warn('[GWP_DONE] redeemClaim 실패:', err.message));
       }
-
       // 하위 시스템 탭 자동 닫기 → gopang 탭 포커스 복귀
       setTimeout(() => {
         if (_gwpTab && !_gwpTab.closed) _gwpTab.close();
@@ -4116,5 +4116,6 @@ function _sendReportToFiil(geminiResult, imageFile, userText) {
 }
 
     })();
+
 
 
