@@ -2194,7 +2194,7 @@ async function callAI(userText, imageFile = null, _preTab = null) {
   // 3) messages: history 전체 (system + 대화 누적 + 현재 user)
   //    단, 이미지가 있을 경우 마지막 user content는 multipart로 교체
   const messages = [
-    ...history.slice(0, -1),                        // system + 이전 대화
+    ...history.slice(-20, -1),                      // 최근 20턴 상한 (KV Cache 효율)
     { role: 'user', content: userContent },         // 현재 user (이미지 포함 가능)
   ];
 
@@ -2230,7 +2230,7 @@ async function callAI(userText, imageFile = null, _preTab = null) {
       body: JSON.stringify({
         model: CFG.model,
         messages,
-        max_tokens:  2000,
+        max_tokens:  800,
         temperature: 0.6,
         stream:      true,
         stream_options: { include_usage: true },  // 캐시 히트 토큰 수 확인용
@@ -4116,4 +4116,5 @@ function _sendReportToFiil(geminiResult, imageFile, userText) {
 }
 
     })();
+
 
