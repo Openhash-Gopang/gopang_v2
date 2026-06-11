@@ -3428,12 +3428,17 @@ function _gwpMatch(text) {
 
 // ── 서비스 실행 (새 탭) ─────────────────────────────────────────
 function _gwpLaunch(service, context, _preTab = null) {
-  // 이미 열려 있는 탭이 있으면 포커스만 이동
-  if (_gwpActive && _gwpTab && !_gwpTab.closed) {
-    _gwpTab.focus();
-    if (_preTab && !_preTab.closed) _preTab.close(); // 예약 탭 불필요 → 닫기
-    return;
+  // 기존 탭이 열려있으면 닫고 새 ctx로 재시작
+  if (_gwpTab && !_gwpTab.closed) {
+    _gwpTab.close();
+    _gwpTab = null;
   }
+  if (_gwpTabTimer) {
+    clearInterval(_gwpTabTimer);
+    _gwpTabTimer = null;
+  }
+  _gwpActive  = false;
+  _gwpService = null;
 
   _gwpActive  = true;
   _gwpService = service;
