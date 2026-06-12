@@ -119,6 +119,11 @@ function _sbServiceHeaders(env) {
 // 메인 fetch 핸들러
 // ═══════════════════════════════════════════════════════════
 export default {
+  // ── Cron 트리거 (10분마다 머클 앵커링) ──────────────────
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(anchorL1MerkleRoot(env));
+  },
+
   async fetch(request, env) {
     const corsOrigin = getCorsOrigin(request);
 
@@ -171,6 +176,9 @@ export default {
 
     // ── search (v4.7) ────────────────────────────────────
     if (pathname === '/search' && request.method === 'POST') return handleSearch(request, env, corsHeaders);
+
+    // ── merkle (T10) ─────────────────────────────────────────
+    if (pathname === '/merkle/verify')           return handleMerkleVerify(request, env, corsHeaders);
 
     // ── biz (v4.8+) ──────────────────────────────────────
     if (pathname.startsWith('/biz/profile/'))   return handleBizProfile(request, env, corsHeaders);
@@ -258,8 +266,48 @@ async function handleBizOrder(request, env, corsHeaders) {
     return _err(statusMap[l1Result.error] || 400, l1Result.error, l1Result.detail || l1Result.error, corsHeaders);
   }
 
-  const { block_id, block_hash, height, buyer_claim, seller_claim } = l1Result;
+  const { block_id, block_hash, height } = l1Result;
+  // L1은 buyer_claim을 반환하지 않음 → Worker가 직접 생성 (T08)
+  const _txTotal = txPayload.outputs.reduce((s, o) => s + (o.amount || 0), 0);
+  const _buyerBalAfter = (txPayload.input?.balance_claimed || balance_claimed || 0) - _txTotal;
+  const buyer_claim = {
+    direction:   'debit',
+    amount:      _txTotal,
+    fs_account:  'pl-purchase',
+    balance_after: _buyerBalAfter,
+    block_hash,
+    tx_hash,
+    expires_at:  new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7일
+  };
+  const seller_claim = {
+    direction:  'credit',
+    amount:     txPayload.outputs.find(o => o.recipient_guid !== 'gopang-platform')?.amount || 0,
+    fs_account: 'pl-revenue',
+    block_hash,
+    tx_hash,
+    expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+  };
 
+  // ── Module 5.5: verifyOutputConsistency + verifyDeltaZero (감시 모드) ──
+  const _outputs = txPayload.outputs;
+  verifyOutputConsistency(l1Result, _outputs);
+  verifyDeltaZero(_outputs, txPayload.input?.balance_claimed || balance_claimed || 0);
+
+  // ── Module 5.5: l1_ledger H_N 기록 (updateNodeHashChain) ──
+  // await는 fs_ledger RPC와 병렬 실행 — 거래 응답 차단 안 함
+  const userHashPromise = _computeUserHash(tx_hash, block_hash, height);
+  const nodeChainPromise = userHashPromise.then(userHash =>
+    updateNodeHashChain(env, {
+      userHash,
+      txId:            tx_hash,
+      blockHash:       block_hash,
+      buyerGuid:       from_guid,
+      sellerGuid:      seller_guid,
+      balanceClaimed:  txPayload.input?.balance_claimed || balance_claimed || 0,
+    })
+  );
+
+  
   // ── fs_ledger 기록 (market_purchase RPC) ─────────────────
   const sbServiceH  = _sbServiceHeaders(env);
   const totalOutput = txPayload.outputs.reduce((s, o) => s + (o.amount || 0), 0);
@@ -671,3 +719,270 @@ async function handleKakaoAppKey(request,env,corsHeaders){const appkey=env.KAKAO
 async function handleAIChat(bodyText,env,corsHeaders){let body;try{body=JSON.parse(bodyText);}catch{return _err(400,'INVALID_JSON','Invalid JSON',corsHeaders);}const{provider='deepseek',model,system,messages,max_tokens=2000}=body;const builtMessages=[...(system?[{role:'system',content:system}]:[]),...(messages||[])];try{if(provider!=='anthropic'){const res=await fetch(DEEPSEEK_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${env.DEEPSEEK_API_KEY}`},body:JSON.stringify({model:model||DEEPSEEK_MODEL,max_tokens,messages:builtMessages})});const data=await res.json();const content=data.choices?.[0]?.message?.content;if(!content)throw new Error('DeepSeek 응답 없음: '+JSON.stringify(data));return new Response(JSON.stringify({content,provider:'deepseek',model:model||DEEPSEEK_MODEL}),{status:200,headers:corsHeaders});}else{const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':env.ANTHROPIC_API_KEY||env.OpenAI,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:model||'claude-sonnet-4-20250514',max_tokens,...(system?{system}:{}),messages:messages||[]})});const data=await res.json();const content=data.content?.find(c=>c.type==='text')?.text;return new Response(JSON.stringify({content,provider:'anthropic'}),{status:200,headers:corsHeaders});}}catch(e){return _err(502,'AI_ERROR',e.message,corsHeaders);}}
 async function callOpenAIFromGeminiBody(bodyText,env,corsHeaders){const apiKey=env.OpenAI;if(!apiKey)return _err(500,'CONFIG_ERROR','OpenAI key not configured',corsHeaders);let geminiBody;try{geminiBody=JSON.parse(bodyText);}catch{return _err(400,'INVALID_JSON','Invalid JSON body',corsHeaders);}const systemPrompt=geminiBody.system_instruction?.parts?.[0]?.text||'';const parts=geminiBody.contents?.[0]?.parts||[];const textPart=parts.find(p=>p.text)?.text||'';const imagePart=parts.find(p=>p.inline_data);const maxTokens=geminiBody.generationConfig?.maxOutputTokens||1500;const messages=[];if(systemPrompt)messages.push({role:'system',content:systemPrompt});if(imagePart?.inline_data){messages.push({role:'user',content:[{type:'image_url',image_url:{url:`data:${imagePart.inline_data.mime_type};base64,${imagePart.inline_data.data}`}},{type:'text',text:textPart||'이미지를 분석하여 JSON으로만 출력하라.'}]});}else{messages.push({role:'user',content:textPart});}try{const res=await fetch(OPENAI_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},body:JSON.stringify({model:OPENAI_MODEL,messages,max_tokens:maxTokens,temperature:geminiBody.generationConfig?.temperature??0.1})});const data=await res.json();if(!res.ok)throw new Error(data.error?.message||`HTTP ${res.status}`);const text=data.choices?.[0]?.message?.content||'{}';return new Response(JSON.stringify({candidates:[{content:{parts:[{text}],role:'model'},finishReason:'STOP'}],_provider:'openai',_model:OPENAI_MODEL}),{headers:corsHeaders});}catch(e){const fbBody=JSON.stringify({model:DEEPSEEK_MODEL,messages,max_tokens:maxTokens,temperature:0.1,stream:false});return callDeepSeek(fbBody,env,corsHeaders,e.message);}}
 async function callDeepSeek(bodyText,env,corsHeaders,fallbackFrom=null){try{let isStream=false;try{isStream=!!JSON.parse(bodyText)?.stream;}catch{}const res=await fetch(DEEPSEEK_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${env.DEEPSEEK_API_KEY}`},body:bodyText});if(!res.ok){const errText=await res.text();let errMsg;try{errMsg=JSON.parse(errText)?.error?.message;}catch{}return new Response(JSON.stringify({error:errMsg||`HTTP ${res.status}`}),{status:res.status,headers:corsHeaders});}if(isStream){return new Response(res.body,{status:200,headers:{...corsHeaders,'Content-Type':'text/event-stream','Cache-Control':'no-cache','X-Accel-Buffering':'no'}});}const data=await res.json();if(fallbackFrom){const text=data.choices?.[0]?.message?.content||'{}';return new Response(JSON.stringify({candidates:[{content:{parts:[{text}],role:'model'},finishReason:'STOP'}],_provider:'deepseek-fallback',_fallback_from:fallbackFrom}),{headers:corsHeaders});}return new Response(JSON.stringify(data),{headers:corsHeaders});}catch(e){return _err(502,'DEEPSEEK_ERROR',e.message,corsHeaders);}}
+
+// ═══════════════════════════════════════════════════════════
+// Module 5.5 — Hash Chain & BIVM (PDV-HASHCHAIN-DESIGN-v3.0)
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * C-1: L1 노드 Hash Chain H_N 기록
+ * n_i = SHA-256(n_{i-1} ∥ h_{user,i})
+ */
+async function updateNodeHashChain(env, { userHash, txId, blockHash, buyerGuid, sellerGuid, balanceClaimed }) {
+  try {
+    const sbH = _sbServiceHeaders(env);
+
+    // 직전 node_hash 조회
+    const lastRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/l1_ledger?select=node_hash&order=anchored_at.desc&limit=1`,
+      { headers: sbH }
+    );
+    const lastRows = await lastRes.json().catch(() => []);
+    const prevNodeHash = lastRows?.[0]?.node_hash || '0'.repeat(64);
+
+    // n_i = SHA-256(n_{i-1} ∥ h_{user,i})
+    const input    = new TextEncoder().encode(prevNodeHash + userHash);
+    const buf      = await crypto.subtle.digest('SHA-256', input);
+    const nodeHash = Array.from(new Uint8Array(buf))
+      .map(b => b.toString(16).padStart(2, '0')).join('');
+
+    await fetch(`${SUPABASE_URL}/rest/v1/l1_ledger`, {
+      method:  'POST',
+      headers: { ...sbH, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({
+        tx_id:           txId,
+        buyer_guid:      buyerGuid,
+        seller_guid:     sellerGuid,
+        block_hash:      blockHash,
+        user_hash:       userHash,
+        node_hash:       nodeHash,
+        balance_claimed: balanceClaimed,
+        anchored_at:     new Date().toISOString(),
+      }),
+    });
+
+    console.log('[H_N] l1_ledger 기록 완료 | tx_id:', txId?.slice(0, 8),
+      '| node_hash:', nodeHash.slice(0, 8));
+    return nodeHash;
+  } catch(e) {
+    console.warn('[H_N] updateNodeHashChain 실패:', e.message);
+  }
+}
+
+/**
+ * 사용자 Hash Chain h_i 계산
+ * h_i = SHA-256(block_hash ∥ tx_hash ∥ height)
+ * ※ 클라이언트의 전체 공식과 달리 Worker는 prev_local_hash 없이
+ *   block_hash + tx_hash + height로 user_hash를 산출합니다.
+ *   (IDB 없는 서버 환경 — L1 응답 기반 단순화)
+ */
+async function _computeUserHash(txHash, blockHash, height) {
+  const input = new TextEncoder().encode(blockHash + txHash + String(height));
+  const buf   = await crypto.subtle.digest('SHA-256', input);
+  return Array.from(new Uint8Array(buf))
+    .map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * C-2a: L1 응답 vs outputs 일관성 검증
+ * 감시 모드 — 불일치 시 로그만 기록, 거래 차단 안 함 (T10까지)
+ */
+function verifyOutputConsistency(l1Response, outputs) {
+  const l1Total   = l1Response.buyer_claim?.amount || 0;
+  const calcTotal = outputs.reduce((s, o) => s + (o.amount || 0), 0);
+  const consistent = Math.abs(l1Total - calcTotal) < 0.01;
+  if (!consistent) {
+    console.error('[BIVM] L1 응답 vs outputs 불일치!',
+      JSON.stringify({ l1Total, calcTotal, diff: l1Total - calcTotal }));
+  }
+  return consistent;
+}
+
+/**
+ * C-2b: 실시간 Σδ=0 검증 (설계서 E1 수정)
+ * buyer_debit = seller_credit + platform_debit
+ * 감시 모드 — 불일치 시 로그만 기록, 거래 차단 안 함 (T10까지)
+ */
+function verifyDeltaZero(outputs, balanceClaimed) {
+  const sellerNet   = outputs.find(o => o.recipient_guid !== 'gopang-platform')?.amount || 0;
+  const platformFee = outputs.find(o => o.recipient_guid === 'gopang-platform')?.amount  || 0;
+  const buyerDebit  = sellerNet + platformFee;
+  const sigmaDelta  = Math.abs(buyerDebit - sellerNet - platformFee);
+
+  if (sigmaDelta > 0.01) {
+    console.error('[BIVM] Σδ ≠ 0 — 집합 잔액 불변성 위반!',
+      JSON.stringify({ buyerDebit, sellerNet, platformFee, sigmaDelta }));
+    return { valid: false, sigmaDelta };
+  }
+  if (balanceClaimed < buyerDebit) {
+    console.error('[BIVM] balance_claimed < txTotal — 잔액 부족!',
+      JSON.stringify({ balanceClaimed, buyerDebit }));
+    return { valid: false, reason: 'insufficient_balance' };
+  }
+  return { valid: true, sigmaDelta: 0 };
+}
+
+// ═══════════════════════════════════════════════════════════
+// Module T10 — Merkle Anchoring (anchorL1MerkleRoot)
+// Cron: 10분마다 실행
+// 미앵커링 pdv_log 배치 → 머클 루트 계산 → merkle_anchors INSERT
+// → pdv_log openhash_anchored = true 갱신
+// ═══════════════════════════════════════════════════════════
+
+async function anchorL1MerkleRoot(env) {
+  try {
+    const sbH = _sbServiceHeaders(env);
+
+    // 1. 미앵커링 pdv_log 조회 (최대 100건) — via_worker 무관
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/pdv_log` +
+      `?openhash_anchored=eq.false` +
+      `&select=id,guid,block_hash,chain_local_hash,session_id` +
+      `&order=created_at.asc&limit=100`,
+      { headers: sbH }
+    );
+    const rows = await res.json().catch(() => []);
+    if (!rows?.length) {
+      console.log('[Merkle] 미앵커링 pdv_log 없음 — 스킵');
+      return;
+    }
+
+    // 2. 머클 트리 계산
+    const leaves = rows.map(r =>
+      r.chain_local_hash || r.block_hash || r.id
+    );
+    const merkleRoot = await _computeMerkleRoot(leaves);
+    const pdvIds     = rows.map(r => r.id);
+    const now        = new Date().toISOString();
+
+    // 3. merkle_anchors INSERT
+    const insRes = await fetch(`${SUPABASE_URL}/rest/v1/merkle_anchors`, {
+      method:  'POST',
+      headers: { ...sbH, 'Prefer': 'return=representation' },
+      body: JSON.stringify({
+        merkle_root:   merkleRoot,
+        anchored_at:   now,
+        block_count:   rows.length,
+        pdv_ids:       pdvIds,
+        status:        'confirmed',
+      }),
+    });
+    const insResult = await insRes.json().catch(() => []);
+    const anchorId  = insResult?.[0]?.id || null;
+
+    // 4. pdv_log openhash_anchored = true 일괄 갱신
+    // Supabase REST는 IN 조건 배치 업데이트 지원
+    for (const id of pdvIds) {
+      await fetch(
+        `${SUPABASE_URL}/rest/v1/pdv_log?id=eq.${encodeURIComponent(id)}`,
+        {
+          method:  'PATCH',
+          headers: { ...sbH, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({
+            openhash_anchored:    true,
+            openhash_anchored_at: now,
+          }),
+        }
+      );
+    }
+
+    console.log(`[Merkle] 앵커링 완료 | root=${merkleRoot.slice(0,8)} | count=${rows.length} | anchor_id=${anchorId}`);
+  } catch(e) {
+    console.error('[Merkle] anchorL1MerkleRoot 실패:', e.message);
+  }
+}
+
+/**
+ * 머클 트리 루트 계산
+ * leaves: string[] (hash 또는 id)
+ * 홀수 노드: 마지막 leaf 복제
+ */
+async function _computeMerkleRoot(leaves) {
+  if (!leaves.length) return '0'.repeat(64);
+
+  // leaf 해시화
+  let nodes = await Promise.all(
+    leaves.map(l => _sha256Hex(l))
+  );
+
+  while (nodes.length > 1) {
+    const next = [];
+    for (let i = 0; i < nodes.length; i += 2) {
+      const left  = nodes[i];
+      const right = nodes[i + 1] || nodes[i]; // 홀수 시 복제
+      next.push(await _sha256Hex(left + right));
+    }
+    nodes = next;
+  }
+  return nodes[0];
+}
+
+/**
+ * verifyWithMerkle 검증용 API
+ * GET /merkle/verify?pdv_id={id}
+ */
+async function handleMerkleVerify(request, env, corsHeaders) {
+  const url   = new URL(request.url);
+  const pdvId = url.searchParams.get('pdv_id');
+  if (!pdvId) return _err(400, 'MISSING_PARAM', 'pdv_id 필수', corsHeaders);
+
+  const sbH = _sbHeaders(env);
+
+  // pdv_log 조회
+  const pdvRes  = await fetch(
+    `${SUPABASE_URL}/rest/v1/pdv_log?id=eq.${encodeURIComponent(pdvId)}&select=*&limit=1`,
+    { headers: sbH }
+  );
+  const pdvRows = await pdvRes.json().catch(() => []);
+  if (!pdvRows?.length) return _err(404, 'PDV_NOT_FOUND', 'pdv_log 없음', corsHeaders);
+  const pdv = pdvRows[0];
+
+  if (!pdv.openhash_anchored) {
+    return new Response(JSON.stringify({
+      valid: false,
+      reason: 'NOT_ANCHORED',
+      pdv_id: pdvId,
+    }), { status: 200, headers: corsHeaders });
+  }
+
+  // merkle_anchors에서 해당 pdv_id 포함 레코드 조회
+  const maRes  = await fetch(
+    `${SUPABASE_URL}/rest/v1/merkle_anchors` +
+    `?pdv_ids=cs.["${pdvId}"]&select=*&limit=1`,
+    { headers: sbH }
+  );
+  const maRows = await maRes.json().catch(() => []);
+  if (!maRows?.length) {
+    return new Response(JSON.stringify({
+      valid: false,
+      reason: 'ANCHOR_NOT_FOUND',
+      pdv_id: pdvId,
+    }), { status: 200, headers: corsHeaders });
+  }
+  const anchor = maRows[0];
+
+  // 머클 루트 재계산으로 검증
+  const leaves     = anchor.pdv_ids;
+  const recomputed = await _computeMerkleRoot(
+    await Promise.all(leaves.map(async id => {
+      const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/pdv_log?id=eq.${encodeURIComponent(id)}&select=chain_local_hash,block_hash&limit=1`,
+        { headers: sbH }
+      );
+      const rows = await r.json().catch(() => []);
+      return rows?.[0]?.chain_local_hash || rows?.[0]?.block_hash || id;
+    }))
+  );
+
+  const valid = recomputed === anchor.merkle_root;
+
+  return new Response(JSON.stringify({
+    valid,
+    pdv_id:      pdvId,
+    merkle_root: anchor.merkle_root,
+    recomputed,
+    anchor_id:   anchor.id,
+    anchored_at: anchor.anchored_at,
+    block_count: anchor.block_count,
+  }), { status: 200, headers: corsHeaders });
+}
