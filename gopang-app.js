@@ -2486,6 +2486,32 @@ function closeAI() {
 // 메시지는 서버에 저장하지 않음 — 기기 PDV(IndexedDB)에만 저장
 // ════════════════════════════════════════════════════════════
 
+// 상단 바 handle 칩 갱신
+function _updateHandleChip(h){
+  const c=document.getElementById("my-handle-chip");if(c)c.textContent=h||"Guest";
+  const s=document.getElementById("gopang-id-status");
+  const b=document.getElementById("gopang-id-register-box");
+  if(h){
+    if(s)s.innerHTML='<b style="color:var(--green,#16a34a)">'+h+'</b> <span style="font-size:11px">(등록됨)</span>';
+    if(b)b.style.display="none";
+  }else{
+    if(s)s.textContent="등록되지 않았습니다.";
+    if(b)b.style.display="block";
+  }
+}
+
+// 설정 패널 아이디 등록 버튼
+async function _settingsRegisterHandle(){
+  const inp=document.getElementById("gopang-id-input");
+  const name=inp?inp.value.trim():"";
+  if(!name){if(inp)inp.focus();return;}
+  const btn=document.querySelector('[onclick="_settingsRegisterHandle()"]');
+  if(btn){btn.disabled=true;btn.textContent="등록 중…";}
+  await _registerToL1(name);
+  _updateHandleChip(_USER.handle||null);
+  if(btn){btn.disabled=false;btn.textContent="아이디 등록";}
+}
+
 // SHA-256 헬퍼 (L1 nickname_hash 생성용)
 async function _sha256(str) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
@@ -4733,7 +4759,4 @@ function _sendReportToFiil(geminiResult, imageFile, userText) {
   window.requestInstall           = typeof requestInstall   !== 'undefined' ? requestInstall   : ()=>{};
 })();
 
-
-
-
-
+document.addEventListener('DOMContentLoaded', () => _updateHandleChip(_USER.handle||null));
