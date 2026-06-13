@@ -3,7 +3,7 @@
 // PWA 오프라인 지원 + 캐시 전략
 // ═══════════════════════════════════════════════════════════
 
-const CACHE_NAME    = 'gopang-v4'; // ★ 모듈 분리 반영
+const CACHE_NAME    = 'gopang-v5'; // ★ 모듈 분리 반영
 const CACHE_TIMEOUT = 5000; // 네트워크 타임아웃 5초
 
 // 설치 시 사전 캐시할 핵심 파일
@@ -24,7 +24,7 @@ const PRECACHE_URLS = [
   // ── 고팡 JS 모듈
   '/src/pwa/gopang-pwa.js',
   '/src/auth/gopang-auth.js',
-  '/gopang-app.js',
+  // gopang-app.js: 자주 변경되므로 PRECACHE 제외 — Network First로 항상 최신 로드
 
   // ── 인증
   '/auth/gopang-sso.js',
