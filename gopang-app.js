@@ -2650,68 +2650,116 @@ function handleSearchOverlayClick(e) {
   if (e.target.id === 'search-overlay') closeSearch();
 }
 
-function runSearch() {
+async function runSearch() {
   const q = document.getElementById('search-input').value.trim();
   const resultEl = document.getElementById('search-result');
-  if (!q) {
-    resultEl.innerHTML = '';
-    return;
-  }
+  if (!q) { resultEl.innerHTML = ''; return; }
 
-  // ── 1. 대화 상대 검색 (대화 이력 기반) ────────────────
+  // 로딩 표시
+  resultEl.innerHTML = `<div style="text-align:center;padding:16px;color:var(--label-3);font-size:13px">🔍 검색 중…</div>`;
+
+  // ── 1. 로컬 대화 상대 검색 ─────────────────────────────
   const contactMatches = _searchContacts(q);
 
-  // ── 2. PDV 데이터 검색 (localStorage 기반) ─────────────
+  // ── 2. 서버 사용자 검색 (GDUDA Phase 1 — Supabase 기반) ─
+  let serverUsers = [];
+  try {
+    const res  = await fetch(`${PROXY}/search/users?q=${encodeURIComponent(q)}&limit=10`);
+    const data = await res.json();
+    if (data.ok) serverUsers = data.users || [];
+  } catch(e) { console.warn('[Search] 서버 검색 실패:', e.message); }
+
+  // ── 3. PDV 데이터 검색 ─────────────────────────────────
   const pdvMatches = _searchPDV(q);
 
   // ── 결과 렌더링 ────────────────────────────────────────
   let html = '';
 
+  // 사람 (로컬 연락처)
   if (contactMatches.length > 0) {
-    html += `<div style="font-size:11px;font-weight:600;color:var(--label-3);
-                          letter-spacing:0.05em;text-transform:uppercase;
-                          margin-bottom:6px">👤 대화 상대</div>`;
+    html += _searchSectionHeader('👤 연락처');
     contactMatches.forEach(c => {
-      html += `<div style="padding:8px 10px;border-radius:var(--r-md);
-                            background:var(--bg-input);margin-bottom:6px;
-                            font-size:14px;cursor:pointer"
-                   onclick="selectContact('${c.id}')">
-                 <span style="color:var(--label)">${_highlight(c.name, q)}</span>
-                 <span style="color:var(--label-3);font-size:12px;margin-left:8px">
-                   ${c.guid ? c.guid.slice(0,8)+'…' : ''}
-                 </span>
-               </div>`;
+      html += `<div class="search-item" onclick="selectContact('${c.id}')">
+        <span class="search-avatar">🙂</span>
+        <div class="search-item-body">
+          <span class="search-item-name">${_highlight(c.name, q)}</span>
+          <span class="search-item-sub">${c.guid ? c.guid.slice(0,8)+'…' : ''}</span>
+        </div>
+      </div>`;
     });
   }
 
+  // 사람 (서버 검색 — 사람/업체/기관 모두 포함)
+  const persons    = serverUsers.filter(u => u.entity_type === 'person');
+  const businesses = serverUsers.filter(u => ['business','org','institution'].includes(u.entity_type));
+
+  if (persons.length > 0) {
+    html += _searchSectionHeader('🌐 고팡 사용자', contactMatches.length > 0);
+    persons.forEach(u => {
+      // setPeer() 호출을 위해 JSON 직렬화 — 특수문자 이스케이프
+      const peerJson = JSON.stringify(u).replace(/'/g, "\'");
+      html += `<div class="search-item" onclick="selectContact(null, ${peerJson})">
+        <span class="search-avatar">${u.avatar_emoji || '🙂'}</span>
+        <div class="search-item-body">
+          <span class="search-item-name">${_highlight(u.name, q)}</span>
+          <span class="search-item-sub">${u.handle || ''} · ${u.address?.split(' ').slice(-2).join(' ') || ''}</span>
+        </div>
+        <span class="search-item-badge">채팅</span>
+      </div>`;
+    });
+  }
+
+  if (businesses.length > 0) {
+    html += _searchSectionHeader('🏪 업체·기관', persons.length > 0 || contactMatches.length > 0);
+    businesses.forEach(u => {
+      const typeIcon = u.entity_type === 'institution' ? '🏛️' : '🏪';
+      html += `<div class="search-item" onclick="openProfile('${u.handle || u.guid}')">
+        <span class="search-avatar">${typeIcon}</span>
+        <div class="search-item-body">
+          <span class="search-item-name">${_highlight(u.name, q)}</span>
+          <span class="search-item-sub">${u.handle || ''} · ${u.address?.split(' ').slice(-2).join(' ') || ''}</span>
+        </div>
+        <span class="search-item-badge">프로필</span>
+      </div>`;
+    });
+  }
+
+  // PDV 데이터
   if (pdvMatches.length > 0) {
-    html += `<div style="font-size:11px;font-weight:600;color:var(--label-3);
-                          letter-spacing:0.05em;text-transform:uppercase;
-                          margin:${contactMatches.length?'12px':0} 0 6px">
-               🔐 PDV 데이터
-             </div>`;
+    html += _searchSectionHeader('🔐 PDV 데이터', !!(contactMatches.length + serverUsers.length));
     pdvMatches.forEach(p => {
-      html += `<div style="padding:8px 10px;border-radius:var(--r-md);
-                            background:var(--bg-input);margin-bottom:6px;font-size:13px">
-                 <span style="color:var(--label-2)">${_highlight(p.key, q)}</span>
-                 <span style="color:var(--label-3);font-size:11px;margin-left:6px">
-                   ${p.date}
-                 </span>
-               </div>`;
+      html += `<div class="search-item">
+        <span class="search-avatar">🔐</span>
+        <div class="search-item-body">
+          <span class="search-item-name">${_highlight(p.key, q)}</span>
+          <span class="search-item-sub">${p.date}</span>
+        </div>
+      </div>`;
     });
   }
 
   if (!html) {
-    html = `<div style="color:var(--label-3);font-size:13px;text-align:center;
-                         padding:20px 0">
-              검색 결과 없음
-              <div style="font-size:11px;margin-top:6px">
-                웹 검색은 AI 비서에게 직접 지시하세요.
-              </div>
-            </div>`;
+    html = `<div style="color:var(--label-3);font-size:13px;text-align:center;padding:20px 0">
+      검색 결과 없음
+      <div style="font-size:11px;margin-top:6px">웹 검색은 AI 비서에게 직접 지시하세요.</div>
+    </div>`;
   }
 
   resultEl.innerHTML = html;
+}
+
+// 검색 섹션 헤더
+function _searchSectionHeader(label, hasMargin = false) {
+  return `<div style="font-size:11px;font-weight:600;color:var(--label-3);
+    letter-spacing:0.05em;text-transform:uppercase;
+    margin:${hasMargin ? '12px' : '0'} 0 6px">${label}</div>`;
+}
+
+// 업체 프로필 열기
+function openProfile(handleOrGuid) {
+  closeSearch();
+  const url = `https://users.gopang.net/profile.html?handle=${encodeURIComponent(handleOrGuid)}`;
+  window.open(url, '_blank');
 }
 
 // 대화 상대 검색 — history 기반 + localStorage 연락처
@@ -2772,8 +2820,21 @@ function _highlight(text, q) {
 }
 
 // 연락처 선택 시 채팅으로 이동
-function selectContact(id) {
+// id: 로컬 연락처 id (null이면 serverUser 사용)
+// serverUser: 서버에서 검색된 user_profiles 객체
+function selectContact(id, serverUser = null) {
   closeSearch();
+  if (serverUser) {
+    // 서버 검색 결과 → setPeer()로 대화 상대 설정
+    setPeer(serverUser);
+    return;
+  }
+  // 로컬 연락처 → localStorage에서 조회 후 setPeer()
+  try {
+    const contacts = JSON.parse(localStorage.getItem('gopang_contacts') || '[]');
+    const c = contacts.find(x => x.id === id);
+    if (c) setPeer({ guid: c.guid, name: c.name, handle: c.handle || '', avatar_emoji: '🙂' });
+  } catch(e) {}
   // 향후: 해당 연락처와의 대화 스레드로 전환
   console.log('[Search] 연락처 선택:', id);
 }
