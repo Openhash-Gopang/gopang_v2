@@ -26,37 +26,6 @@ const _USER = await (async () => {
   console.info('[Auth v2] 신규 게스트 — 등록 없이 진입');
   return { ipv6, fpHex, isTemp: true, isGuest: true,
            registeredAt: new Date().toISOString() };
-  // ── webapp.html onclick에서 호출되는 함수 전역 노출 ──────
-  window.openSearch    = openSearch;
-  window.closeSearch   = closeSearch;
-  window.runSearch     = runSearch;
-  window.openSettings  = openSettings;
-  window.toggleAI      = toggleAI;
-  window.sendMessage   = sendMessage;
-  window.handleKey     = handleKey;
-  window.updateSendBtn = updateSendBtn;
-  window.triggerAttach = triggerAttach;
-  window.removeAttach  = removeAttach;
-  window.setPeer       = setPeer;
-  window._clearPeer    = _clearPeer;
-  window.selectContact = selectContact;
-  window.openProfile              = openProfile;
-  window.handleSearchOverlayClick = handleSearchOverlayClick;
-  window.handleOverlayClick       = handleOverlayClick;
-  window._updateHandleChip        = _updateHandleChip;
-  window._settingsRegisterHandle  = _settingsRegisterHandle;
-  window.handleOverlayClick       = handleOverlayClick;
-  window._updateHandleChip        = _updateHandleChip;
-  window._settingsRegisterHandle  = _settingsRegisterHandle;
-  window.dismissInstall           = typeof dismissInstall   !== 'undefined' ? dismissInstall   : ()=>{};
-  window.dismissIOSInstall        = typeof dismissIOSInstall !== 'undefined' ? dismissIOSInstall : ()=>{};
-  window.requestInstall           = typeof requestInstall   !== 'undefined' ? requestInstall   : ()=>{};
-  // 상단 바 handle 칩 초기화
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => _updateHandleChip(_USER.handle||null));
-  } else {
-    _updateHandleChip(_USER.handle||null);
-  }
 })();
 
 // 하위 호환성 (기존 코드 USER_GUID 참조 유지)
@@ -2443,10 +2412,18 @@ function _updateStreamBubble(bubble, text) {
 }
 
 // ── 버블 렌더링 ─────────────────────────────────────────
-function appendBubble(role, text, isHTML = false) {
+function appendBubble(role, text, isHTML = false, senderName = null) {
   const list = document.getElementById('message-list');
   const row  = document.createElement('div');
   row.className = `msg-row ${role}`;
+
+  // peer 메시지에 발신자 이름 표시
+  if (senderName && role === 'peer') {
+    const nameEl = document.createElement('div');
+    nameEl.style.cssText = 'font-size:11px;font-weight:600;color:var(--txt3);margin-bottom:2px;padding-left:2px';
+    nameEl.textContent = senderName;
+    row.appendChild(nameEl);
+  }
 
   const bubble = document.createElement('div');
   bubble.className = `bubble bubble-${role}`;
@@ -2583,7 +2560,8 @@ async function _settingsRegisterHandle(){
   const inp=document.getElementById("gopang-id-input");
   const name=inp?inp.value.trim():"";
   if(!name){if(inp)inp.focus();return;}
-  const btn=document.querySelector('[onclick="_settingsRegisterHandle()"]');
+  const btn=document.getElementById("gopang-id-register-btn")
+         || document.querySelector('#gopang-id-register-box button');
   if(btn){btn.disabled=true;btn.textContent="등록 중…";}
   await _registerToL1(name);
   _updateHandleChip(_USER.handle||null);
@@ -2596,13 +2574,15 @@ async function _sha256(str) {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
 }
 
-// L1 사용자 등록
+// L1 사용자 등록 (upsert: 없으면 POST, 있으면 PATCH)
 async function _registerToL1(name) {
   const guid          = _USER.ipv6 || USER_GUID;
   const nickname_hash = await _sha256('ko:' + name);
   const handle        = '@' + name + '#' + guid.slice(-4);
+  const L1_URL = 'https://l1-hanlim.gopang.net/api/collections/users/records';
   try {
-    await fetch('https://l1-hanlim.gopang.net/api/collections/users/records', {
+    // 1차: POST 시도
+    const postRes = await fetch(L1_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -2611,6 +2591,22 @@ async function _registerToL1(name) {
         is_public: true,
       }),
     });
+
+    if (!postRes.ok) {
+      // 중복 레코드(400)이면 기존 레코드 조회 후 PATCH
+      const filter = encodeURIComponent(`guid='${guid}'`);
+      const getRes = await fetch(`${L1_URL}?filter=${filter}&perPage=1`);
+      const getData = await getRes.json();
+      const existingId = getData.items?.[0]?.id;
+      if (existingId) {
+        await fetch(`${L1_URL}/${existingId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nickname_hash, handle, is_public: true }),
+        });
+      }
+    }
+
     _USER.handle = handle;
     _USER.name   = name;
     const stored = JSON.parse(localStorage.getItem('gopang_user_v3') || '{}');
@@ -4027,7 +4023,7 @@ function _gwpLaunch(service, context, _preTab = null) {
 
   const svcUrl = new URL(service.url);
   svcUrl.searchParams.set('gwp',      '1');
-  svcUrl.searchParams.set('token',    _USER?.guid || '');
+  svcUrl.searchParams.set('token',    _USER?.ipv6 || _USER?.guid || '');
   svcUrl.searchParams.set('origin',   location.origin);
   svcUrl.searchParams.set('ctx',      safeCtx);
   svcUrl.searchParams.set('ctx_enc',  'b64');  // 수신 측에 인코딩 방식 명시
