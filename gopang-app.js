@@ -789,6 +789,13 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
   showGUID();
   _scheduleLocation();  // GPS — PWA 배너 충돌 방지 지연 실행
+
+  // ── 등록 사용자: 시그널 폴링 자동 시작 ──────────────────
+  // setPeer 없이도 다른 사용자의 offer를 수신하기 위해
+  if (_isRegistered()) {
+    _startSignalPoll();
+    console.info('[Signal] 자동 폴링 시작 (등록 사용자)');
+  }
 });
 
 // ── 위치 획득 (GPS 실제 좌표 우선) ──────────────────────────
@@ -1238,9 +1245,8 @@ function updateSendBtn() {
   const hasInput = !!(v || attachFile);
   document.getElementById('send-btn').disabled = !hasInput;
 
-  // 입력 시작 시 AI 자동 활성화
-  // Type B(seedHex 존재) 또는 Type C(profileHandle 존재)만 허용
-  if (hasInput && !aiActive && _isTypeBorC()) {
+  // 등록 사용자 + 대화 상대 없음 + AI 비활성 → 입력 시작 시 AI 자동 활성화
+  if (hasInput && !aiActive && !_peer && _isRegistered()) {
     activateAI(true);
   }
 }
@@ -1290,14 +1296,22 @@ async function sendMessage() {
   // ── 대화 상대 분기 ─────────────────────────────────────
   if (text) {
     if (_peer) {
-      // 사람과 대화 → WebRTC P2P 전송
+      // 사람과 대화 → WebRTC P2P 전송 (등록/비등록 모두 가능)
       await _sendP2P(text);
     } else if (aiActive) {
-      // AI와 대화 → callAI (기존 로직 유지)
+      // AI와 대화
+      await callAI(text, capturedFile, null);
+    } else if (_isRegistered()) {
+      // 등록 사용자 + 대화 상대 없음 → AI 자동 활성 후 전달
+      activateAI(true);
       await callAI(text, capturedFile, null);
     } else {
-      _runPipelineBackground(text);
-      appendBubble('ai', '🔵 AI 버튼을 눌러 AI 비서를 활성화하세요.');
+      // 미등록(Guest) → 등록 유도
+      appendBubble('ai',
+        '👤 <b>고팡 아이디를 등록</b>하면 AI 비서와 대화할 수 있습니다.<br>' +
+        '<span style="font-size:12px;color:var(--txt3)">상단 <b>AI</b> 버튼을 탭하여 등록하세요.</span>',
+        true
+      );
     }
     return;
   }
@@ -2462,14 +2476,18 @@ function hideTyping() {
 
 // ── AI 비서 토글 ────────────────────────────────────────
 function toggleAI() {
+  // ── 미등록(Guest) → 사용자 등록 플로우 ──────────────────
+  if (!_isRegistered()) {
+    _showRegisterFlow();
+    return;
+  }
+  // ── 등록 사용자: AI 토글 ──────────────────────────────
   if (aiActive) {
-    // 이미 활성 → 비활성화
     aiActive = false;
     document.getElementById('btn-ai').classList.remove('active');
     appendBubble('system', 'AI 비서 비활성화됨.');
     return;
   }
-  // 미활성 → AI 설정 팩업 표시
   _showAISetupPopup();
 }
 
@@ -2616,6 +2634,7 @@ async function _registerToL1(name) {
     console.info('[L1] 등록 완료:', handle);
   } catch(e) {
     console.warn('[L1] 등록 실패:', e.message);
+    return null;  // 실패 시 null 반환 — 호출자가 _USER.handle로 성공 여부 확인
   }
   return handle;
 }
@@ -2657,14 +2676,15 @@ function _promptNickname() {
   });
 }
 
-// 대화 상대 설정 — 검색 결과 클릭 시 호출
+// 대화 상대 설정 — selectContact() 또는 _handleSignal()에서 호출
+// 호출 전제: 이미 _isRegistered() === true (selectContact에서 보장)
 async function setPeer(peer) {
-  // 자신의 handle이 없으면 닉네임 입력 요청
-  if (!_USER.handle) {
-    const name = await _promptNickname();
-    if (!name) return;                    // 취소 → 채팅 안 함
-    await _registerToL1(name);
+  // 혹시 등록 없이 직접 호출된 경우 방어
+  if (!_isRegistered()) {
+    _showRegisterFlowThenPeer(peer);
+    return;
   }
+
   _closeRTC();
   _peer = peer;
 
@@ -2674,7 +2694,7 @@ async function setPeer(peer) {
   const nm  = document.getElementById('peer-name');
   const hnd = document.getElementById('peer-handle');
   if (bar) {
-    if (ava) ava.textContent = '🙂';
+    if (ava) ava.textContent = peer.avatar_emoji || '🙂';
     if (nm)  nm.textContent  = peer.name || peer.handle || '상대방';
     if (hnd) hnd.textContent = peer.handle || '';
     bar.style.display = 'flex';
@@ -2683,13 +2703,13 @@ async function setPeer(peer) {
   const inp = document.getElementById('msg-input');
   if (inp) inp.placeholder = `${peer.name || peer.handle || '상대방'}에게 메시지…`;
 
-  // 이전 대화 이력 로드 (PDV)
+  // 이전 대화 이력 로드 (PDV — IndexedDB, 서버 저장 없음)
   await _loadChatHistory(peer.guid);
 
   // 시그널 수신 폴링 시작
   _startSignalPoll();
 
-  // WebRTC offer 생성 (발신자가 먼저 연결 시도)
+  // WebRTC offer 생성
   await _createOffer();
 
   appendBubble('system', `🔗 ${peer.name || peer.handle || '상대방'}에게 연결 중…`);
@@ -2906,24 +2926,113 @@ async function _loadChatHistory(peerGuid) {
   } catch(e) { console.warn('[PDV] 이력 로드 실패:', e); }
 }
 
-// Type B: seedHex 존재(지갑 초기화) / Type C: profileHandle 존재(프로필 등록)
+// Type B(seedHex 존재) / Type C(profileHandle·handle 존재)
 function _isTypeBorC() {
   try {
     const s = JSON.parse(localStorage.getItem('gopang_user_v3') || 'null');
     if (!s) return false;
-    return !!(s.seedHex || s.faceVec || s.webauthn?.credentialId || s.profileHandle);
+    return !!(s.seedHex || s.faceVec || s.webauthn?.credentialId || s.profileHandle || s.handle);
   } catch (e) { return false; }
 }
 
-function activateAI(silent = false) {
+// 등록 사용자 여부 — handle이 있으면 등록된 것으로 판단
+function _isRegistered() {
+  try {
+    const s = JSON.parse(localStorage.getItem('gopang_user_v3') || 'null');
+    return !!(s?.handle);
+  } catch(e) { return false; }
+}
+
+// ── 사용자 등록 플로우 (Guest가 AI 버튼 또는 고팡 아이디 등록 클릭 시) ──────
+// 단계: 닉네임 입력 → L1 등록 → 완료 안내
+function _showRegisterFlow() {
+  const ov = document.createElement('div');
+  ov.id = '_register-flow-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
+  ov.innerHTML = `
+    <div style="background:#fff;border-radius:20px 20px 0 0;padding:24px;
+                width:100%;max-width:480px;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))">
+      <div style="width:36px;height:4px;background:#e5e7eb;border-radius:2px;margin:0 auto 20px"></div>
+      <p style="font-weight:800;font-size:18px;margin:0 0 6px;color:#111">👤 고팡 아이디 등록</p>
+      <p style="font-size:13px;color:#6b7280;margin:0 0 20px;line-height:1.6">
+        아이디를 등록하면 다른 사용자와 대화하고<br>AI 비서를 사용할 수 있습니다.
+      </p>
+
+      <label style="font-size:12px;font-weight:700;color:#9ca3af;display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">표시 이름</label>
+      <input id="_reg_name" type="text" maxlength="20"
+        placeholder="예: 주피터, 한림상회"
+        style="width:100%;box-sizing:border-box;padding:12px 14px;border:1.5px solid #e5e7eb;
+               border-radius:10px;font-size:15px;outline:none;font-family:inherit;
+               transition:border-color .15s;margin-bottom:6px">
+      <p style="font-size:11px;color:#9ca3af;margin:0 0 20px">실명이 아니어도 됩니다. 나중에 설정에서 변경 가능합니다.</p>
+
+      <div style="background:#f9fafb;border-radius:10px;padding:12px 14px;margin-bottom:20px;font-size:12px;color:#374151;line-height:1.7">
+        <b style="color:#16a34a">등록 사용자 혜택</b><br>
+        ✅ 사람과 P2P 채팅 · AI 비서 사용<br>
+        ✅ GDC 결제 수단 · 재무제표 자동 생성<br>
+        ✅ 프로필 페이지 생성 (사업체 → 쇼핑몰로 활용)
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <button id="_reg_cancel"
+          style="flex:1;padding:13px;border:1px solid #e5e7eb;border-radius:10px;
+                 background:none;cursor:pointer;font-size:14px;font-family:inherit">취소</button>
+        <button id="_reg_ok"
+          style="flex:2;padding:13px;border:none;border-radius:10px;
+                 background:#16a34a;color:#fff;cursor:pointer;
+                 font-size:14px;font-weight:700;font-family:inherit">아이디 등록</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+
+  const inp = ov.querySelector('#_reg_name');
+  inp.focus();
+  inp.addEventListener('focus', () => inp.style.borderColor = '#16a34a');
+  inp.addEventListener('blur',  () => inp.style.borderColor = '#e5e7eb');
+
+  const close = () => ov.remove();
+  ov.querySelector('#_reg_cancel').onclick = close;
+
+  const doRegister = async () => {
+    const name = inp.value.trim();
+    if (!name) { inp.focus(); inp.style.borderColor = '#ef4444'; return; }
+
+    const okBtn = ov.querySelector('#_reg_ok');
+    okBtn.disabled = true;
+    okBtn.textContent = '등록 중…';
+
+    await _registerToL1(name);
+
+    if (!_USER.handle) {
+      // L1 등록 실패 → 모달 유지, 버튼 복원
+      okBtn.disabled = false;
+      okBtn.textContent = '아이디 등록';
+      inp.style.borderColor = '#ef4444';
+      const errEl = ov.querySelector('#_reg_err') || (() => {
+        const e = document.createElement('p');
+        e.id = '_reg_err';
+        e.style.cssText = 'font-size:12px;color:#ef4444;margin:6px 0 0;text-align:center';
+        okBtn.parentNode.insertBefore(e, okBtn.nextSibling);
+        return e;
+      })();
+      errEl.textContent = '⚠️ 등록에 실패했습니다. 네트워크를 확인하고 다시 시도해 주세요.';
+      return;
+    }
+
+    ov.remove();
+    _updateHandleChip(_USER.handle || null);
+
+    appendBubble('ai',
+      `✅ <b>${_USER.handle}</b> 으로 등록됐습니다!<br><br>` +
+      `이제 🔍 검색으로 다른 사용자를 찾아 대화하거나,<br>` +
+      `<b>AI</b> 버튼으로 AI 비서를 활성화할 수 있습니다.`,
+      true
+    );
+  };(silent = false) {
   if (aiActive) return;
-  if (!_isTypeBorC()) {
+  if (!_isRegistered()) {
     if (!silent) {
-      appendBubble('ai',
-        '🔒 AI 비서는 고팡 지갑을 초기화하거나 프로필을 등록한 사용자만 이용할 수 있습니다.\n\n' +
-        '• 지갑 초기화: 설정(⚙️) → 보안 설정에서 4단어 시드 등록\n' +
-        '• 프로필 등록: users.gopang.net/register-profile.html'
-      );
+      _showRegisterFlow();
     }
     return;
   }
@@ -2937,16 +3046,39 @@ function activateAI(silent = false) {
 
 // ── 설정 패널 ───────────────────────────────────────────
 function openSettings() {
-  // LLM 섹션: AI 활성 시만 표시
+  const registered = _isRegistered();
+
+  // LLM 섹션: 등록 사용자만 표시
   const llmSec = document.getElementById('llm-settings-section');
-  if (llmSec) llmSec.style.display = aiActive ? 'block' : 'none';
-  document.getElementById('setting-apikey').value     = CFG.apiKey    ? '••••••••••••••••••••••••••••••••' : '';
-  document.getElementById('setting-gemini-key').value = CFG.geminiKey ? '••••••••••••••••••••••••••••••••' : '';
-  document.getElementById('setting-system').value     = CFG.system;
-  const modelSel = document.getElementById('setting-model');
-  if (modelSel) modelSel.value = CFG.model;
-  const epSel = document.getElementById('setting-endpoint');
-  if (epSel) epSel.value = CFG.endpoint;
+  if (llmSec) llmSec.style.display = registered ? 'block' : 'none';
+
+  // 고팡 아이디 섹션: 미등록이면 항상 펼쳐서 강조
+  const idSec = document.getElementById('gopang-id-section');
+  if (idSec) {
+    idSec.style.display = 'block';
+    if (!registered) {
+      // 등록 유도 — 섹션 상단에 안내 추가
+      const guide = document.getElementById('_id-section-guide');
+      if (!guide && idSec) {
+        const g = document.createElement('p');
+        g.id = '_id-section-guide';
+        g.style.cssText = 'font-size:12px;color:#16a34a;font-weight:600;margin-bottom:8px;' +
+                          'background:#dcfce7;border-radius:8px;padding:8px 10px;line-height:1.5';
+        g.innerHTML = '👤 아이디를 등록하면 AI 비서와 P2P 채팅, GDC 결제를 사용할 수 있습니다.';
+        idSec.insertBefore(g, idSec.firstChild);
+      }
+    }
+  }
+
+  if (registered) {
+    document.getElementById('setting-apikey').value     = CFG.apiKey    ? '••••••••••••••••••••••••••••••••' : '';
+    document.getElementById('setting-gemini-key').value = CFG.geminiKey ? '••••••••••••••••••••••••••••••••' : '';
+    document.getElementById('setting-system').value     = CFG.system;
+    const modelSel = document.getElementById('setting-model');
+    if (modelSel) modelSel.value = CFG.model;
+    const epSel = document.getElementById('setting-endpoint');
+    if (epSel) epSel.value = CFG.endpoint;
+  }
 
   // ── 보안 섹션 업데이트 ──────────────────────────────
   _updateSecuritySection();
@@ -3135,24 +3267,33 @@ async function runSearch() {
   const resultEl = document.getElementById('search-result');
   if (!q) { resultEl.innerHTML = ''; return; }
 
-  // 로딩 표시
   resultEl.innerHTML = `<div style="text-align:center;padding:16px;color:var(--label-3);font-size:13px">🔍 검색 중…</div>`;
 
   // ── 1. 로컬 대화 상대 검색 ─────────────────────────────
   const contactMatches = _searchContacts(q);
 
-  // ── 2. 서버 사용자 검색 (GDUDA Phase 1 — L1 PocketBase) ─
+  // ── 2. L1 PocketBase 사용자 검색 ───────────────────────
+  // 닉네임 해시(SHA-256 'ko:name') 또는 handle로 검색
+  // entity_type: 'person' | 'business' | 'institution' (L1 스키마)
   let serverUsers = [];
   try {
-    const filter = encodeURIComponent(`(nickname_hash~'${q}' || handle~'${q}') && is_public=true`);
-    const res  = await fetch(`https://l1-hanlim.gopang.net/api/collections/users/records?filter=${filter}&perPage=20`);
+    const nickHash = await _sha256('ko:' + q);
+    const safeQ = q.replace(/'/g, "\\'").replace(/"/g, '\\"');
+    const filter = encodeURIComponent(
+      `(nickname_hash='${nickHash}' || handle~'${safeQ}') && is_public=true`
+    );
+    const res  = await fetch(
+      `https://l1-hanlim.gopang.net/api/collections/users/records?filter=${filter}&perPage=20`
+    );
     const data = await res.json();
     serverUsers = (data.items || []).map(u => ({
       guid:        u.guid,
       name:        u.handle?.split('#')[0]?.replace('@','') || u.handle,
       handle:      u.handle,
-      entity_type: 'person',
-      avatar_emoji:'🙂',
+      entity_type: u.entity_type || 'person',  // L1에 저장된 실제 타입 사용
+      avatar_emoji: u.entity_type === 'business'    ? '🏪'
+                  : u.entity_type === 'institution'  ? '🏛️'
+                  : '🙂',
     }));
   } catch(e) { console.warn('[Search] L1 검색 실패:', e.message); }
 
@@ -3160,9 +3301,10 @@ async function runSearch() {
   const pdvMatches = _searchPDV(q);
 
   // ── 결과 렌더링 ────────────────────────────────────────
+  const isGuest = !_isRegistered();
   let html = '';
 
-  // 사람 (로컬 연락처)
+  // 로컬 연락처
   if (contactMatches.length > 0) {
     html += _searchSectionHeader('👤 연락처');
     contactMatches.forEach(c => {
@@ -3176,39 +3318,71 @@ async function runSearch() {
     });
   }
 
-  // 사람 (서버 검색 — 사람/업체/기관 모두 포함)
+  // L1 사람 사용자
   const persons    = serverUsers.filter(u => u.entity_type === 'person');
   const businesses = serverUsers.filter(u => ['business','org','institution'].includes(u.entity_type));
 
   if (persons.length > 0) {
     html += _searchSectionHeader('🌐 고팡 사용자', contactMatches.length > 0);
     persons.forEach(u => {
-      // setPeer() 호출을 위해 JSON 직렬화 — 특수문자 이스케이프
-      const peerJson = JSON.stringify(u).replace(/'/g, "\'");
-      html += `<div class="search-item" onclick="selectContact(null, ${peerJson})">
-        <span class="search-avatar">${u.avatar_emoji || '🙂'}</span>
-        <div class="search-item-body">
-          <span class="search-item-name">${_highlight(u.name, q)}</span>
-          <span class="search-item-sub">${u.handle || ''} · ${u.address?.split(' ').slice(-2).join(' ') || ''}</span>
-        </div>
-        <span class="search-item-badge">채팅</span>
-      </div>`;
+      const peerJson = JSON.stringify(u).replace(/'/g, "\\'");
+      if (isGuest) {
+        // 미등록: 프로필 조회는 가능, 채팅은 아이디 등록 후
+        html += `<div class="search-item" onclick="selectContact(null, ${peerJson})">
+          <span class="search-avatar">${u.avatar_emoji}</span>
+          <div class="search-item-body">
+            <span class="search-item-name">${_highlight(u.name, q)}</span>
+            <span class="search-item-sub">${u.handle || ''}</span>
+          </div>
+          <span class="search-item-badge" style="background:#fef3c7;color:#92400e">🔒 채팅</span>
+        </div>`;
+      } else {
+        html += `<div class="search-item" onclick="selectContact(null, ${peerJson})">
+          <span class="search-avatar">${u.avatar_emoji}</span>
+          <div class="search-item-body">
+            <span class="search-item-name">${_highlight(u.name, q)}</span>
+            <span class="search-item-sub">${u.handle || ''}</span>
+          </div>
+          <span class="search-item-badge">채팅</span>
+        </div>`;
+      }
     });
   }
 
+  // L1 업체·기관 — Guest도 프로필 조회 가능
   if (businesses.length > 0) {
     html += _searchSectionHeader('🏪 업체·기관', persons.length > 0 || contactMatches.length > 0);
     businesses.forEach(u => {
       const typeIcon = u.entity_type === 'institution' ? '🏛️' : '🏪';
-      html += `<div class="search-item" onclick="openProfile('${u.handle || u.guid}')">
+      const peerJson = JSON.stringify(u).replace(/'/g, "\\'");
+      // 업체: 프로필(공개) + 채팅(등록 사용자만)
+      html += `<div class="search-item">
         <span class="search-avatar">${typeIcon}</span>
         <div class="search-item-body">
           <span class="search-item-name">${_highlight(u.name, q)}</span>
-          <span class="search-item-sub">${u.handle || ''} · ${u.address?.split(' ').slice(-2).join(' ') || ''}</span>
+          <span class="search-item-sub">${u.handle || ''}</span>
         </div>
-        <span class="search-item-badge">프로필</span>
+        <div style="display:flex;gap:4px;flex-shrink:0">
+          <span class="search-item-badge" style="cursor:pointer"
+            onclick="openProfile('${u.handle || u.guid}')">프로필</span>
+          ${isGuest
+            ? `<span class="search-item-badge" style="background:#fef3c7;color:#92400e;cursor:pointer"
+                onclick="selectContact(null, ${peerJson})">🔒 채팅</span>`
+            : `<span class="search-item-badge" style="cursor:pointer"
+                onclick="selectContact(null, ${peerJson})">채팅</span>`
+          }
+        </div>
       </div>`;
     });
+  }
+
+  // Guest 안내 (사람/업체 결과가 있고 미등록인 경우)
+  if (isGuest && (persons.length > 0 || businesses.length > 0)) {
+    html += `<div style="margin-top:10px;padding:10px 12px;background:#fffbeb;border:1px solid #fde68a;
+                          border-radius:10px;font-size:12px;color:#92400e;line-height:1.6">
+      🔒 <b>채팅하려면 고팡 아이디가 필요합니다.</b><br>
+      <span style="color:#78350f">상단 <b>AI</b> 버튼 또는 ⚙️ 설정에서 아이디를 등록하세요.</span>
+    </div>`;
   }
 
   // PDV 데이터
@@ -3309,21 +3483,126 @@ function _highlight(text, q) {
 // 연락처 선택 시 채팅으로 이동
 // id: 로컬 연락처 id (null이면 serverUser 사용)
 // serverUser: 서버에서 검색된 user_profiles 객체
+// 검색 결과 클릭 → 대화 상대 설정
+// Guest가 채팅 시도 시: 등록 플로우 → 완료 후 자동으로 setPeer 재개
 function selectContact(id, serverUser = null) {
+  const peer = serverUser || (() => {
+    try {
+      const contacts = JSON.parse(localStorage.getItem('gopang_contacts') || '[]');
+      const c = contacts.find(x => x.id === id);
+      return c ? { guid: c.guid, name: c.name, handle: c.handle || '', avatar_emoji: '🙂' } : null;
+    } catch(e) { return null; }
+  })();
+
+  if (!peer) return;
+
   closeSearch();
-  if (serverUser) {
-    // 서버 검색 결과 → setPeer()로 대화 상대 설정
-    setPeer(serverUser);
+
+  // 미등록(Guest) → 등록 플로우 먼저, 완료 후 setPeer 자동 재개
+  if (!_isRegistered()) {
+    _showRegisterFlowThenPeer(peer);
     return;
   }
-  // 로컬 연락처 → localStorage에서 조회 후 setPeer()
-  try {
-    const contacts = JSON.parse(localStorage.getItem('gopang_contacts') || '[]');
-    const c = contacts.find(x => x.id === id);
-    if (c) setPeer({ guid: c.guid, name: c.name, handle: c.handle || '', avatar_emoji: '🙂' });
-  } catch(e) {}
-  // 향후: 해당 연락처와의 대화 스레드로 전환
-  console.log('[Search] 연락처 선택:', id);
+
+  setPeer(peer);
+}
+
+// 등록 플로우 완료 후 특정 peer와 연결
+function _showRegisterFlowThenPeer(pendingPeer) {
+  const ov = document.createElement('div');
+  ov.id = '_register-flow-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
+
+  const peerName = pendingPeer.name || pendingPeer.handle || '상대방';
+
+  ov.innerHTML = `
+    <div style="background:#fff;border-radius:20px 20px 0 0;padding:24px;
+                width:100%;max-width:480px;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))">
+      <div style="width:36px;height:4px;background:#e5e7eb;border-radius:2px;margin:0 auto 20px"></div>
+
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;
+                  background:#f0fdf4;border-radius:12px;padding:12px 14px">
+        <span style="font-size:22px">${pendingPeer.avatar_emoji || '🙂'}</span>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#111">${peerName}</div>
+          <div style="font-size:11px;color:#6b7280">${pendingPeer.handle || ''}</div>
+        </div>
+        <div style="margin-left:auto;font-size:11px;color:#16a34a;font-weight:600">← 대화 상대</div>
+      </div>
+
+      <p style="font-weight:800;font-size:17px;margin:0 0 6px;color:#111">👤 고팡 아이디 등록</p>
+      <p style="font-size:13px;color:#6b7280;margin:0 0 18px;line-height:1.6">
+        <b>${peerName}</b>님과 대화하려면 아이디가 필요합니다.<br>
+        아이디는 OpenHash L1에 P2P 방식으로 기록됩니다.
+      </p>
+
+      <label style="font-size:12px;font-weight:700;color:#9ca3af;display:block;margin-bottom:6px;
+                    text-transform:uppercase;letter-spacing:.5px">내 표시 이름</label>
+      <input id="_reg_name" type="text" maxlength="20"
+        placeholder="예: 주피터, 한림상회"
+        style="width:100%;box-sizing:border-box;padding:12px 14px;border:1.5px solid #e5e7eb;
+               border-radius:10px;font-size:15px;outline:none;font-family:inherit;
+               transition:border-color .15s;margin-bottom:18px">
+
+      <div style="display:flex;gap:8px">
+        <button id="_reg_cancel"
+          style="flex:1;padding:13px;border:1px solid #e5e7eb;border-radius:10px;
+                 background:none;cursor:pointer;font-size:14px;font-family:inherit">취소</button>
+        <button id="_reg_ok"
+          style="flex:2;padding:13px;border:none;border-radius:10px;
+                 background:#16a34a;color:#fff;cursor:pointer;
+                 font-size:14px;font-weight:700;font-family:inherit">
+          등록 후 ${peerName}에게 연결
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+
+  const inp = ov.querySelector('#_reg_name');
+  inp.focus();
+  inp.addEventListener('focus', () => inp.style.borderColor = '#16a34a');
+  inp.addEventListener('blur',  () => inp.style.borderColor = '#e5e7eb');
+
+  ov.querySelector('#_reg_cancel').onclick = () => ov.remove();
+
+  const doRegister = async () => {
+    const name = inp.value.trim();
+    if (!name) { inp.focus(); inp.style.borderColor = '#ef4444'; return; }
+
+    const okBtn = ov.querySelector('#_reg_ok');
+    okBtn.disabled = true;
+    okBtn.textContent = '등록 중…';
+
+    await _registerToL1(name);
+
+    if (!_USER.handle) {
+      okBtn.disabled = false;
+      okBtn.textContent = `등록 후 ${peerName}에게 연결`;
+      inp.style.borderColor = '#ef4444';
+      const errEl = ov.querySelector('#_reg_err') || (() => {
+        const e = document.createElement('p');
+        e.id = '_reg_err';
+        e.style.cssText = 'font-size:12px;color:#ef4444;margin:6px 0 0;text-align:center';
+        okBtn.parentNode.insertBefore(e, okBtn.nextSibling);
+        return e;
+      })();
+      errEl.textContent = '⚠️ 등록에 실패했습니다. 네트워크를 확인하고 다시 시도해 주세요.';
+      return;
+    }
+
+    ov.remove();
+    _updateHandleChip(_USER.handle || null);
+
+    appendBubble('ai',
+      `✅ <b>${_USER.handle}</b> 으로 등록됐습니다!<br>` +
+      `<b>${peerName}</b>님과 연결합니다…`,
+      true
+    );
+    await setPeer(pendingPeer);
+  };
+
+  ov.querySelector('#_reg_ok').onclick = doRegister;
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') doRegister(); });
 }
 
 // ── GUID 상태 스트립 표시 ────────────────────────────────
