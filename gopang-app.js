@@ -1281,10 +1281,9 @@ async function sendMessage() {
   // _gwpMatch / runRouter 제거 — LLM 1회 호출로 통합
   if (text) {
     if (aiActive) {
-      // 모바일 팝업 차단 우회: 사용자 탭 직후(동기) 빈 탭 예약
-      // LLM 응답 완료 후 비동기 시점에 window.open()하면 차단됨
-      const _preTab = (!_gwpActive) ? window.open('', '_blank') : null;
-      await callAI(text, capturedFile, _preTab);
+      // GWP 태그가 있을 때만 탭을 열어야 하므로 빈 탭 예약 제거
+      // 모바일 팝업 차단은 _gwpLaunch 내부에서 처리
+      await callAI(text, capturedFile, null);
     } else {
       _runPipelineBackground(text);
       appendBubble('ai', '🔵 AI 버튼을 눌러 AI 비서를 활성화하세요.');
