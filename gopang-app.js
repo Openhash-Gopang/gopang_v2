@@ -42,6 +42,9 @@ const _USER = await (async () => {
   window.selectContact = selectContact;
   window.openProfile              = openProfile;
   window.handleSearchOverlayClick = handleSearchOverlayClick;
+  window.handleOverlayClick       = handleOverlayClick;
+  window._updateHandleChip        = _updateHandleChip;
+  window._settingsRegisterHandle  = _settingsRegisterHandle;
   window.dismissInstall           = typeof dismissInstall   !== 'undefined' ? dismissInstall   : ()=>{};
   window.dismissIOSInstall        = typeof dismissIOSInstall !== 'undefined' ? dismissIOSInstall : ()=>{};
   window.requestInstall           = typeof requestInstall   !== 'undefined' ? requestInstall   : ()=>{};
@@ -1957,6 +1960,9 @@ async function _loadRouterPrompt() {
   window.selectContact = selectContact;
   window.openProfile              = openProfile;
   window.handleSearchOverlayClick = handleSearchOverlayClick;
+  window.handleOverlayClick       = handleOverlayClick;
+  window._updateHandleChip        = _updateHandleChip;
+  window._settingsRegisterHandle  = _settingsRegisterHandle;
   window.dismissInstall           = typeof dismissInstall   !== 'undefined' ? dismissInstall   : ()=>{};
   window.dismissIOSInstall        = typeof dismissIOSInstall !== 'undefined' ? dismissIOSInstall : ()=>{};
   window.requestInstall           = typeof requestInstall   !== 'undefined' ? requestInstall   : ()=>{};
@@ -4754,6 +4760,9 @@ function _sendReportToFiil(geminiResult, imageFile, userText) {
   window.selectContact = selectContact;
   window.openProfile              = openProfile;
   window.handleSearchOverlayClick = handleSearchOverlayClick;
+  window.handleOverlayClick       = handleOverlayClick;
+  window._updateHandleChip        = _updateHandleChip;
+  window._settingsRegisterHandle  = _settingsRegisterHandle;
   window.dismissInstall           = typeof dismissInstall   !== 'undefined' ? dismissInstall   : ()=>{};
   window.dismissIOSInstall        = typeof dismissIOSInstall !== 'undefined' ? dismissIOSInstall : ()=>{};
   window.requestInstall           = typeof requestInstall   !== 'undefined' ? requestInstall   : ()=>{};
