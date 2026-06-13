@@ -26,6 +26,21 @@ const _USER = await (async () => {
   console.info('[Auth v2] 신규 게스트 — 등록 없이 진입');
   return { ipv6, fpHex, isTemp: true, isGuest: true,
            registeredAt: new Date().toISOString() };
+  // ── webapp.html onclick에서 호출되는 함수 전역 노출 ──────
+  window.openSearch    = openSearch;
+  window.closeSearch   = closeSearch;
+  window.runSearch     = runSearch;
+  window.openSettings  = openSettings;
+  window.toggleAI      = toggleAI;
+  window.sendMessage   = sendMessage;
+  window.handleKey     = handleKey;
+  window.updateSendBtn = updateSendBtn;
+  window.triggerAttach = triggerAttach;
+  window.removeAttach  = removeAttach;
+  window.setPeer       = setPeer;
+  window._clearPeer    = _clearPeer;
+  window.selectContact = selectContact;
+  window.openProfile   = openProfile;
 })();
 
 // 하위 호환성 (기존 코드 USER_GUID 참조 유지)
@@ -1922,7 +1937,22 @@ async function _loadRouterPrompt() {
       _routerPromptVer = 'minimal (내장)';
       return _routerPrompt;
     }
-  })();
+    // ── webapp.html onclick에서 호출되는 함수 전역 노출 ──────
+  window.openSearch    = openSearch;
+  window.closeSearch   = closeSearch;
+  window.runSearch     = runSearch;
+  window.openSettings  = openSettings;
+  window.toggleAI      = toggleAI;
+  window.sendMessage   = sendMessage;
+  window.handleKey     = handleKey;
+  window.updateSendBtn = updateSendBtn;
+  window.triggerAttach = triggerAttach;
+  window.removeAttach  = removeAttach;
+  window.setPeer       = setPeer;
+  window._clearPeer    = _clearPeer;
+  window.selectContact = selectContact;
+  window.openProfile   = openProfile;
+})();
 
   return _routerLoadPromise;
 }
@@ -4590,7 +4620,22 @@ function _sendReportToFiil(geminiResult, imageFile, userText) {
   }
 }
 
-    })();
+      // ── webapp.html onclick에서 호출되는 함수 전역 노출 ──────
+  window.openSearch    = openSearch;
+  window.closeSearch   = closeSearch;
+  window.runSearch     = runSearch;
+  window.openSettings  = openSettings;
+  window.toggleAI      = toggleAI;
+  window.sendMessage   = sendMessage;
+  window.handleKey     = handleKey;
+  window.updateSendBtn = updateSendBtn;
+  window.triggerAttach = triggerAttach;
+  window.removeAttach  = removeAttach;
+  window.setPeer       = setPeer;
+  window._clearPeer    = _clearPeer;
+  window.selectContact = selectContact;
+  window.openProfile   = openProfile;
+})();
 
 
 
