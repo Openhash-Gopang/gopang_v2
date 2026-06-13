@@ -101,17 +101,6 @@ function _err(status, code, detail, corsHeaders) {
   );
 }
 
-// gopang_token (HMAC-SHA256 JWT) 파싱
-function _parseGopangJWT(token, env) {
-  try {
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
-    const payload = JSON.parse(atob(parts[1].replace(/-/g,'+').replace(/_/g,'/')));
-    if (payload.exp < Math.floor(Date.now() / 1000)) return null;
-    return payload;
-  } catch { return null; }
-}
-
 function _supabaseAnonKey() {
   return 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImViYmVjamZyd2Fzd2JkeWJiZ2l1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1NjE5ODQsImV4cCI6MjA5NTEzNzk4NH0.H2ahQKtWdSke04Pdi3hDY86pdTx7UUKPUpQMlS_zciA';
 }
@@ -198,16 +187,33 @@ export default {
     if (pathname === '/biz/product' && request.method === 'POST') return handleBizProduct(request, env, corsHeaders);
 
     // ── ai-setup (AI 비서 설정) ─────────────────────────────
+    // v5.1: 토큰 기반 폐기 — Ed25519 서명(/biz/product와 동일 패턴)으로 전환
+    //   GET  : ?guid=... 만으로 조회 (저장값은 암호화되어 있어 평문 키 노출 없음)
+    //   POST : body={guid,pubkey,signature,...} — _verifyEd25519 + TOFU
     if (pathname === '/ai-setup') {
-      const authHeader = request.headers.get('Authorization') || '';
-      const token = authHeader.replace('Bearer ', '').trim();
-      if (!token) return _err(401, 'UNAUTHORIZED', 'JWT 필수', corsHeaders);
-      const jwt = _parseGopangJWT(token, env);
-      if (!jwt) return _err(401, 'INVALID_TOKEN', 'JWT 만료 또는 위조', corsHeaders);
-      const guid = jwt.guid;
-      if (!guid) return _err(401, 'NO_GUID', 'guid 없음', corsHeaders);
-      if (request.method === 'GET')  return handleAiSetupGet(request, env, corsHeaders, guid);
-      if (request.method === 'POST') return handleAiSetupPost(request, env, corsHeaders, guid);
+      if (request.method === 'GET') {
+        const guid = url.searchParams.get('guid');
+        if (!guid) return _err(400, 'MISSING_FIELD', 'guid 파라미터 필수', corsHeaders);
+        return handleAiSetupGet(request, env, corsHeaders, guid);
+      }
+      if (request.method === 'POST') return handleAiSetupPost(request, env, corsHeaders);
+    }
+
+    // ── WebRTC 시그널링 (P2P 채팅 — OpenHash 철학) ──────────
+    // 메시지는 서버에 저장하지 않음 — 시그널(SDP/ICE)만 임시 경유
+    if (pathname === '/signal/send')   return handleSignalSend(request, env, corsHeaders);
+    if (pathname === '/signal/poll')   return handleSignalPoll(request, env, corsHeaders);
+    if (pathname === '/signal/delete') return handleSignalDelete(request, env, corsHeaders);
+
+    // ── 사용자 검색 (GDUDA Phase 1) ──────────────────────────
+    if (pathname === '/search/users')  return handleSearchUsers(request, env, corsHeaders);
+
+    // ── profile (사용자/사업자 프로필 등록·조회 — v5.1) ──────
+    //   GET  : 인증 불필요 — handle 또는 guid로 공개 조회
+    //   POST : body={guid,pubkey,signature,...} — _verifyEd25519 + TOFU
+    if (pathname.startsWith('/profile')) {
+      if (request.method === 'GET')  return handleProfileGet(request, env, corsHeaders);
+      if (request.method === 'POST') return handleProfilePost(request, env, corsHeaders);
     }
 
     // ── POST 전용 ────────────────────────────────────────
@@ -882,11 +888,271 @@ async function handleAiSetupGet(request, env, corsHeaders, guid) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// /ai-setup POST — AI 비서 설정 저장 (API 키 AES-256-GCM 암호화)
 // ═══════════════════════════════════════════════════════════
-async function handleAiSetupPost(request, env, corsHeaders, guid) {
+// v5.0 — WebRTC 시그널링 핸들러 (P2P 채팅)
+// 원칙: 메시지 본문 절대 저장 없음 — SDP/ICE 60초 TTL 후 삭제
+// ═══════════════════════════════════════════════════════════
+
+async function handleSignalSend(request, env, corsHeaders) {
+  if (request.method !== 'POST') return _err(405, 'METHOD_NOT_ALLOWED', '', corsHeaders);
+  const body = await request.json().catch(() => null);
+  if (!body) return _err(400, 'INVALID_JSON', '', corsHeaders);
+  const { from_guid, to_guid, type, payload } = body;
+  if (!from_guid || !to_guid || !type || !payload)
+    return _err(400, 'MISSING_FIELDS', 'from_guid, to_guid, type, payload 필수', corsHeaders);
+  if (!['offer','answer','ice'].includes(type))
+    return _err(400, 'INVALID_TYPE', 'offer|answer|ice 만 허용', corsHeaders);
+
+  const expires_at = new Date(Date.now() + 60_000).toISOString();
+  const sbH = _sbServiceHeaders(env);
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/webrtc_signals`, {
+    method: 'POST',
+    headers: { ...sbH, 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ from_guid, to_guid, type, payload, expires_at }),
+  });
+  if (!res.ok) return _err(500, 'DB_ERROR', await res.text(), corsHeaders);
+
+  // 기회적 만료 시그널 정리
+  fetch(`${SUPABASE_URL}/rest/v1/webrtc_signals?expires_at=lt.${new Date().toISOString()}`, {
+    method: 'DELETE', headers: sbH,
+  }).catch(() => {});
+
+  return new Response(JSON.stringify({ ok: true }), { status: 200, headers: corsHeaders });
+}
+
+async function handleSignalPoll(request, env, corsHeaders) {
+  if (request.method !== 'GET') return _err(405, 'METHOD_NOT_ALLOWED', '', corsHeaders);
+  const url  = new URL(request.url);
+  const guid = url.searchParams.get('guid');
+  if (!guid) return _err(400, 'GUID_REQUIRED', '', corsHeaders);
+
+  const sbH = _sbHeaders(env);
+  const now = new Date().toISOString();
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/webrtc_signals?to_guid=eq.${encodeURIComponent(guid)}&expires_at=gt.${now}&order=created_at.asc&limit=20`,
+    { headers: sbH }
+  );
+  const signals = await res.json().catch(() => []);
+  return new Response(JSON.stringify({ ok: true, signals }), { status: 200, headers: corsHeaders });
+}
+
+async function handleSignalDelete(request, env, corsHeaders) {
+  if (request.method !== 'POST') return _err(405, 'METHOD_NOT_ALLOWED', '', corsHeaders);
+  const body = await request.json().catch(() => null);
+  if (!body) return _err(400, 'INVALID_JSON', '', corsHeaders);
+  const sbH = _sbServiceHeaders(env);
+
+  if (body.id) {
+    await fetch(`${SUPABASE_URL}/rest/v1/webrtc_signals?id=eq.${encodeURIComponent(body.id)}`,
+      { method: 'DELETE', headers: sbH });
+    return new Response(JSON.stringify({ ok: true }), { status: 200, headers: corsHeaders });
+  }
+  if (body.from_guid) {
+    await fetch(`${SUPABASE_URL}/rest/v1/webrtc_signals?from_guid=eq.${encodeURIComponent(body.from_guid)}`,
+      { method: 'DELETE', headers: sbH });
+    return new Response(JSON.stringify({ ok: true }), { status: 200, headers: corsHeaders });
+  }
+  return _err(400, 'ID_OR_FROM_GUID_REQUIRED', '', corsHeaders);
+}
+
+async function handleSearchUsers(request, env, corsHeaders) {
+  if (request.method !== 'GET') return _err(405, 'METHOD_NOT_ALLOWED', '', corsHeaders);
+  const url   = new URL(request.url);
+  const q     = url.searchParams.get('q')?.trim();
+  const limit = Math.min(parseInt(url.searchParams.get('limit') || '20'), 50);
+  if (!q) return _err(400, 'QUERY_REQUIRED', 'q 파라미터 필수', corsHeaders);
+
+  const sbH = _sbHeaders(env);
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/search_users`, {
+    method: 'POST',
+    headers: sbH,
+    body: JSON.stringify({ q, limit_n: limit }),
+  });
+  const data = await res.json().catch(() => []);
+  return new Response(JSON.stringify({ ok: true, users: data, count: data.length }),
+    { status: 200, headers: corsHeaders });
+}
+
+// ═══════════════════════════════════════════════════════════
+// v5.0 — /profile (사용자/사업자 프로필 등록·조회)
+//   인증: parseToken(Authorization Bearer) → payload.ipv6
+//   저장 대상: user_profiles (BaseProfile v2.0 단순화)
+//     고정 컬럼: guid, current_ipv6, entity_type, name, handle,
+//                native_lang, address, lat, lng, phone, website,
+//                is_public, public_key
+//     확장: extra.public.{identity, activity, contact, location, finance}
+// ═══════════════════════════════════════════════════════════
+
+// GET /profile/{handle}  또는  /profile?guid={ipv6}
+// v5.1: 인증 불필요 — 공개 프로필 조회 (PUBLIC 계층만 노출 대상이나,
+//       현재는 단순화를 위해 user_profiles 행 전체를 반환한다.
+//       PRIVATE/SEMI 분리 마스킹은 추후 별도 작업에서 처리)
+async function handleProfileGet(request, env, corsHeaders) {
+  const url = new URL(request.url);
+  const sbH = _sbHeaders(env);
+
+  const rawHandle = decodeURIComponent(url.pathname.replace('/profile/', '').replace('/profile', ''));
+  const guidParam = url.searchParams.get('guid');
+
+  let query;
+  if (rawHandle) {
+    query = `handle=eq.${encodeURIComponent(rawHandle.startsWith('@') ? rawHandle : '@' + rawHandle)}`;
+  } else if (guidParam) {
+    query = `guid=eq.${encodeURIComponent(guidParam)}`;
+  } else {
+    return _err(400, 'MISSING_FIELD', 'handle 또는 guid 필요', corsHeaders);
+  }
+
+  const res  = await fetch(`${SUPABASE_URL}/rest/v1/user_profiles?${query}&limit=1`, { headers: sbH });
+  const rows = await res.json().catch(() => []);
+  if (!rows.length) return _err(404, 'PROFILE_NOT_FOUND', '프로필 없음', corsHeaders);
+
+  return new Response(JSON.stringify({ ok: true, profile: rows[0] }), { status: 200, headers: corsHeaders });
+}
+
+// POST /profile — 본인 프로필 생성/갱신 (upsert)
+// v5.1: Ed25519 서명 인증 (/biz/product와 동일 패턴) + TOFU(Trust-On-First-Use)
+// body: {
+//   guid, pubkey, signature,      // 인증 — _verifyEd25519(pubkey, signature, body)
+//   entity_type, name, native_lang, address, lat, lng, phone, website, is_public,
+//   handle,                       // 선택 — 미지정 시 자동 생성(@{이름})
+//   description, tags,            // S01 identity
+//   hours, holidays,              // S03 activity
+//   sns_public, languages_spoken, // S04 contact
+//   region, directions, parking,  // S05 location
+//   gdc_accepted, currencies, price_range, // S07 finance
+//   phone_visible,
+// }
+async function handleProfilePost(request, env, corsHeaders) {
   const body = await request.json().catch(() => null);
   if (!body) return _err(400, 'INVALID_JSON', 'JSON body 필수', corsHeaders);
+
+  const { guid, pubkey, signature } = body;
+  if (!guid)      return _err(400, 'MISSING_FIELD', 'guid 필수', corsHeaders);
+  if (!pubkey)    return _err(400, 'MISSING_FIELD', 'pubkey 필수', corsHeaders);
+  if (!signature) return _err(400, 'MISSING_FIELD', 'signature 필수', corsHeaders);
+
+  const sigOk = await _verifyEd25519(pubkey, signature, body);
+  if (!sigOk) return _err(401, 'INVALID_SIGNATURE', '서명 검증 실패', corsHeaders);
+
+  const {
+    entity_type, name, native_lang = 'ko',
+    address = '', lat = null, lng = null,
+    phone = null, website = '', is_public = true,
+    handle = null,
+    description = '', tags = [],
+    hours = [], holidays = [],
+    sns_public = {}, languages_spoken = [],
+    region = '', directions = '', parking = false,
+    gdc_accepted = false, currencies = ['KRW'], price_range = '',
+    phone_visible = false,
+  } = body;
+
+  if (!entity_type) return _err(400, 'MISSING_FIELD', 'entity_type 필수', corsHeaders);
+  if (!name)        return _err(400, 'MISSING_FIELD', 'name 필수', corsHeaders);
+  if (!['person','consumer','individual','org','institution','business','platform'].includes(entity_type)) {
+    return _err(400, 'INVALID_FIELD', 'entity_type 값이 올바르지 않습니다', corsHeaders);
+  }
+
+  const sbH = _sbHeaders(env);
+
+  // 기존 프로필 존재 여부 확인 (upsert 분기) — TOFU: pubkey 일치 확인
+  const existRes  = await fetch(`${SUPABASE_URL}/rest/v1/user_profiles?guid=eq.${encodeURIComponent(guid)}&select=guid,handle,extra,pubkey_ed25519&limit=1`, { headers: sbH });
+  const existRows = await existRes.json().catch(() => []);
+  const existing  = existRows[0] || null;
+
+  if (existing?.pubkey_ed25519 && existing.pubkey_ed25519 !== pubkey) {
+    return _err(401, 'PUBKEY_MISMATCH', '등록된 공개키와 일치하지 않습니다', corsHeaders);
+  }
+
+  // handle 자동 생성 (미지정 + 신규일 때)
+  let finalHandle = handle || existing?.handle || null;
+  if (!finalHandle) {
+    const slug = String(name).trim().toLowerCase()
+      .replace(/\s+/g, '_')
+      .replace(/[^a-z0-9가-힣_]/g, '');
+    finalHandle = `@${slug}`;
+  }
+
+  // extra.public 병합 (기존 extra 보존, public 섹션만 갱신)
+  const prevExtra = existing?.extra || {};
+  const newExtraPublic = {
+    ...(prevExtra.public || {}),
+    identity: { _schema_version: '2.0', display_name: name, description, tags, entity_subtype: body.entity_subtype || null },
+    activity: { timezone: 'Asia/Seoul', hours, holidays },
+    contact:  { phone_display: phone, phone_visible: !!phone_visible, website, sns_public, languages_spoken },
+    location: { region, address_short: address, directions, parking },
+    finance:  { gdc_accepted, currencies, price_range },
+  };
+  const newExtra = { ...prevExtra, public: newExtraPublic };
+
+  const record = {
+    guid,
+    current_ipv6: guid,
+    pubkey_ed25519: pubkey,
+    entity_type,
+    name,
+    handle: finalHandle,
+    native_lang,
+    address,
+    lat,
+    lng,
+    phone,
+    website,
+    is_public,
+    extra: newExtra,
+    updated_at: new Date().toISOString(),
+  };
+
+  let saveRes;
+  if (existing) {
+    saveRes = await fetch(`${SUPABASE_URL}/rest/v1/user_profiles?guid=eq.${encodeURIComponent(guid)}`, {
+      method: 'PATCH',
+      headers: { ..._sbServiceHeaders(env), 'Prefer': 'return=representation' },
+      body: JSON.stringify(record),
+    });
+  } else {
+    record.created_at = new Date().toISOString();
+    saveRes = await fetch(`${SUPABASE_URL}/rest/v1/user_profiles`, {
+      method: 'POST',
+      headers: { ..._sbServiceHeaders(env), 'Prefer': 'return=representation' },
+      body: JSON.stringify(record),
+    });
+  }
+
+  if (!saveRes.ok) {
+    const errText = await saveRes.text().catch(() => '');
+    return _err(502, 'DB_ERROR', `프로필 저장 실패: ${errText}`, corsHeaders);
+  }
+  const savedRows = await saveRes.json().catch(() => []);
+
+  return new Response(JSON.stringify({ ok: true, profile: savedRows[0] || record }), { status: 200, headers: corsHeaders });
+}
+
+// /ai-setup POST — AI 비서 설정 저장 (API 키 AES-256-GCM 암호화)
+// ═══════════════════════════════════════════════════════════
+async function handleAiSetupPost(request, env, corsHeaders) {
+  const body = await request.json().catch(() => null);
+  if (!body) return _err(400, 'INVALID_JSON', 'JSON body 필수', corsHeaders);
+
+  // v5.1: Ed25519 서명 인증 + TOFU
+  const { guid, pubkey, signature } = body;
+  if (!guid)      return _err(400, 'MISSING_FIELD', 'guid 필수', corsHeaders);
+  if (!pubkey)    return _err(400, 'MISSING_FIELD', 'pubkey 필수', corsHeaders);
+  if (!signature) return _err(400, 'MISSING_FIELD', 'signature 필수', corsHeaders);
+
+  const sigOk = await _verifyEd25519(pubkey, signature, body);
+  if (!sigOk) return _err(401, 'INVALID_SIGNATURE', '서명 검증 실패', corsHeaders);
+
+  {
+    const sbHChk = _sbHeaders(env);
+    const chkRes  = await fetch(`${SUPABASE_URL}/rest/v1/user_profiles?guid=eq.${encodeURIComponent(guid)}&select=pubkey_ed25519&limit=1`, { headers: sbHChk });
+    const chkRows = await chkRes.json().catch(() => []);
+    const existingPubkey = chkRows[0]?.pubkey_ed25519;
+    if (existingPubkey && existingPubkey !== pubkey) {
+      return _err(401, 'PUBKEY_MISMATCH', '등록된 공개키와 일치하지 않습니다', corsHeaders);
+    }
+  }
 
   const {
     provider = 'deepseek', model = 'deepseek-chat',
