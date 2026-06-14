@@ -19,8 +19,7 @@
 <script src="/gopang-wallet.js"></script>
 <script>
 function gopangLogout() {
-  if (!confirm('로그아웃 하시겠습니까?
-(아이디·설정이 초기화됩니다)')) return;
+  if (!confirm('로그아웃 하시겠습니까?\n(아이디·설정이 초기화됩니다)')) return;
   localStorage.clear();
   sessionStorage.clear();
   caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))))
