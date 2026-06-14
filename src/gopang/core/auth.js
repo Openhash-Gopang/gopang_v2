@@ -1,4 +1,4 @@
-/**
+﻿/**
  * core/auth.js — 사용자 인증·등록
  * - _USER 초기화 (L0 자동로그인 / Guest)
  * - L1 PocketBase 아이디 등록 (upsert)
@@ -218,7 +218,7 @@ async function _patchFpHexToL1(stored, fpHex) {
     await fetch(`${L1_URL}/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fpHex })
+      body: JSON.stringify({ fpHex, guid: stored.ipv6 })
     });
     console.info('[Auth] L1 fpHex 동기화 완료');
   } catch(e) {
